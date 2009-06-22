@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<page xmlns:xlink="http://www.w3.org/1999/xlink"
+      xlink:title="Русскоязычное сообщество lisp-разработчиков">
+    
+    <p>Добро пожаловать на <a href="http://lisp.catap.ru">lisp.catap.ru</a></p>
+    <p>Здесь вступительное слово, рассказывающее о целях и задачах проекта. И т.д. и т.п.</p>
+
+    <p>
+        Обсуждение данного проекта ведётся <a href="http://groups.google.com/group/community-lisp-ru">здесь</a>.
+    </p>
+</page>

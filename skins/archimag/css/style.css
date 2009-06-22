@@ -1,0 +1,252 @@
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+*   style.css
+*/
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Helvetica Neue",Arial,sans-serif;
+    /*background: #333333 url('image/logo120x80.png') no-repeat;*/
+    background-color: #333333;
+}
+
+#logo {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+}
+
+#caution {
+    margin: 0;
+    padding-top: 3px;
+    margin-left: 150px;
+    font-style: italic;
+    font-weight: bold;
+    color: gray;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+*   .top
+*/
+   
+.top {
+    padding-top: 0;
+    height: 30px;
+
+    margin-top: 10px;
+    font-size: 90%;
+}
+
+#friends {
+    margin: 0;
+    margin-left: 20px;
+    padding-top: 3px;
+}
+
+.top li {
+    display: inline;
+    list-style-type: none;
+    list-style-position: outside;
+    list-style-image: none;
+    padding-right: 5px;
+    font-weight: bold;
+
+}
+
+.top a {
+    color: #d3e6b8;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+*   .bottom
+*/
+
+.bottom {
+    font-size: 90%;
+    color: gray;
+    text-align: center;
+    margin: 10px;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+*  #login
+*/
+
+#login {
+    float: right;
+    margin-top: 3px;
+    margin-right: 5px;
+}
+
+#login b {
+    /*color: orange;*/
+    color: #d3e6b8;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+*   #mainmenu
+*/
+
+#mainmenu {
+    margin: 0;
+    
+    margin-left: 100px;
+    margin-right: 100px;
+
+    background-image: url('image/menu.png');
+    font-size: 130%;
+    padding: 20px;
+
+    margin-top: 10px;
+}
+
+#mainmenu > ul {
+    margin: 0;
+    padding: 0;
+}
+
+#mainmenu li {
+    display: inline;
+    list-style-type: none;
+    list-style-position: outside;
+    list-style-image: none;
+    padding-left: 10px;
+}
+
+#mainmenu a { 
+    color: orange;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+*   #content
+*/
+
+#content {
+    /*
+    width: 80%;
+    margin-left: 8%;
+       */
+    margin-left: 100px;
+    margin-right: 100px;
+    
+    background-color: #efece5;
+    padding: 20px;
+    
+    min-height: 500px;
+}
+
+#content h4 {
+    margin: 10px 0 5px;
+}
+
+#content h5 {
+    margin: 10px 0 0;
+}
+
+#content li {
+    padding: 5px 0;
+}
+
+#content blockquote {
+    font-style: italic;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+*   .code
+*/
+
+.code {
+    background-color: #eeeeee;
+    border: 1px solid #d0d0d0;
+    margin: 5px;
+    padding: 10px;
+
+    font-family: "Courier New", monospace;
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+* articles
+*/
+
+.articles li {
+    margin-bottom: 10px;
+}
+
+.articles a {
+    font-weight: bold;
+    color: #526b66;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+* login-form
+*/
+
+.login-form {
+    padding: 2px;
+    font-size: 90%;
+    font-weight: normal;
+
+    border: 1px solid #D0D0D0;
+
+    display: table;
+}
+
+.login-form > table {
+    padding: 10px;
+}
+
+.login-form td {
+    width: 100px;
+}
+
+.login-form tr > td:first-child {
+    text-align: right;
+    font-weight: bold;
+    width: auto;
+}
+
+.login-form > table td {
+    padding-right: 5px;
+    padding-top: 3px;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+* login-form
+*/
+
+.register-form {
+    border: 1px solid #d0d0d0;
+    display: table;
+
+    padding-top: 30px;
+    padding-bottom: 30px;
+    padding-left: 10px;
+    padding-right: 20px;
+}
+
+.register-form td {
+    padding-bottom: 20px;
+}
+
+.register-form tr > td:first-child {
+    vertical-align: top;
+    font-weight: bold;
+    font-size: 90%;
+    
+}
+
+
+.register-form .info {
+    color: gray;
+    font-size: 80%;
+}
+
+.register-form input[type=button] {
+    margin-top: 10px;
+}
+
+.register-form .error-info {
+    color: red;
+    font-size: 80%;
+}

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<page xmlns:xlink="http://www.w3.org/1999/xlink"
+      xlink:title="Статьи">
+
+    <h4>Прекрасный и удивительный...</h4>
+    <ul class="articles">
+        <li>
+            <a href="common-lisp-technologies.html">Уникальные технологии Common Lisp</a>
+        </li>
+        
+        <li>
+            <a href="good-and-damage.html">О пользе унификации и вреде предубеждений</a>
+        </li>
+    </ul>
+    
+    <h4>Подробности</h4>
+    <ul class="articles">
+        <li><a href="cl-vars.html">Переменные в Common Lisp</a><br />
+        В данной статье рассказывается о разнице между лексическими и динамическими переменными.
+        </li>
+
+        <li>
+            <a href="setf-vs-setq.html">Чем SETF отличается от SETQ</a>
+        </li>
+    </ul>
+
+    <h4>Различные реализации</h4>
+    <ul class="articles">
+        <li>
+            <a href="clisp-vs-sbcl.html">Сравнение GNU CLISP и SBCL</a>
+        </li>
+    </ul>
+
+    <h4>Практика</h4>
+    <ul class="articles">
+        <li>
+            <a href="sendind-smtp-mail-with-utf-8-characters.html">Отпавка эллектронного письма в кодироке utf-8</a>
+        </li>
+    </ul>
+
+    <h4>Ссылки на другие ресурсы</h4>
+    <ul>
+        <li>
+            <a href="http://pcl.catap.ru/doku.php?id=pcl">Перевод на русский книги Practical Common Lisp</a>
+        </li>
+        <li>
+            <a href="http://cl-cookbook.sourceforge.net/">The Common Lisp Cookbook</a>
+        </li>
+    </ul>
+</page>
