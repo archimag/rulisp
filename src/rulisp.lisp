@@ -56,21 +56,21 @@
 
 (defparameter/update *master* (merge-pathnames "rulisp.html" *skindir*))
 
-(restas:define-fs-xsl-route main "" "content/index.xml" *content-xsl* :overlay-master *master*)
+(define-fs-xsl-route main "" "content/index.xml" *content-xsl* :overlay-master *master*)
 
-(restas:define-filesystem-route css "css/:(file)" (format nil "~A~A" "skins/default/" "css/${file}"))
-(restas:define-filesystem-route css/image "css/image/:(file)" (format nil "~A~A" "skins/default/" "css/image/${file}"))
+(define-filesystem-route css "css/:(file)" (format nil "~A~A" "skins/default/" "css/${file}"))
+(define-filesystem-route css/image "css/image/:(file)" (format nil "~A~A" "skins/default/" "css/image/${file}"))
 
-(restas:define-fs-xsl-route articles "articles/" "content/articles/index.xml" *content-xsl* :overlay-master *master*)
+(define-fs-xsl-route articles "articles/" "content/articles/index.xml" *content-xsl* :overlay-master *master*)
 
-(restas:define-fs-xsl-route article "articles/:(file).html" "content/articles/${file}.xml" *content-xsl* :overlay-master *master*)
+(define-fs-xsl-route article "articles/:(file).html" "content/articles/${file}.xml" *content-xsl* :overlay-master *master*)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; auth
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(restas:define-simple-route auth-info ("auth/info-panel" :protocol :chrome)
+(define-simple-route auth-info ("auth/info-panel" :protocol :chrome)
   (restas::expand-text (alexandria:read-file-into-string (merge-pathnames "auth/info-panel.xml" *skindir*))
                (acons :callback
                       (hunchentoot:url-encode (format nil
@@ -79,10 +79,10 @@
                                                       (hunchentoot:request-uri hunchentoot:*request*)))
                       bindings)))
 
-(restas:define-filesystem-route login "login.html"
+(define-filesystem-route login "login.html"
   (namestring (merge-pathnames "auth/login.xml" *skindir*))
   :overlay-master *master*)
 
-(restas:define-filesystem-route registration "register.html" 
+(define-filesystem-route registration "register.html" 
   (namestring (merge-pathnames "auth/register.xml" *skindir*)) 
   :overlay-master *master*)
