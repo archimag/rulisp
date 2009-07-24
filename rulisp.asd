@@ -6,11 +6,13 @@
 (in-package :rulisp-system)
 
 (defsystem :rulisp
-    :depends-on ( #:restas #:colorize #:planet)
+    :depends-on ( #:restas #:colorize #:planet #:postmodern #:ironclad)
     :components
     ((:module :src
               :components
               ((:file "packages")
-               (:file "rulisp" :depends-on ("packages"))
-               (:file "planet" :depends-on ("rulisp"))
-               (:file "start" :depends-on ("rulisp"))))))
+               (:file "core" :depends-on ("packages"))
+               (:file "rulisp" :depends-on ("core"))
+               (:file "account" :depends-on ("core"))
+               (:file "planet" :depends-on ("core"))
+               (:file "start" :depends-on ("rulisp" "planet"))))))

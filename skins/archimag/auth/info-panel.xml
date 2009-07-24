@@ -1,4 +1,4 @@
 <div id="login">
-    <a href="/register.html">Регистрация</a> 
-    <a href="/login.html?done=${callback}">Войти</a>
+    <a href="/register">Регистрация</a> 
+    <a href="/login?done=${callback}">Войти</a>
 </div>
