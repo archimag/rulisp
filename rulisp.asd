@@ -15,4 +15,5 @@
                (:file "rulisp" :depends-on ("core"))
                (:file "account" :depends-on ("core"))
                (:file "planet" :depends-on ("core"))
-               (:file "start" :depends-on ("rulisp" "planet"))))))
+               (:file "forum" :depends-on ("core"))
+               (:file "start" :depends-on ("rulisp" "planet" "forum"))))))
