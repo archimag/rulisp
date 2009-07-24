@@ -79,3 +79,67 @@
 (defun username ()
   "Return name of the user if he loggen on"
   (cdr (assoc :user-login-name *bindings*)))
+
+
+(defun in-pool (obj)
+  (gp:object-register obj *request-pool*))
+
+
+(defmacro with-rulisp-db (&body body)
+  `(postmodern:with-connection *rulisp-db*
+     ,@body))
+
+;;; xfactory
+
+(defun apply-format-aux (format args)
+  (if args
+      (apply #'format nil (cons format args))
+      format))
+
+(defun eid (format &rest args)
+  "Make id attribute"
+  (xfactory:attributes :id
+                       (apply-format-aux format args)))
+
+(defun eclass (format &rest args)
+  "Make class attribute"
+  (xfactory:attributes :class
+                       (apply-format-aux format args)))
+
+(defun ehref (format &rest args)
+  "Make href attribute"
+  (xfactory:attributes :href
+                       (apply-format-aux format args)))
+
+(defun estyle (format &rest args)
+  "Make style attributes"
+  (xfactory:attributes :style
+                       (apply-format-aux format args)))
+
+(defun escript (src &optional (type "text/javascript"))
+  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "script")))
+    (xfactory:attributes :src src
+                         :type type)))
+
+(defun ecss (src)
+  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "link")))
+    (xfactory:attributes :href src
+                         :rel "stylesheet"
+                         :type "text/css")))
+
+(defun e-break-line ()
+  (xtree:make-child-element xfactory:*node* "br"))
+
+(defun estrong (format &rest args)
+  (xtree:make-child-text (xtree:make-child-element xfactory:*node*
+                                          "strong")
+                         (apply-format-aux format args)))
+
+(defun e-text2html (text)
+  (if text
+      (html:with-parse-html (html text)
+        (when html
+          (iter (for node in (iter (for node in-child-nodes (xpath:find-single-node html "/html/body"))
+                                   (collect node)))
+                (xtree:detach node)
+                (xtree:append-child xfactory:*node* node))))))

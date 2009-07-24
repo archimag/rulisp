@@ -1,0 +1,345 @@
+;;; forum.lisp
+
+(in-package :rulisp)
+
+(defun substring (text end)
+  (if (> (length text) end)
+      (subseq text 0 end)
+      text))
+
+;;; main
+
+(define-simple-route forum-main ("forum/"
+                                 :overlay-master *master*)
+  (postmodern:with-connection *rulisp-db*
+    (in-pool
+     (xfactory:with-document-factory ((E))
+       (E :overlay
+          (E :head
+             (E :title "Форум")
+             (ecss "/css/forum.css"))
+          (E :div
+             (eid "content")
+             (iter (for (id description) in (postmodern:query "SELECT forum_id, description FROM rlf_forums"))
+                   (E :div
+                      (eclass "forum")
+                      (E :a
+                         (ehref id)
+                         (xfactory:text description))))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; topics
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(postmodern:defprepared select-topics*
+    " SELECT fm.author as author, t.title, fm.message as body,
+             to_char(fm.created  AT TIME ZONE 'GMT +3', 'DD.MM.YYYY HH24:MI') as date,
+             t.topic_id, t.all_message,
+             m.author AS last_author,
+             to_char(m.created AT TIME ZONE 'GMT +3', 'DD.MM.YYYY HH24:MI') AS last_created,
+             fm.message_id AS first_author
+        FROM rlf_topics AS t
+        LEFT JOIN rlf_messages  AS m ON t.last_message = m.message_id
+        LEFT JOIN rlf_messages AS fm ON t.first_message = fm.message_id
+        WHERE forum_id = $1
+        ORDER BY COALESCE(m.created, fm.created) DESC
+        LIMIT $3 OFFSET $2")
+
+(defun select-topics (forum-id start)
+  (select-topics* forum-id
+                  start
+                  10))
+
+
+(postmodern:defprepared forum-info "SELECT description, all_topics FROM rlf_forums WHERE forum_id = $1")
+
+
+(defun topic-nav-panel (forum-id start end all)
+  (xfactory:with-element-factory ((E))
+    (E :span
+       (estrong "~A" (1+ start))
+       " - "
+       (estrong "~A" end)
+       " из "
+       (estrong "~A" all)
+       " « "
+       (if (> start 1)
+           (E :a
+              (ehref "~A-~A" forum-id (max (- start 10) 0))
+              "Позже")
+           (xfactory:text "Позже"))
+       " | "
+       (if (< (+ start 10) all)
+           (E :a
+              (ehref "~A-~A" forum-id (+ start 10))
+              "Раньше")
+           (xfactory:text "Раньше"))
+       " » ")))
+       
+
+(defun show-forum-topics (forum-id &optional (start 0))
+  (with-rulisp-db 
+    (bind:bind (((description all-topics) (car (forum-info forum-id)))
+                (last (max (+ 10 start) all-topics))
+                (topics (select-topics forum-id start)))
+      (xfactory:with-document-factory ((E))
+        (E :div
+           (E :head
+              (E :title
+                 (xfactory:text description))
+              (ecss "/css/forum.css")
+              (ecss "/css/jquery.wysiwyg.css")
+              (escript "/js/jquery.js")
+              (escript "/js/jquery.wysiwyg.js")
+              (escript "/js/forum.js"))
+           (E :div
+              (eid "content")
+              (E :div
+                 (eid "forum-nav-panel")
+                 (E :ul
+                    (E :li
+                       (E :a
+                          (ehref (genurl 'forum-main))
+                          "Список форумов"))
+                    (E :li
+                       (estrong description))))
+              (E :div
+                 "Темы "
+                 (xfactory:attributes :class "info"
+                                      :align "right")
+                 (topic-nav-panel forum-id start last all-topics))
+
+              (E :div
+                 (eclass "topic-list")
+                 (iter (for (author title body date topic-id all-message last-author last-created first-author)
+                            in topics)
+                       (E :div
+                          (eclass "topic")
+                          (E :a
+                             (ehref (genurl 'view-topic :topic-id topic-id))
+                             (xfactory:text title))
+                          (E :div
+                             (eclass "topicbody")
+                             (xfactory:text (html:with-parse-html (html body)
+                                              (let ((str (xtree:text-content html)))
+                                                (if (< (length str) 500)
+                                                    str
+                                                    (subseq str 0 500)))))
+                             )
+                          (E :div
+                             (eclass "topic-info")
+                             (E :span
+                                (eclass "topic-author")
+                                "Автор: "
+                                (estrong author)
+                                (xfactory:text " - ~A" date)
+                                (e-break-line)
+                                (xfactory:text "Сообщений: ~A" all-message)
+                                (unless (eql last-author :null)
+                                  (e-break-line)
+                                  (xfactory:text "Последнее:  ")
+                                  (estrong last-author)
+                                  (xfactory:text " - ~A" last-created))
+                                )))))
+              
+              (E :div
+                 (xfactory:attributes :class "info"
+                                      :align "right")
+                 (topic-nav-panel forum-id start last all-topics))
+
+              (when (username)
+                (E :input
+                   (xfactory:attributes :type "button"
+                                        :value "+ Новая тема"
+                                        :onclick "newmessage()"))
+
+                (E :form
+                   (xfactory:attributes :method "post"
+                                        :class "newmessage"
+                                        :style "display: none"
+                                        :id "editor")
+                   (E :div "Новая тема")
+                   (E :div
+                      (estrong "Тема:")
+                      (E :input
+                         (xfactory:attributes :name "title" :size "80")))
+                   (E :div
+                      (E :textarea
+                         (xfactory:attributes :rows "30" :name "body" :id "wysiwyg")))
+                   (E :dev
+                      (E :input
+                         (xfactory:attributes :type "submit" :value "Отправить")))))
+
+
+              ))))))
+               
+                           
+  
+(define-simple-route view-forum-main ("forum/:(forum-id)"
+                                      :overlay-master *master*)
+  (in-pool
+   (show-forum-topics forum-id)))
+
+(define-simple-route view-forum-main-n ("forum/:(forum-id)-:(start)"
+                                      :overlay-master *master*)
+  (in-pool
+   (show-forum-topics forum-id (parse-integer start))))
+
+
+(postmodern:defprepared insert-new-topic
+    "select rlf_new_topic($1, $2, $3, $4)")
+
+(define-simple-route new-forum-topic ("forum/:(forum-id)"
+                                      :method :post
+                                      :login-status :logged-on)
+  (let ((title (hunchentoot:post-parameter "title"))
+        (body (hunchentoot:post-parameter "body")))
+    (unless (or (string= title "")
+                (string= body ""))
+      (with-rulisp-db
+        (insert-new-topic forum-id title body (username)))))
+  (hunchentoot:redirect (genurl 'view-forum-main :forum-id forum-id)))
+  
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; messages
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(postmodern:defprepared select-message*
+    "SELECT t.title, t.topic_id, t.all_message, m.author, m.message as body,
+            to_char(m.created AT TIME ZONE 'GMT +3', 'DD.MM.YYYY HH24:MI') as date
+       FROM rlf_topics AS t
+       LEFT JOIN rlf_messages AS m ON t.first_message = m.message_id
+       WHERE t.topic_id = $1")
+
+(defun select-message (topic-id)
+  (car (select-message* topic-id)))
+
+(postmodern:defprepared select-reply-list*
+    "SELECT message,
+            author,
+            to_char(created AT TIME ZONE 'GMT +3', 'DD.MM.YYYY HH24:MI') as date
+        FROM rlf_messages 
+        WHERE topic_id = $1
+        ORDER BY created ASC
+        OFFSET 1")
+
+(defun select-reply-list (topic-id)
+  (select-reply-list* topic-id))
+
+(defun get-forum-info (topic-id)
+  (car (postmodern:query (format nil
+                                 "SELECT forum_id, description FROM rlf_forums
+WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
+                                 topic-id))))
+
+
+
+(define-simple-route view-topic ("forum/thread/:(topic-id)"
+                                 :overlay-master *master*)
+  (with-rulisp-db
+    (bind:bind (((forum-id description) (get-forum-info topic-id))
+                ((title message-id all-message author body date) (select-message topic-id))
+                (reply-list (select-reply-list topic-id)))
+      (in-pool
+       (xfactory:with-document-factory ((E))
+         (E :overlay
+            (E :head
+               (E :title
+                  (xfactory:text title))
+               (ecss "/css/forum.css")
+               (ecss "/css/jquery.wysiwyg.css")
+               (escript "/js/jquery.js")
+               (escript "/js/jquery.wysiwyg.js")
+               (escript "/js/forum.js"))
+            (E :div
+               (eid "content")
+               (E :div
+                  (eid "forum-nav-panel")
+                  (E :ul
+                     (E :li
+                        (E :a
+                           (ehref (genurl 'forum-main))
+                           "Список форумов"))
+                     (E :li
+                        (E :a
+                           (ehref (genurl 'view-forum-main :forum-id forum-id))
+                           (xfactory:text description)))
+                     (E :li
+                        (estrong (substring title 64)))))
+
+               (E :div
+                  (eclass "thread")
+
+                  (E :div
+                     (eclass "topic")
+                     (E :div
+                        (E :big
+                           (xfactory:text title)))
+
+                     (E :div
+                        (eclass "topic-info")
+                        (E :span
+                           (eclass "topic-author")
+                           "Автор: "
+                           (estrong author)
+                           (xfactory:text " - ~A, Сообщений - ~A" date all-message)))
+
+                     (E :div
+                        (eclass "topicbody"
+                                (e-text2html body))))
+
+                  (iter (for (message author date) in reply-list)
+                        (E :div
+                           (eclass "reply")
+                           (E :div
+                              (eclass "topic-info")
+                              (E :span
+                                 (eclass "topic-author")
+                                 "Автор: "
+                                 (estrong author)
+                                 (xfactory:text " - ~A" date)))
+                           (E :div
+                              (eclass "replybody")
+                              (e-text2html message)))))
+
+               (when (username)
+                 (E :input
+                    (xfactory:attributes :type "button"
+                                         :value "+ Новое сообщение"
+                                         :onclick "newmessage()"))
+
+                 (E :form
+                    (xfactory:attributes :method "post"
+                                         :class "newmessage"
+                                         :style "display: none"
+                                         :id "editor")
+                    (E :div "Новое сообщение: ")
+                    (E :div
+                       (E :textarea
+                          (xfactory:attributes :rows "30" :name "body" :id "wysiwyg")))
+                    (E :dev
+                       (E :input
+                          (xfactory:attributes :type "submit" :value "Отправить")))))
+
+               )))))))
+  
+(postmodern:defprepared insert-new-message
+    "INSERT INTO rlf_messages (topic_id, message, author) VALUES($1, $2, $3)")
+
+(define-simple-route new-topic-message ("forum/thread/:(topic-id)"
+                                        :method :post
+                                        :login-status :logged-on)
+  (let ((body (hunchentoot:post-parameter "body")))
+    (unless (string= body "")
+      (with-rulisp-db
+        (insert-new-message topic-id
+                            body
+                            (username))))
+      (hunchentoot:redirect (genurl 'view-topic :topic-id topic-id))))
+
+  
+  
+

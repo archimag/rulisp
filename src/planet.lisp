@@ -19,15 +19,6 @@
 (define-simple-route planet-atom ("planet/atom.xml")
   (planet:planet-syndicate-feed *planet*))
 
-(defun eid (value)
-  (xfactory:attributes :id value))
-
-(defun eclass (value)
-  (xfactory:attributes :class value))
-
-(defun ehref (value)
-  (xfactory:attributes :href value))
-
 (define-simple-route planet-main ("planet/"
                            :overlay-master *master*)
   (gp:object-register
