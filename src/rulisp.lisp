@@ -77,7 +77,7 @@
                                                       "http://~A~A"
                                                       (hunchentoot:host)
                                                       (hunchentoot:request-uri hunchentoot:*request*)))
-                      bindings)))
+                      *bindings*)))
 
 (define-filesystem-route login "login.html"
   (namestring (merge-pathnames "auth/login.xml" *skindir*))
