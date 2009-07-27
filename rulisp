@@ -17,7 +17,7 @@ start () {
         --startas /usr/bin/screen \
         --chuid rulisp \
         -- \
-        -d -m -c /dev/null -S rulisp /usr/bin/sbcl --no-userinit --load /usr/share/rulisp/rulisp-start.lisp
+        -d -m -c /dev/null -S rulisp /usr/bin/sbcl --no-userinit --dynamic-space-size 400 --load /usr/share/rulisp/rulisp-start.lisp
 		       
 	[ $? -eq 0 ] && echo "done." || echo "failed!"
 }
