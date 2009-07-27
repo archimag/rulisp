@@ -41,10 +41,10 @@
 
 (postmodern:defprepared select-topics*
     " SELECT fm.author as author, t.title, fm.message as body,
-             to_char(fm.created  AT TIME ZONE 'GMT +3', 'DD.MM.YYYY HH24:MI') as date,
+             to_char(fm.created, 'DD.MM.YYYY HH24:MI') as date,
              t.topic_id, t.all_message,
              m.author AS last_author,
-             to_char(m.created AT TIME ZONE 'GMT +3', 'DD.MM.YYYY HH24:MI') AS last_created,
+             to_char(m.created, 'DD.MM.YYYY HH24:MI') AS last_created,
              fm.message_id AS first_author
         FROM rlf_topics AS t
         LEFT JOIN rlf_messages  AS m ON t.last_message = m.message_id
@@ -60,33 +60,34 @@
                   10))
 
 
-(postmodern:defprepared forum-info "SELECT description, all_topics FROM rlf_forums
-WHERE pretty_forum_id = $1")
+(postmodern:defprepared forum-info "SELECT description, all_topics FROM rlf_forums WHERE pretty_forum_id = $1")
 
 
 (defun topic-nav-panel (forum-id start end all)
-  (xfactory:with-element-factory ((E))
-    (E :span
-       (estrong "~A" (1+ start))
-       " - "
-       (estrong "~A" end)
-       " из "
-       (estrong "~A" all)
-       " « "
-       (if (> start 1)
-           (E :a
-              (ehref "~A-~A" forum-id (max (- start 10) 0))
-              "Позже")
-           (xfactory:text "Позже"))
-       " | "
-       (if (< (+ start 10) all)
-           (E :a
-              (ehref "~A-~A" forum-id (+ start 10))
-              "Раньше")
-           (xfactory:text "Раньше"))
-       " » ")))
+  (let ((url (genurl 'view-forum-main :forum-id forum-id)))
+    (xfactory:with-element-factory ((E))
+      (E :span
+         (estrong "~A" (1+ start))
+         " - "
+         (estrong "~A" end)
+         " из "
+         (estrong "~A" all)
+         " « "
+         (if (> start 0)
+             (E :a
+                (if (> start 10)
+                    (ehref "~A?start=~A" url (- start 10))
+                    (ehref url))
+                "Позже")
+             (xfactory:text "Позже"))
+         " | "
+         (if (< (+ start 10) all)
+             (E :a
+                (ehref "~A?start=~A" url (+ start 10))
+                "Раньше")
+             (xfactory:text "Раньше"))
+         " » "))))
        
-
 (defun show-forum-topics (forum-id &optional (start 0))
   (with-rulisp-db 
     (bind:bind (((description all-topics) (car (forum-info forum-id)))
@@ -130,6 +131,11 @@ WHERE pretty_forum_id = $1")
                             in topics)
                        (E :div
                           (eclass "topic")
+                          (when (admin-p (username))
+                            (E :a
+                               (eclass "delete-this")
+                               (ehref (genurl 'delete-topic :topic-id topic-id))
+                               "Удалить"))
                           (E :a
                              (ehref (genurl 'view-topic :topic-id topic-id))
                              (xfactory:text title))
@@ -193,12 +199,11 @@ WHERE pretty_forum_id = $1")
 (define-simple-route view-forum-main ("forum/:(forum-id)"
                                       :overlay-master *master*)
   (in-pool
-   (show-forum-topics forum-id)))
-
-(define-simple-route view-forum-main-n ("forum/:(forum-id)/:(start)"
-                                      :overlay-master *master*)
-  (in-pool
-   (show-forum-topics forum-id (parse-integer start))))
+   (show-forum-topics forum-id
+                      (let ((start (hunchentoot:get-parameter "start")))
+                        (if start
+                            (parse-integer start)
+                            0)))))
 
 
 (postmodern:defprepared insert-new-topic
@@ -216,7 +221,17 @@ WHERE pretty_forum_id = $1")
   (hunchentoot:redirect (genurl 'view-forum-main :forum-id forum-id)))
   
 
+(define-simple-route delete-topic ("forum/thread/delete/:(topic-id)"
+                                   :login-status :logged-on)
+  (if (admin-p (username))
+      (with-rulisp-db
+        (let ((forum-id (postmodern:query (format nil "SELECT * from rlf_delete_topic(~A)" topic-id) :single)))
+          (hunchentoot:redirect (if (eql topic-id :null)
+                                    (genurl 'forum-main)
+                                    (genurl 'view-forum-main :forum-id forum-id)))))
+      hunchentoot:+HTTP-FORBIDDEN+))
 
+  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; messages
@@ -224,7 +239,7 @@ WHERE pretty_forum_id = $1")
 
 (postmodern:defprepared select-message*
     "SELECT t.title, t.topic_id, t.all_message, m.author, m.message as body,
-            to_char(m.created AT TIME ZONE 'GMT +3', 'DD.MM.YYYY HH24:MI') as date
+            to_char(m.created, 'DD.MM.YYYY HH24:MI') as date
        FROM rlf_topics AS t
        LEFT JOIN rlf_messages AS m ON t.first_message = m.message_id
        WHERE t.topic_id = $1")
@@ -233,9 +248,10 @@ WHERE pretty_forum_id = $1")
   (car (select-message* topic-id)))
 
 (postmodern:defprepared select-reply-list*
-    "SELECT message,
+    "SELECT message_id,
+            message,
             author,
-            to_char(created AT TIME ZONE 'GMT +3', 'DD.MM.YYYY HH24:MI') as date
+            to_char(created, 'DD.MM.YYYY HH24:MI') as date
         FROM rlf_messages 
         WHERE topic_id = $1
         ORDER BY created ASC
@@ -247,7 +263,7 @@ WHERE pretty_forum_id = $1")
 (defun get-forum-info (topic-id)
   (car (postmodern:query (format nil
                                  "SELECT pretty_forum_id, description FROM rlf_forums
-WHERE pretty_forum_id = (SELECT pretty_forum_id FROM rlf_topics WHERE topic_id = ~A)"
+WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
                                  topic-id))))
 
 
@@ -258,6 +274,7 @@ WHERE pretty_forum_id = (SELECT pretty_forum_id FROM rlf_topics WHERE topic_id =
     (bind:bind (((forum-id description) (get-forum-info topic-id))
                 ((title message-id all-message author body date) (select-message topic-id))
                 (reply-list (select-reply-list topic-id)))
+      (declare (ignore message-id))
       (in-pool
        (xfactory:with-document-factory ((E))
          (E :overlay
@@ -295,10 +312,6 @@ WHERE pretty_forum_id = (SELECT pretty_forum_id FROM rlf_topics WHERE topic_id =
 
                   (E :div
                      (eclass "topic")
-                     (when (admin-p (username))
-                       (E :span
-                          (eclass "fakelink delete-this")
-                          "Удалить"))
                      (E :div
                         (E :big
                            (xfactory:text title)))
@@ -315,14 +328,15 @@ WHERE pretty_forum_id = (SELECT pretty_forum_id FROM rlf_topics WHERE topic_id =
                         (eclass "topicbody"
                                 (e-text2html body))))
 
-                  (iter (for (message author date) in reply-list)
+                  (iter (for (message-id message author date) in reply-list)
                         (E :div
                            (eclass "reply")
                            (E :div
                               (eclass "topic-info")
                               (when (admin-p (username))
-                                (E :span
-                                   (eclass "fakelink delete-this")
+                                (E :a
+                                   (eclass "delete-this")
+                                   (ehref (genurl 'delete-topic-message :message-id message-id))
                                    "Удалить"))
                               (E :span
                                  (eclass "topic-author")
@@ -368,7 +382,17 @@ WHERE pretty_forum_id = (SELECT pretty_forum_id FROM rlf_topics WHERE topic_id =
                             (username))))
       (hunchentoot:redirect (genurl 'view-topic :topic-id topic-id))))
 
-  
+
+(define-simple-route delete-topic-message ("forum/message/delete/:(message-id)"
+                                           :login-status :logged-on)
+  (if (admin-p (username))
+      (with-rulisp-db
+        (let ((topic-id (postmodern:query (format nil "SELECT * from rlf_delete_message(~A)" message-id) :single)))
+          (hunchentoot:redirect (if (eql topic-id :null)
+                                    (genurl 'forum-main)
+                                    (genurl 'view-topic :topic-id topic-id)))))
+      hunchentoot:+HTTP-FORBIDDEN+))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; RSS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -406,7 +430,7 @@ WHERE pretty_forum_id = (SELECT pretty_forum_id FROM rlf_topics WHERE topic_id =
   (with-rulisp-db
     (make-rss-feed (format nil "Форумы ~A" *host*)
                    (postmodern:query "SELECT pretty_forum_id, topic_id,  m.author, m.message,
-                                             to_char(created AT TIME ZONE 'GMT', 'D, DD Mon YYYY HH24:MI:SS') || ' GMT' as date,
+                                             to_char(created, 'D, DD Mon YYYY HH24:MI:SS') || ' GMT+3' as date,
                                              title
                                        FROM rlf_messages AS m
                                        JOIN rlf_topics AS t USING (topic_id)
@@ -424,7 +448,7 @@ WHERE pretty_forum_id = (SELECT pretty_forum_id FROM rlf_topics WHERE topic_id =
                                      :single)
                    (postmodern:query (format nil
                                              "SELECT forum_id, topic_id,  m.author, m.message,
-                                                     to_char(created AT TIME ZONE 'GMT', 'D, DD Mon YYYY HH24:MI:SS') || ' GMT' as date,
+                                                     to_char(created, 'D, DD Mon YYYY HH24:MI:SS') || ' GMT+3' as date,
                                                      title
                                               FROM rlf_messages AS m
                                               JOIN rlf_topics AS t USING (topic_id)
@@ -444,7 +468,7 @@ WHERE pretty_forum_id = (SELECT pretty_forum_id FROM rlf_topics WHERE topic_id =
                                      :single)
                    (postmodern:query (format nil
                                              "SELECT forum_id, topic_id,  m.author, m.message,
-                                                     to_char(created AT TIME ZONE 'GMT', 'D, DD Mon YYYY HH24:MI:SS') || ' GMT' as date,
+                                                     to_char(created, 'D, DD Mon YYYY HH24:MI:SS') || ' GMT+3' as date,
                                                      title
                                               FROM rlf_messages AS m
                                               JOIN rlf_topics AS t USING (topic_id)

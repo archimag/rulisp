@@ -322,8 +322,3 @@ ALTER TABLE ONLY rlf_topics
 -- PostgreSQL database dump complete
 --
 
-----------------------------------------------------------------------------------------------------
--- Update
-----------------------------------------------------------------------------------------------------
-
-ALTER TABLE rlf_forums ADD COLUMN pretty_forum_id varchar(32) UNIQUE;

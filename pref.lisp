@@ -5,7 +5,8 @@
   (:export :*rulisp-path*
            :*skindir*
            :*rulisp-db*
-           :*host*))
+           :*host*
+           :*cookie-cipher-key*))
 
 (in-package :rulisp.preferences)
 
@@ -15,4 +16,6 @@
 
 (defparameter *rulisp-db* '("rulisp" "lisp" "123" "localhost"))
 
-(defparameter *host* "lisp.catap.ru")
+(defparameter *host* "localhost:8080")
+
+(defparameter *cookie-cipher-key* (ironclad:ascii-string-to-byte-array "Specify the secure key"))

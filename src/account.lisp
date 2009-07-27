@@ -2,8 +2,6 @@
 
 (in-package :rulisp)
 
-(defparameter *cookie-cipher-key* (ironclad:ascii-string-to-byte-array "asdfpqwurqwueasdf"))
-
 (defparameter *cookie-auth-name* "userauth")
 
 (defparameter *user-auth-cipher* (ironclad:make-cipher :blowfish :mode :ecb :key *cookie-cipher-key*))
