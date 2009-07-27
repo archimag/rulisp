@@ -1,0 +1,41 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          rulispdaemon
+# Required-Start:    
+# Required-Stop:     
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start rulisp server at boot time
+### END INIT INFO
+
+start () {
+	echo -n "Starting rulisp server... "
+
+    start-stop-daemon --start \
+        --pidfile /var/rulisp/rulisp.pid \
+        --startas /usr/bin/screen \
+        --chuid rulisp \
+        -- \
+        -d -m -c /dev/null -S rulisp /usr/bin/sbcl --no-userinit --load /usr/share/rulisp/rulisp-start.lisp
+		       
+	[ $? -eq 0 ] && echo "done." || echo "failed!"
+}
+
+stop () {
+	echo -n "Stopping rulisp server... "
+    start-stop-daemon --stop --pidfile /var/rulisp/rulisp.pid
+    
+	[ $? -eq 0 ] && echo "done." || echo "failed!"
+}
+
+help () {
+	echo "Usage: $0 <start|stop|restart>"
+}
+
+case "$1" in
+    start) start ;;
+    stop) stop ;;
+    restart) stop && start ;;
+    *) help ;;
+esac
