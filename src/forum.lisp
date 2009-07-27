@@ -190,8 +190,6 @@
                    (E :dev
                       (E :input
                          (xfactory:attributes :type "submit" :value "Отправить")))))
-
-
               ))))))
                
                            
