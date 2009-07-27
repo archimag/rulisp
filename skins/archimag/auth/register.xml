@@ -14,7 +14,7 @@
                         <td>
                             <input name="name" size="30" /> 
                             <div class="info">Например: graham, Piter.Norvig </div> 
-                            <input type="button" value="проверьте, не занято ли имя" />
+                            <!--<input type="button" value="проверьте, не занято ли имя" />-->
                         </td>
                     </tr>
 

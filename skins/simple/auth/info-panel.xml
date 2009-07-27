@@ -1,4 +1,4 @@
 <div id="login">
-    <a href="/register.html">Регистрация</a> |
-    <a href="/login.html">Войти</a>
+    <a href="/register">Регистрация</a> |
+    <a href="/login">Войти</a>
 </div>

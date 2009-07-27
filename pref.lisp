@@ -6,9 +6,13 @@
            :*skindir*
            :*rulisp-db*
            :*host*
-           :*cookie-cipher-key*))
+           :*cookie-cipher-key*
+           :*noreply-mail-account*
+           :*vardir*))
 
 (in-package :rulisp.preferences)
+
+(defparameter *vardir* #P"/var/rulisp/")
 
 (defparameter *rulisp-path* (asdf:component-pathname (asdf:find-system  :rulisp)))
 
@@ -20,3 +24,4 @@
 
 (defparameter *cookie-cipher-key* (ironclad:ascii-string-to-byte-array "Specify the secure key"))
 
+(defparameter *noreply-mail-account* "noreply@lisp.catap.ru")

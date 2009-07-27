@@ -161,6 +161,102 @@
 ;; register
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-filesystem-route registration "register" 
-  (namestring (merge-pathnames "auth/register.xml" *skindir*)) 
-  :overlay-master *master*)
+(defparameter *register-form* (skinpath "auth/register.xml"))
+
+(define-filesystem-route registration "register" *register-form*
+                         :overlay-master *master*
+                         :login-status :not-logged-on)
+
+(postmodern:defprepared check-login-exist "select login from users where login = $1" :single)
+(postmodern:defprepared check-email-exist "select email from users where email = $1" :single)
+
+
+(defun check-register-form (formdata)
+  (let ((badform nil))
+    (flet ((form ()
+             (or badform
+                 (fill-form (setf badform
+                                  (gp:object-register (xtree:parse *register-form*)
+                                                      *request-pool*))
+                            formdata))))
+      (with-rulisp-db
+        (if (form-field-empty-p formdata "name")
+            (form-error-message (form)
+                                "name"
+                                "Не указан логин")
+            (if (check-login-exist (form-field-value formdata "name"))
+                (form-error-message (form)
+                                    "name"
+                                    "Пользователь с таким логином уже существует")))
+        (if (form-field-empty-p formdata "email")
+            (form-error-message (form)
+                                "email"
+                                "Не указан email")
+            (if (not (ppcre:scan *re-email-check*
+                                 (string-downcase (form-field-value formdata "email"))))
+                (form-error-message (form)
+                                    "email"
+                                    "Это не похоже на email")
+                (if (check-email-exist (form-field-value formdata "email"))
+                    (form-error-message (form)
+                                        "email"
+                                        "Пользователь с таким email уже существует"))))
+        (if (form-field-empty-p formdata "password")
+            (form-error-message (form)
+                                "password"
+                                "Необходимо ввести пароль")
+            (if (< (length (form-field-value formdata "password")) 8)
+                (form-error-message (form)
+                                    "password"
+                                    "Должно быть не менее 8 символов")))
+        (unless (string= (form-field-value formdata "password")
+                         (form-field-value formdata "re-password"))
+          (form-error-message (form)
+                              "re-password"
+                              "Пароли не совпадают"))
+        badform))))
+
+(defun register-confirmation-pathname (mark)
+  (merge-pathnames mark
+                   (merge-pathnames "tmp/register/"
+                                    *vardir*)))
+
+(defun create-confirmation (login email password)
+  (let* ((confirmation (register-confirmation-pathname (calc-sha1-sum (format nil "~A~A~A" login email password))))
+         (path (register-confirmation-pathname confirmation)))
+    (ensure-directories-exist path)
+    (alexandria:write-string-into-file (write-to-string (list login email password))
+                                       path
+                                       :if-does-not-exist :create)
+    (send-noreply-mail email
+                       "Потверждение регистрации"
+                       (skinpath "mail/confirmation")
+                       :host (hunchentoot:host)
+                       :link (genurl 'registration-confirmation :mark confirmation))))
+    
+
+
+(define-simple-route registration/post ("register"
+                                        :login-status :not-logged-on
+                                        :overlay-master *master*
+                                        :method :post)
+  (let* ((formdata (hunchentoot:post-parameters hunchentoot:*request*))
+         (check-form (check-register-form formdata)))
+    (if check-form
+        check-form
+        (let* ((login (form-field-value formdata "name"))
+               (email (form-field-value formdata "email"))
+               (password (calc-md5-sum (form-field-value formdata "password"))))
+          (create-confirmation login email password)
+          (skinpath "auth/success-register.xml")))))
+
+(define-simple-route registration-confirmation ("register/confirmation/:(mark)"
+                                                :overlay-master *master*
+                                                :login-status :not-logged-on)
+  (declare (ignore mark))
+  (in-pool
+   (xfactory:with-document-factory ((E))
+       (E :overlay
+          (E :div
+             (eid "content")
+             "Hello")))))
