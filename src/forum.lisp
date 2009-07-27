@@ -7,6 +7,9 @@
       (subseq text 0 end)
       text))
 
+(defun admin-p (name)
+  (string= name "archimag"))
+
 ;;; main
 
 (define-simple-route forum-main ("forum/"
@@ -275,6 +278,10 @@ WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
 
                   (E :div
                      (eclass "topic")
+                     (when (admin-p (username))
+                       (E :span
+                          (eclass "fakelink delete-this")
+                          "Удалить"))
                      (E :div
                         (E :big
                            (xfactory:text title)))
@@ -296,6 +303,10 @@ WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
                            (eclass "reply")
                            (E :div
                               (eclass "topic-info")
+                              (when (admin-p (username))
+                                (E :span
+                                   (eclass "fakelink delete-this")
+                                   "Удалить"))
                               (E :span
                                  (eclass "topic-author")
                                  "Автор: "

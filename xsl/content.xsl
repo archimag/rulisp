@@ -2,8 +2,8 @@
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:xlink="http://www.w3.org/1999/xlink"
-                xmlns:restas="restas://restas/"
-                extension-element-prefixes="restas"
+                xmlns:rulisp="chrome://rulisp/"
+                extension-element-prefixes="rulisp"
                 version="1.0">
 
     <xsl:template match="/page">
@@ -24,9 +24,9 @@
     <xsl:template match="title" />
 
     <xsl:template match="code">
-        <!--<xsl:value-of select="restas:colorize(string(.))" />-->
+        <!--<xsl:value-of select="rulisp:colorize(string(.))" />-->
         <div class="code">
-            <restas:text2html select="restas:colorize(string(.))" />
+            <rulisp:text2html select="rulisp:colorize(string(.))" />
         </div>
         <!--
         <pre class="code">

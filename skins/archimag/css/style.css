@@ -250,3 +250,16 @@ body {
     color: red;
     font-size: 80%;
 }
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+* fakelink
+*/
+
+.fakelink { 
+    color: #0000CC;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-left: 5px;
+    margin-right: 5px;
+    text-decoration: underline;
+}
