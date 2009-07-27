@@ -17,10 +17,15 @@
        (E :overlay
           (E :head
              (E :title "Форум")
+             (E :link
+                (xfactory:attributes :rel "alternate"
+                                     :type "application/rss+xml"
+                                     :title (format nil "Форумs '~A' - RSS-лента" (hunchentoot:host))
+                                     :href (genurl 'all-forums-rss)))
              (ecss "/css/forum.css"))
           (E :div
              (eid "content")
-             (iter (for (id description) in (postmodern:query "SELECT forum_id, description FROM rlf_forums"))
+             (iter (for (id description) in (postmodern:query "SELECT pretty_forum_id, description FROM rlf_forums"))
                    (E :div
                       (eclass "forum")
                       (E :a
@@ -41,7 +46,8 @@
         FROM rlf_topics AS t
         LEFT JOIN rlf_messages  AS m ON t.last_message = m.message_id
         LEFT JOIN rlf_messages AS fm ON t.first_message = fm.message_id
-        WHERE forum_id = $1
+        LEFT JOIN rlf_forums AS f ON t.forum_id = f.forum_id
+        WHERE f.pretty_forum_id = $1
         ORDER BY COALESCE(m.created, fm.created) DESC
         LIMIT $3 OFFSET $2")
 
@@ -51,7 +57,8 @@
                   10))
 
 
-(postmodern:defprepared forum-info "SELECT description, all_topics FROM rlf_forums WHERE forum_id = $1")
+(postmodern:defprepared forum-info "SELECT description, all_topics FROM rlf_forums
+WHERE pretty_forum_id = $1")
 
 
 (defun topic-nav-panel (forum-id start end all)
@@ -87,11 +94,16 @@
            (E :head
               (E :title
                  (xfactory:text description))
+              (E :link
+                 (xfactory:attributes :rel "alternate"
+                                      :type "application/rss+xml"
+                                      :title (format nil "Форум '~A' - RSS-лента" description)
+                                      :href (genurl 'forum-rss :forum-id forum-id)))
               (ecss "/css/forum.css")
               (ecss "/css/jquery.wysiwyg.css")
               (escript "/js/jquery.js")
               (escript "/js/jquery.wysiwyg.js")
-              (escript "/js/forum.js"))
+              (escript "/js/forum.js"))           
            (E :div
               (eid "content")
               (E :div
@@ -180,7 +192,7 @@
   (in-pool
    (show-forum-topics forum-id)))
 
-(define-simple-route view-forum-main-n ("forum/:(forum-id)-:(start)"
+(define-simple-route view-forum-main-n ("forum/:(forum-id)/:(start)"
                                       :overlay-master *master*)
   (in-pool
    (show-forum-topics forum-id (parse-integer start))))
@@ -231,8 +243,8 @@
 
 (defun get-forum-info (topic-id)
   (car (postmodern:query (format nil
-                                 "SELECT forum_id, description FROM rlf_forums
-WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
+                                 "SELECT pretty_forum_id, description FROM rlf_forums
+WHERE pretty_forum_id = (SELECT pretty_forum_id FROM rlf_topics WHERE topic_id = ~A)"
                                  topic-id))))
 
 
@@ -249,6 +261,11 @@ WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
             (E :head
                (E :title
                   (xfactory:text title))
+               (E :link
+                  (xfactory:attributes :rel "alternate"
+                                       :type "application/rss+xml"
+                                       :title (format nil "Тема  '~A' - RSS-лента" title)
+                                       :href (genurl 'topic-rss :topic-id topic-id)))
                (ecss "/css/forum.css")
                (ecss "/css/jquery.wysiwyg.css")
                (escript "/js/jquery.js")
@@ -341,5 +358,87 @@ WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
       (hunchentoot:redirect (genurl 'view-topic :topic-id topic-id))))
 
   
-  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; RSS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun make-rss-feed (description messages)
+  (in-pool
+   (xfactory:with-document-factory ((RSS))
+     (RSS "rss"
+          (xfactory:attributes "version" "2.0")
+          (RSS "channel"
+               (RSS "title"
+                    (xfactory:text description))
+               (RSS "link"
+                    (xfactory:text "http://~A~A"
+                                   (hunchentoot:host)
+                                   (genurl 'forum-main)))
+               (RSS "description"
+                    (xfactory:text "~A - RSS-лента" description))
+
+               (iter (for (forum-id topic-id author message date title) in messages)
+                     (RSS "item"
+                          (RSS "title"
+                               (xfactory:text "~A: ~A" author title))
+                          (RSS "link"
+                               (xfactory:text "http://~A~A"
+                                              (hunchentoot:host)
+                                              (genurl 'view-topic :topic-id topic-id)))
+                          (RSS "description"
+                               (xfactory:text message))
+                          (RSS "pubDate"
+                               (xfactory:text date)))))))))
+
+(define-simple-route all-forums-rss ("forum/rss/all.rss"
+                                     :content-type "application/rss+xml")
+  (with-rulisp-db
+    (make-rss-feed (format nil "Форумы ~A" *host*)
+                   (postmodern:query "SELECT pretty_forum_id, topic_id,  m.author, m.message,
+                                             to_char(created AT TIME ZONE 'GMT', 'D, DD Mon YYYY HH24:MI:SS') || ' GMT' as date,
+                                             title
+                                       FROM rlf_messages AS m
+                                       JOIN rlf_topics AS t USING (topic_id)
+                                       JOIN rlf_forums AS f USING (forum_id)
+                                       ORDER BY created DESC
+                                       LIMIT 20"))))
+
+(define-simple-route forum-rss ("forum/rss/:(forum-id).rss"
+                                :content-type "application/rss+xml")
+  
+  (with-rulisp-db
+    (make-rss-feed (postmodern:query (format nil
+                                             "SELECT description FROM rlf_forums WHERE pretty_forum_id = '~A'"
+                                             forum-id)
+                                     :single)
+                   (postmodern:query (format nil
+                                             "SELECT forum_id, topic_id,  m.author, m.message,
+                                                     to_char(created AT TIME ZONE 'GMT', 'D, DD Mon YYYY HH24:MI:SS') || ' GMT' as date,
+                                                     title
+                                              FROM rlf_messages AS m
+                                              JOIN rlf_topics AS t USING (topic_id)
+                                              JOIN rlf_forums AS f USING (forum_id)
+                                              WHERE f.pretty_forum_id = '~A'
+                                              ORDER BY created DESC
+                                              LIMIT 20"
+                                             forum-id)))))
+
+
+(define-simple-route topic-rss ("forum/rss/threads/:(topic-id).rss"
+                                :content-type "application/rss+xml")
+  (with-rulisp-db
+    (make-rss-feed (postmodern:query (format nil
+                                             "SELECT title FROM rlf_topics WHERE topic_id = ~A"
+                                             topic-id)
+                                     :single)
+                   (postmodern:query (format nil
+                                             "SELECT forum_id, topic_id,  m.author, m.message,
+                                                     to_char(created AT TIME ZONE 'GMT', 'D, DD Mon YYYY HH24:MI:SS') || ' GMT' as date,
+                                                     title
+                                              FROM rlf_messages AS m
+                                              JOIN rlf_topics AS t USING (topic_id)
+                                              JOIN rlf_forums AS f USING (forum_id)
+                                              WHERE topic_id = ~A
+                                              ORDER BY created DESC
+                                              LIMIT 20"
+                                             topic-id)))))

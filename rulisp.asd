@@ -8,7 +8,8 @@
 (defsystem :rulisp
     :depends-on ( #:restas #:colorize #:planet #:postmodern #:ironclad)
     :components
-    ((:module :src
+    ((:file "pref")
+     (:module :src
               :components
               ((:file "packages")
                (:file "core" :depends-on ("packages"))
@@ -16,4 +17,5 @@
                (:file "account" :depends-on ("core"))
                (:file "planet" :depends-on ("core"))
                (:file "forum" :depends-on ("core"))
-               (:file "start" :depends-on ("rulisp" "planet" "forum"))))))
+               (:file "start" :depends-on ("rulisp" "planet" "forum")))
+              :depends-on ("pref"))))

@@ -2,17 +2,11 @@
 
 (in-package :rulisp)
 
-(defparameter *rulisp-path* (asdf:component-pathname (asdf:find-system  :rulisp)))
-
-(defparameter *skindir* (merge-pathnames "skins/default/" *rulisp-path*))
-
 (defparameter *master* (merge-pathnames "rulisp.html" *skindir*))
 
 (xslt:defxsl *content-xsl* (merge-pathnames "xsl/content.xsl" *rulisp-path*))
 
 (defparameter *rulisp-ns* "chrome://rulisp/")
-
-(defparameter *rulisp-db* '("rulisp" "lisp" "123" "localhost"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; xsl
