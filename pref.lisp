@@ -19,3 +19,4 @@
 (defparameter *host* "localhost:8080")
 
 (defparameter *cookie-cipher-key* (ironclad:ascii-string-to-byte-array "Specify the secure key"))
+
