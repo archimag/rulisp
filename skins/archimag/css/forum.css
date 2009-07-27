@@ -157,3 +157,14 @@
     margin-bottom: -5px;
 
 }
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ * delete-this
+ * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+.delete-this {
+    float: right;
+    right: 10px;
+    top: 5px;
+}

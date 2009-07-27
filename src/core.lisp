@@ -4,8 +4,6 @@
 
 (defparameter *master* (merge-pathnames "rulisp.html" *skindir*))
 
-(xslt:defxsl *content-xsl* (merge-pathnames "xsl/content.xsl" *rulisp-path*))
-
 (defparameter *rulisp-ns* "chrome://rulisp/")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -50,8 +48,8 @@
           (iter (for node in-child-nodes root)
                 (xtree:append-child output (xtree:copy node))))))))
 
-(push '(colorize "colorize" *rulisp-ns*) *xpath-functions*)
-(push '(text2html "text2html" *rulisp-ns*) *xslt-elements*)
+(push `(colorize "colorize" ,*rulisp-ns*) *xpath-functions*)
+(push `(text2html "text2html" ,*rulisp-ns*) *xslt-elements*)
 
 
 ;;; digest

@@ -2,6 +2,9 @@
 
 (in-package :rulisp)
 
+(xslt:defxsl *content-xsl* (merge-pathnames "xsl/content.xsl" *rulisp-path*))
+(xslt:defxsl *articles-xsl* (merge-pathnames "xsl/articles.xsl" *rulisp-path*))
+
 (define-fs-xsl-route main "" "content/index.xml" *content-xsl* :overlay-master *master*)
 
 (define-filesystem-route css "css/:(file)" (format nil "~A~A" "skins/default/" "css/${file}"))
@@ -11,6 +14,6 @@
 
 (define-fs-xsl-route articles "articles/" "content/articles/index.xml" *content-xsl* :overlay-master *master*)
 
-(define-fs-xsl-route article "articles/:(file).html" "content/articles/${file}.xml" *content-xsl* :overlay-master *master*)
+(define-fs-xsl-route article "articles/:(file).html" "content/articles/${file}.xml" *articles-xsl* :overlay-master *master*)
 
 
