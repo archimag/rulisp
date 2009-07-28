@@ -52,7 +52,7 @@
                                  (xhtml :h3 "Авторы")
                                  (xhtml :ul
                                         (eid "authors")
-                                        (iter (for feed in (sort (planet:planet-feeds *planet*)
+                                        (iter (for feed in (sort (copy-list (planet:planet-feeds *planet*))
                                                                  #'string<
                                                                  :key #'(lambda (f)
                                                                           (planet:author-name (planet:feed-author f)))))
