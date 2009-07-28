@@ -248,7 +248,7 @@
                (email (form-field-value formdata "email"))
                (password (calc-md5-sum (form-field-value formdata "password"))))
           (create-confirmation login email password)
-          (skinpath "auth/register-send-email.xml")))))
+          (skinpath "auth/register-send-mail.xml")))))
 
 (defun show-confirmation-form ()
   (in-pool

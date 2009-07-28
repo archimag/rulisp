@@ -17,3 +17,4 @@
 (define-fs-xsl-route article "articles/:(file).html" "content/articles/${file}.xml" *articles-xsl* :overlay-master *master*)
 
 
+(define-filesystem-route favicon "favicon.ico" (skinpath "favicon.ico"))
