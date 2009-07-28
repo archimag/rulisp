@@ -209,7 +209,7 @@
                (string (restas::expand-text body (alexandria:plist-alist bindings)))
                (otherwise (error "bad mail body: ~A" body)))))
 
-;;; html form check support
+;;; check html form support
 
 (defun form-error-message (form field text)
   (let ((el (xtree:make-element "div")))

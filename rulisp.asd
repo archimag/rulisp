@@ -22,6 +22,7 @@
                          (:file "topics" :depends-on ("forum"))
                          (:file "messages" :depends-on ("forum"))
                          (:file "rss" :depends-on ("forum")))
-                        :depends-on ("core"))
-               (:file "start" :depends-on ("rulisp" "planet" "forum")))
-              :depends-on ("pref"))))
+                        :depends-on ("core")))
+              :depends-on ("pref"))
+     (:file "start" :depends-on ("src"))))
+
