@@ -6,8 +6,35 @@
 
 (defparameter *user-auth-cipher* (ironclad:make-cipher :blowfish :mode :ecb :key *cookie-cipher-key*))
 
-(defun user-auth-cipher ()
-  *user-auth-cipher*)
+;;; user-auth-cookie-set
+
+(defun user-auth-cookie-pack (name password &key (version 1) date)
+  (format nil
+          "~A|~A|~A|~A"
+          version
+          name
+          password
+          (or date
+              (get-universal-time))))
+
+(defun user-auth-cookie-encrypt (name password &key (version 1) date)
+  (let ((result (ironclad:ascii-string-to-byte-array (user-auth-cookie-pack name password :version version :date date))))
+    (ironclad:encrypt-in-place *user-auth-cipher*
+                               result)
+    (ironclad:byte-array-to-hex-string result)))
+
+
+
+(defun user-auth-cookie-set (name password &key (version 1))
+  (hunchentoot:set-cookie *cookie-auth-name*
+                          :value (user-auth-cookie-encrypt name password :version version)
+                          :path "/"
+                          :http-only t))
+
+;;; user-auth-cookie-get
+    
+(defun user-auth-cookie-unpack (str)
+  (split-sequence:split-sequence #\| str))
 
 (defun hex-string-to-byte-array (string &key (start 0) (end nil))
   (declare (type string string))
@@ -24,37 +51,6 @@
                      (+ (* (char-to-digit (char string j)) 16)
                         (char-to-digit (char string (1+ j)))))
          finally (return key)))))
-
-
-;;; user-auth-cookie-set
-
-(defun user-auth-cookie-pack (name password &key (version 1) date)
-  (format nil
-          "~A|~A|~A|~A"
-          version
-          name
-          password
-          (or date
-              (get-universal-time))))
-
-(defun user-auth-cookie-encrypt (name password &key (version 1) date)
-  (let ((result (ironclad:ascii-string-to-byte-array (user-auth-cookie-pack name password :version version :date date))))
-    (ironclad:encrypt-in-place (user-auth-cipher)
-                               result)
-    (ironclad:byte-array-to-hex-string result)))
-
-
-
-(defun user-auth-cookie-set (name password &key (version 1))
-  (hunchentoot:set-cookie *cookie-auth-name*
-                          :value (user-auth-cookie-encrypt name password :version version)
-                          :path "/"
-                          :http-only t))
-
-;;; user-auth-cookie-get
-    
-(defun user-auth-cookie-unpack (str)
-  (split-sequence:split-sequence #\| str))
 
 (defun user-auth-cookie-decrypt (str)
   (ignore-errors

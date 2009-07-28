@@ -71,6 +71,11 @@
 
 ;;; misc
 
+(defun substring (text end)
+  (if (> (length text) end)
+      (subseq text 0 end)
+      text))
+
 (defun username ()
   "Return name of the user if he loggen on"
   (cdr (assoc :user-login-name *bindings*)))
