@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <overlay>
+    <head>
+        <title>Изменение пароля</title>
+    </head>
+
     <div id="content">        
         <h3>Забыли свой пароль?</h3>
         <p>Вам выслано письмо со ссылкой на продолжение.</p>

@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <overlay>
+    <head>
+        <title>Регистрация</title>
+    </head>
+    
     <div id="content">
         <h3>Создайте учётную запись</h3>
 
