@@ -6,7 +6,7 @@
 (in-package :rulisp-system)
 
 (defsystem :rulisp
-    :depends-on ( #:restas #:colorize #:planet #:postmodern #:ironclad)
+    :depends-on ( #:restas #:colorize #:planet #:postmodern #:ironclad #:cl-recaptcha)
     :components
     ((:file "pref")
      (:module :src

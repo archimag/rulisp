@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<overlay>
+    <head>
+        <title>Подтверждение регистрации</title>
+    </head>
+    
+    <div id="content">
+        <p>Для завершение регистрации введите два слова:</p>
+        <form method="post">
+            <script>
+                var RecaptchaOptions = {
+                   theme : 'clean',
+                   lang: "ru"
+                };
+            </script>
+
+            <script type="text/javascript"
+                    src="http://api.recaptcha.net/challenge?k=${recaptcha-pubkey}">
+            </script>
+
+            <noscript>
+                <iframe src="http://api.recaptcha.net/noscript?k=${recaptcha-pubkey}"
+                        height="300" width="500" frameborder="0"></iframe><br />
+                <textarea name="recaptcha_challenge_field" rows="3" cols="40">
+                </textarea>
+                <input type="hidden" name="recaptcha_response_field" 
+                       value="manual_challenge" />
+            </noscript>
+
+            <br />
+            <input type="submit" value="Потвердить регистрацию" />
+        </form>
+    </div>
+</overlay>

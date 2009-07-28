@@ -187,7 +187,7 @@ body {
     font-size: 90%;
     font-weight: normal;
 
-    border: 1px solid #D0D0D0;
+    /*border: 1px solid #D0D0D0;*/
 
     display: table;
 }
@@ -196,13 +196,11 @@ body {
     padding: 10px;
 }
 
-.login-form td {
-    width: 100px;
-}
 
 .login-form tr > td:first-child {
-    text-align: right;
+
     font-weight: bold;
+    vertical-align: top;
     width: auto;
 }
 
@@ -246,7 +244,7 @@ body {
     margin-top: 10px;
 }
 
-.register-form .error-info {
+.error-info {
     color: red;
     font-size: 80%;
 }

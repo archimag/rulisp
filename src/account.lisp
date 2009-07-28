@@ -71,7 +71,7 @@
 ;;; check-user-password
 
 (postmodern:defprepared check-user-password*
-    "SELECT (count(*) > 0) FROM users WHERE login = $1 AND password = $2"
+    "SELECT (count(*) > 0) FROM users WHERE login = $1 AND password = $2 AND status IS NULL"
   :single)
 
 (defun check-user-password (login password)
@@ -105,7 +105,7 @@
                                 :protocol :chrome
                                 :login-status :not-logged-on)
   (restas::expand-text (alexandria:read-file-into-string (merge-pathnames "auth/info-panel.xml" *skindir*))
-               (acons :callback
+                       (acons :callback
                       (hunchentoot:url-encode (format nil
                                                       "http://~A~A"
                                                       (hunchentoot:host)
@@ -126,6 +126,7 @@
 
 (define-filesystem-route login "login"
   (namestring (merge-pathnames "auth/login.xml" *skindir*))
+  :login-status :not-logged-on
   :overlay-master *master*)
 
 (define-simple-route login/post ("login"
@@ -200,7 +201,8 @@
                 (if (check-email-exist (form-field-value formdata "email"))
                     (form-error-message (form)
                                         "email"
-                                        "Пользователь с таким email уже существует"))))
+                                        "Пользователь с таким email уже существует"))
+                ))
         (if (form-field-empty-p formdata "password")
             (form-error-message (form)
                                 "password"
@@ -216,23 +218,21 @@
                               "Пароли не совпадают"))
         badform))))
 
-(defun register-confirmation-pathname (mark)
-  (merge-pathnames mark
-                   (merge-pathnames "tmp/register/"
-                                    *vardir*)))
+
+(defparameter *register-confirmation-status* 1)
+
+(postmodern:defprepared db-add-new-user "SELECT add_new_user($1, $2, $3, $4)" :single)
 
 (defun create-confirmation (login email password)
-  (let* ((confirmation (register-confirmation-pathname (calc-sha1-sum (format nil "~A~A~A" login email password))))
-         (path (register-confirmation-pathname confirmation)))
-    (ensure-directories-exist path)
-    (alexandria:write-string-into-file (write-to-string (list login email password))
-                                       path
-                                       :if-does-not-exist :create)
+  (let* ((confirmation (calc-sha1-sum (format nil "~A~A~A" login email password))))
+    (with-rulisp-db
+      (db-add-new-user login email password confirmation))
     (send-noreply-mail email
                        "Потверждение регистрации"
                        (skinpath "mail/confirmation")
                        :host (hunchentoot:host)
-                       :link (genurl 'registration-confirmation :mark confirmation))))
+                       :link (genurl 'registration-confirmation
+                                     :mark (pathname-name confirmation)))))
     
 
 
@@ -250,13 +250,144 @@
           (create-confirmation login email password)
           (skinpath "auth/success-register.xml")))))
 
+(defun show-confirmation-form ()
+  (in-pool
+   (xtree:parse (expand-file (skinpath "auth/confirmation.xml")
+                             (acons :recaptcha-pubkey *reCAPTCHA.publick-key* nil)))))
+
+(defun register-mark-exist-p (mark)
+  (with-rulisp-db
+    (postmodern:query (format nil
+                              "SELECT mark FROM confirmations WHERE mark = '~A'"
+                              mark)
+                      :single)))
+  
 (define-simple-route registration-confirmation ("register/confirmation/:(mark)"
                                                 :overlay-master *master*
                                                 :login-status :not-logged-on)
-  (declare (ignore mark))
-  (in-pool
-   (xfactory:with-document-factory ((E))
-       (E :overlay
-          (E :div
-             (eid "content")
-             "Hello")))))
+  (if (register-mark-exist-p mark)
+      (show-confirmation-form)
+      hunchentoot:+HTTP-NOT-FOUND+))
+
+
+(define-simple-route registration-confirmation/post ("register/confirmation/:(mark)"
+                                                     :method :post
+                                                     :overlay-master *master*
+                                                     :login-status :not-logged-on)
+  (if (and (register-mark-exist-p mark)
+           (cl-recaptcha:verify-captcha (hunchentoot:post-parameter "recaptcha_challenge_field")
+                                        (hunchentoot:post-parameter "recaptcha_response_field")
+                                        (hunchentoot:real-remote-addr)
+                                        :private-key *reCAPTCHA.privake-key*))
+      (progn
+        (with-rulisp-db
+          (postmodern:with-transaction ()
+            (postmodern:execute (format nil
+                                        "UPDATE users
+                                             SET status = NULL
+                                             WHERE user_id = (SELECT user_id FROM confirmations WHERE mark = '~A')"
+                                        mark))
+            (postmodern:execute (format nil
+                                        "DELETE FROM confirmations WHERE mark = '~A'"
+                                        mark))))
+        (skinpath "auth/success-register.xml"))
+      (show-confirmation-form)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; forgot password
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defparameter *forgot-form* (skinpath "auth/forgot.xml"))
+
+(define-filesystem-route forgot-password "forgot-password" *forgot-form*
+                         :overlay-master *master*
+                         :login-status :not-logged-on)
+
+(define-simple-route forgot-password/post ("forgot-password"
+                                      :overlay-master *master*
+                                      :login-status :not-logged-on
+                                      :method :post)
+  (let ((login-info (with-rulisp-db
+                      (postmodern:query (format nil
+                                                "SELECT user_id, login, email, password FROM users
+                                                    WHERE email = '~A' AND status IS NULL"
+                                                (hunchentoot:post-parameter "email"))
+                                        :row))))
+    (if login-info
+        (let ((mark (calc-sha1-sum (write-to-string login-info))))
+          (with-rulisp-db
+            (postmodern:execute (format nil
+                                        "INSERT INTO forgot (mark, user_id) VALUES('~A', ~A)"
+                                        mark
+                                        (first login-info))))
+          (send-noreply-mail (second login-info)
+                             "Восстановление пароля"
+                             (expand-file (skinpath "mail/forgot")
+                                          (acons :host (hunchentoot:host)
+                                                 (acons :link (format nil
+                                                                      "http://~A~A"
+                                                                      (hunchentoot:host)
+                                                                      (genurl 'reset-password :mark mark))
+                                                        nil))))
+          (skinpath "auth/forgot-send-email.xml"))
+        (let ((badform (in-pool (xtree:parse *forgot-form*))))
+          (fill-form badform (hunchentoot:post-parameters*))
+          (form-error-message badform
+                              "email"
+                              "Пользователь с таким email не зарегестрирован")
+          badform))))
+
+(defparameter *reset-password-form* (skinpath "auth/reset-password.xml"))
+
+(defun forgot-mark-exist-p (mark)
+  (with-rulisp-db
+    (postmodern:query (format nil
+                              "SELECT mark FROM forgot WHERE mark = '~A'"
+                              mark)
+                      :single)))
+
+(define-simple-route reset-password ("forgot-password/:(mark)"
+                                     :overlay-master *master*
+                                     :login-status :not-logged-on)
+  (if (forgot-mark-exist-p mark)
+      *reset-password-form*
+      hunchentoot:+HTTP-NOT-FOUND+))
+      
+(define-simple-route reset-password/post ("forgot-password/:(mark)"
+                                          :overlay-master *master*
+                                          :method :post
+                                          :login-status :not-logged-on)
+  (if (forgot-mark-exist-p mark)
+      (let ((reset-form (in-pool (xtree:parse *reset-password-form*)))
+            (password (hunchentoot:post-parameter "password"))
+            (repassword (hunchentoot:post-parameter "confirmation"))
+            (success nil))
+        (cond
+          ((string= password "") (form-error-message reset-form
+                                                     "password"
+                                                     "Необходимо указать пароль"))
+          ((< (length password) 8) (form-error-message reset-form
+                                                     "password"
+                                                     "Должно быть не менее 8 символов"))
+          ((not (string= password repassword)) (form-error-message reset-form
+                                                             "confirmation"
+                                                             "Пароли не совпадают"))
+          (t (setf success t)))
+        (if success
+            (progn
+              (with-rulisp-db
+                (postmodern:with-transaction ()
+                  (postmodern:execute (format nil
+                                              "UPDATE users SET password = '~A'
+                                                WHERE user_id = (SELECT user_id FROM forgot WHERE mark = '~A')"
+                                              (calc-md5-sum password)
+                                              mark))
+                  (postmodern:execute (format nil
+                                              "DELETE FROM forgot WHERE mark = '~A'"
+                                              mark))))
+              (skinpath "auth/reset-password-success.xml"))
+            (progn
+              (fill-form reset-form (hunchentoot:post-parameters*))
+              reset-form)))
+      hunchentoot:+HTTP-NOT-FOUND+))

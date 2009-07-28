@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<overlay>
+    <div id="content">        
+        <h3>Забыли свой пароль?</h3>
+        <p>Вам выслано письмо со ссылкой на продолжение.</p>
+    </div>
+</overlay>
