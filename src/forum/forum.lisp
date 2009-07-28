@@ -20,10 +20,11 @@
                                      :type "application/rss+xml"
                                      :title (format nil "Форумs '~A' - RSS-лента" (hunchentoot:host))
                                      :href (genurl 'all-forums-rss)))
-             (ecss "/css/forum.css"))
+             (ecss 'css :file "forum.css"))
           (E :div
              (eid "content")
-             (iter (for (id description) in (postmodern:query "SELECT pretty_forum_id, description FROM rlf_forums"))
+             (iter (for (id description)
+                        in (postmodern:query "SELECT pretty_forum_id, description FROM rlf_forums ORDER BY forum_id"))
                    (E :div
                       (eclass "forum")
                       (E :a

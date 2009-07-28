@@ -63,11 +63,11 @@ WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
                   (E :ul
                      (E :li
                         (E :a
-                           (ehref (genurl 'forum-main))
+                           (ehref 'forum-main)
                            "Список форумов"))
                      (E :li
                         (E :a
-                           (ehref (genurl 'view-forum-main :forum-id forum-id))
+                           (ehref 'view-forum-main :forum-id forum-id)
                            (xfactory:text description)))
                      (E :li
                         (estrong (substring title 64)))))
@@ -101,7 +101,7 @@ WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
                               (when (forum-admin-p (username))
                                 (E :a
                                    (eclass "delete-this")
-                                   (ehref (genurl 'delete-topic-message :message-id message-id))
+                                   (ehref 'delete-topic-message :message-id message-id)
                                    "Удалить"))
                               (E :span
                                  (eclass "topic-author")
@@ -145,7 +145,7 @@ WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
         (insert-new-message topic-id
                             body
                             (username))))
-      (hunchentoot:redirect (genurl 'view-topic :topic-id topic-id))))
+      (redirect 'view-topic :topic-id topic-id)))
 
 
 (define-simple-route delete-topic-message ("forum/message/delete/:(message-id)"
@@ -153,7 +153,7 @@ WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
   (if (forum-admin-p (username))
       (with-rulisp-db
         (let ((topic-id (postmodern:query (format nil "SELECT * from rlf_delete_message(~A)" message-id) :single)))
-          (hunchentoot:redirect (if (eql topic-id :null)
-                                    (genurl 'forum-main)
-                                    (genurl 'view-topic :topic-id topic-id)))))
+          (if (eql topic-id :null)
+              (redirect 'forum-main)
+              (redirect 'view-topic :topic-id topic-id))))
       hunchentoot:+HTTP-FORBIDDEN+))

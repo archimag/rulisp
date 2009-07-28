@@ -4,7 +4,7 @@
 (in-package :rulisp)
 
 (planet:defplanet *planet* 
-    :name "Sample PLANET implemented on Common Lisp"
+    :name "Russian Lisp Planet"
     :alternate-href "http://lisp.catap.ru/planet/"
     :self-href "http://lisp.catap.ru/planet/atom.xml"
     :feeds-path #P"/etc/planet-feeds.lisp")
@@ -21,7 +21,7 @@
 
 (define-simple-route planet-main ("planet/"
                            :overlay-master *master*)
-  (gp:object-register
+  (in-pool
    (xfactory:with-document-factory ((xhtml "http://www.w3.org/1999/xhtml"))
      (xhtml "overlay"
             (xhtml :head
@@ -62,7 +62,8 @@
                                                             (xfactory:text (planet:author-name (planet:feed-author feed))))))))
                           (xhtml :div
                                  (eid "planet-content")
-                                 (iter (for entry in-child-nodes (xtree:root (planet:planet-syndicate-feed *planet*)) with (:local-name "entry"))
+                                 (iter (for entry in-child-nodes (xtree:root (planet:planet-syndicate-feed *planet*)) 
+                                            with (:local-name "entry"))
                                        (xhtml :div
                                               (eclass "entry")
                                               (xhtml :div

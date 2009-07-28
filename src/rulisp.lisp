@@ -18,3 +18,4 @@
 
 
 (define-filesystem-route favicon "favicon.ico" (skinpath "favicon.ico"))
+

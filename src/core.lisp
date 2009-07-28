@@ -13,33 +13,32 @@
 ;; xsl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun empty-line-p (line)
-  (string= (string-trim #(#\Space #\Tab) line) ""))
-
 (xpath:define-xpath-function colorize (code)
-  (let ((lines (split-sequence:split-sequence #\Newline code)))
-    (iter
-      (while lines)
-      (for isempty = (empty-line-p (first lines)))
-      (if isempty
-          (setf lines (cdr lines)))
-      (while isempty))
-    (iter
-      (while lines)
-      (for isempty = (empty-line-p (car (last lines))))
-      (if isempty
-          (setf lines
-                (remove (car (last lines)) lines)))
-      (while isempty))
-    (let ((min-space-count (iter (for line in (remove-if #'empty-line-p lines))
-                                 (minimize (or (position #\Space line :test-not #'char-equal) 0)))))
-      (setf lines
-            (iter (for line in lines)
-                  (collect (if (empty-line-p line)
-                               ""
-                               (subseq line min-space-count))))))
-    (colorize::html-colorization :common-lisp
-                                 (format nil "~{~A~%~}" lines))))
+  (flet ((empty-line-p (line)
+           (string= (string-trim #(#\Space #\Tab) line) "")))
+    (let ((lines (split-sequence:split-sequence #\Newline code)))
+      (iter
+        (while lines)
+        (for isempty = (empty-line-p (first lines)))
+        (if isempty
+            (setf lines (cdr lines)))
+        (while isempty))
+      (iter
+        (while lines)
+        (for isempty = (empty-line-p (car (last lines))))
+        (if isempty
+            (setf lines
+                  (remove (car (last lines)) lines)))
+        (while isempty))
+      (let ((min-space-count (iter (for line in (remove-if #'empty-line-p lines))
+                                   (minimize (or (position #\Space line :test-not #'char-equal) 0)))))
+        (setf lines
+              (iter (for line in lines)
+                    (collect (if (empty-line-p line)
+                                 ""
+                                 (subseq line min-space-count))))))
+      (colorize::html-colorization :common-lisp
+                                   (format nil "~{~A~%~}" lines)))))
 
 (xslt:define-xslt-element text2html (self input output)
   (let ((text (xpath:find-string input
@@ -96,12 +95,35 @@
 (defparameter *re-email-check* 
   "^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")
 
+(defun apply-format-aux (format args)
+  (if (symbolp format)
+      (apply #'genurl format args)
+      (if args
+          (apply #'format nil (cons format args))
+          format)))
+
+(defun redirect (route-symbol &rest args)
+  (let* ((url (apply-format-aux route-symbol args))
+         (route (car (routes:match restas::*mapper*
+                                   url
+                                   (acons :method :get nil))))
+         (required-login-status (restas::route-required-login-status route)))
+    (hunchentoot:redirect (if (or (null required-login-status)
+                                  (and (eql required-login-status :logged-on)
+                                       (username))
+                                  (and (eql required-login-status :not-logged-on)
+                                       (null (username))))
+                              url
+                              "/"))))
+
+(defun genurl-with-host (route &rest args)
+  (format nil
+          "http://~A~A"
+          (hunchentoot:host)
+          (apply #'genurl route args)))
+
 ;;; xfactory
 
-(defun apply-format-aux (format args)
-  (if args
-      (apply #'format nil (cons format args))
-      format))
 
 (defun eid (format &rest args)
   "Make id attribute"
@@ -129,10 +151,10 @@
     (xfactory:attributes :src src
                          :type type)))
 
-(defun ecss (src)
+(defun ecss (format &rest args)
   "Make link css element"
   (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "link")))
-    (xfactory:attributes :href src
+    (xfactory:attributes :href (apply-format-aux format args)
                          :rel "stylesheet"
                          :type "text/css")))
 

@@ -65,8 +65,8 @@
                                       :type "application/rss+xml"
                                       :title (format nil "Форум '~A' - RSS-лента" description)
                                       :href (genurl 'forum-rss :forum-id forum-id)))
-              (ecss "/css/forum.css")
-              (ecss "/css/jquery.wysiwyg.css")
+              (ecss 'css :file "forum.css")
+              (ecss 'css :file  "jquery.wysiwyg.css")
               (escript "/js/jquery.js")
               (escript "/js/jquery.wysiwyg.js")
               (escript "/js/forum.js"))           
@@ -96,10 +96,10 @@
                           (when (forum-admin-p (username))
                             (E :a
                                (eclass "delete-this")
-                               (ehref (genurl 'delete-topic :topic-id topic-id))
+                               (ehref 'delete-topic :topic-id topic-id)
                                "Удалить"))
                           (E :a
-                             (ehref (genurl 'view-topic :topic-id topic-id))
+                             (ehref 'view-topic :topic-id topic-id)
                              (xfactory:text title))
                           (E :div
                              (eclass "topicbody")
@@ -178,7 +178,7 @@
                 (string= body ""))
       (with-rulisp-db
         (insert-new-topic forum-id title body (username)))))
-  (hunchentoot:redirect (genurl 'view-forum-main :forum-id forum-id)))
+  (redirect 'view-forum-main :forum-id forum-id))
   
 
 (define-simple-route delete-topic ("forum/thread/delete/:(topic-id)"
@@ -186,8 +186,8 @@
   (if (forum-admin-p (username))
       (with-rulisp-db
         (let ((forum-id (postmodern:query (format nil "SELECT * from rlf_delete_topic(~A)" topic-id) :single)))
-          (hunchentoot:redirect (if (eql topic-id :null)
-                                    (genurl 'forum-main)
-                                    (genurl 'view-forum-main :forum-id forum-id)))))
+          (if (eql topic-id :null)
+              (redirect 'forum-main)
+              (redirect 'view-forum-main :forum-id forum-id))))
       hunchentoot:+HTTP-FORBIDDEN+))
 

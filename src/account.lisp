@@ -87,10 +87,15 @@
 
 (defun run-login (login password-md5 &key (version 1) )
   "Set cookie for user name and password"
+  (setf *bindings*
+        (acons :user-login-name login *bindings*))
   (user-auth-cookie-set login password-md5 :version version))
 
 (defun run-logout ()
   "Cleaer cookie with auth information"
+  (setf (cdr (assoc :user-login-name
+                    *bindings*))
+        nil)
   (hunchentoot:set-cookie *cookie-auth-name*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -100,20 +105,19 @@
 (define-simple-route auth-info ("auth/info-panel"
                                 :protocol :chrome
                                 :login-status :not-logged-on)
-  (restas::expand-text (alexandria:read-file-into-string (merge-pathnames "auth/info-panel.xml" *skindir*))
-                       (acons :callback
+  (expand-file (skinpath "auth/info-panel.xml")
+               (acons :callback
                       (hunchentoot:url-encode (format nil
                                                       "http://~A~A"
                                                       (hunchentoot:host)
-                                                      (hunchentoot:request-uri hunchentoot:*request*)
-                                                      ))
+                                                      (hunchentoot:request-uri hunchentoot:*request*)))
                       *bindings*)))
 
 (define-simple-route user-panel ("auth/info-panel"
                                 :protocol :chrome
                                 :login-status :logged-on)
-  (restas:expand-text (alexandria:read-file-into-string (merge-pathnames "auth/user-info.xml" *skindir*))
-                      (acons :user (username) nil)))
+  (expand-file (skinpath "auth/user-info.xml")
+               (acons :user (username) nil)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -121,7 +125,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-filesystem-route login "login"
-  (namestring (merge-pathnames "auth/login.xml" *skindir*))
+  (skinpath "auth/login.xml")
   :login-status :not-logged-on
   :overlay-master *master*)
 
@@ -135,10 +139,10 @@
     (if (check-user-password name password-md5)
         (progn
           (run-login name password-md5)
-          (hunchentoot:redirect (if done
-                                    (hunchentoot:url-decode done)
-                                    "/")))
-        (hunchentoot:redirect "/login"))))
+          (redirect (if done
+                        (hunchentoot:url-decode done)
+                        "/")))
+        (redirect 'login))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -149,8 +153,8 @@
                              :overlay-master *master*
                              :login-status :logged-on)
   (run-logout)
-  (hunchentoot:redirect (or (hunchentoot:header-in :referer hunchentoot:*request*)
-                            "/login")))
+  (redirect (or (hunchentoot:header-in :referer hunchentoot:*request*)
+                'login)))
  
 
 
