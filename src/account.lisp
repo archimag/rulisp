@@ -248,7 +248,7 @@
                (email (form-field-value formdata "email"))
                (password (calc-md5-sum (form-field-value formdata "password"))))
           (create-confirmation login email password)
-          (skinpath "auth/success-register.xml")))))
+          (skinpath "auth/register-send-email.xml")))))
 
 (defun show-confirmation-form ()
   (in-pool
@@ -321,7 +321,7 @@
                                         "INSERT INTO forgot (mark, user_id) VALUES('~A', ~A)"
                                         mark
                                         (first login-info))))
-          (send-noreply-mail (second login-info)
+          (send-noreply-mail (third login-info)
                              "Восстановление пароля"
                              (expand-file (skinpath "mail/forgot")
                                           (acons :host (hunchentoot:host)

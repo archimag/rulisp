@@ -38,6 +38,8 @@ CREATE TABLE forgot (
    created  timestamp without time zone  
 );
 
+ALTER TABLE forgot OWNER TO lisp;
+
 CREATE TRIGGER forgot_insert_trigger
     BEFORE INSERT ON confirmations
     FOR EACH ROW
