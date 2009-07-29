@@ -24,14 +24,15 @@
                           (RSS "description"
                                (xfactory:text message))
                           (RSS "pubDate"
-                               (xfactory:text date)))))))))
+                               (xfactory:text (local-time:format-http-timestring nil (local-time:universal-to-timestamp date))
+                                              )))))))))
 
 (define-simple-route all-forums-rss ("forum/rss/all.rss"
                                      :content-type "application/rss+xml")
   (with-rulisp-db
     (make-rss-feed (format nil "Форумы ~A" *host*)
                    (postmodern:query "SELECT pretty_forum_id, topic_id,  m.author, m.message,
-                                             to_char(created, 'D, DD Mon YYYY HH24:MI:SS') || ' GMT+3' as date,
+                                             created AT TIME ZONE 'GMT',
                                              title
                                        FROM rlf_messages AS m
                                        JOIN rlf_topics AS t USING (topic_id)
@@ -49,7 +50,7 @@
                                      :single)
                    (postmodern:query (format nil
                                              "SELECT forum_id, topic_id,  m.author, m.message,
-                                                     to_char(created, 'D, DD Mon YYYY HH24:MI:SS') || ' GMT+3' as date,
+                                                     created AT TIME ZONE 'GMT',
                                                      title
                                               FROM rlf_messages AS m
                                               JOIN rlf_topics AS t USING (topic_id)
@@ -69,7 +70,7 @@
                                      :single)
                    (postmodern:query (format nil
                                              "SELECT forum_id, topic_id,  m.author, m.message,
-                                                     to_char(created, 'D, DD Mon YYYY HH24:MI:SS') || ' GMT+3' as date,
+                                                     created AT TIME ZONE 'GMT',
                                                      title
                                               FROM rlf_messages AS m
                                               JOIN rlf_topics AS t USING (topic_id)

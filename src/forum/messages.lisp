@@ -26,10 +26,11 @@
   (select-reply-list* topic-id))
 
 (defun get-forum-info (topic-id)
-  (car (postmodern:query (format nil
-                                 "SELECT pretty_forum_id, description FROM rlf_forums
-WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
-                                 topic-id))))
+  (postmodern:query (format nil
+                           "SELECT pretty_forum_id, description FROM rlf_forums
+                            WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
+                           topic-id)
+                    :row))
 
 
 

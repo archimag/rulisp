@@ -4,6 +4,8 @@
 
 ALTER TABLE rlf_forums ADD COLUMN pretty_forum_id varchar(32) UNIQUE;
 
+ALTER TABLE rlf_messages ALTER COLUMN created TYPE timestamp with time zone;
+
 ALTER TABLE rlf_messages DROP CONSTRAINT rlf_messages_topic_id_fkey;
 ALTER TABLE rlf_messages 
       ADD CONSTRAINT rlf_messages_topic_id_fkey

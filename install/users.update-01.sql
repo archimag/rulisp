@@ -41,6 +41,6 @@ CREATE TABLE forgot (
 ALTER TABLE forgot OWNER TO lisp;
 
 CREATE TRIGGER forgot_insert_trigger
-    BEFORE INSERT ON confirmations
+    BEFORE INSERT ON forgot
     FOR EACH ROW
     EXECUTE PROCEDURE rlf_created_fix();
