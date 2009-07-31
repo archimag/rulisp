@@ -3,6 +3,7 @@
 CREATE TABLE pastes (
     paste_id serial PRIMARY KEY,
     user_id integer REFERENCES users(user_id) ON DELETE CASCADE,
+    title varchar (64), 
     code text,
     created timestamp without time zone
 );
