@@ -9,6 +9,7 @@
 
 (define-filesystem-route css "css/:(file)" (format nil "~A~A" "skins/default/" "css/${file}"))
 (define-filesystem-route css/image "css/image/:(file)" (format nil "~A~A" "skins/default/" "css/image/${file}"))
+(define-filesystem-route image "image/:(file)" (format nil "~A~A" "skins/default/" "image/${file}"))
 
 (define-filesystem-route js "js/:(file)" (format nil "~A~A" "skins/default/" "js/${file}"))
 

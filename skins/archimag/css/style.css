@@ -57,6 +57,12 @@ body {
     color: #d3e6b8;
 }
 
+.info {
+    color: gray;
+    font-size: 80%;
+}
+
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 *   .bottom
 */
@@ -115,6 +121,41 @@ body {
 
 #mainmenu a { 
     color: orange;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+*   #second-menu
+*/
+
+#second-menu {
+    padding: 3px;
+    border-bottom: 1px solid #b9b2ca;
+    margin-bottom: 5px;
+}
+
+#second-menu ul {
+    margin: 0;
+    padding: 0;
+}
+
+#second-menu li {
+    display: inline;
+    list-style-type: none;
+    padding-left: 5px;
+}
+
+#second-menu a {
+    color: #6A5EAB;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+*   .item-nav-panel
+*/
+
+.item-nav-panel { 
+    color: gray;
+    font-size: 80%;
+    border-bottom: 1px solid #b9b2ca;
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -235,10 +276,6 @@ body {
 }
 
 
-.register-form .info {
-    color: gray;
-    font-size: 80%;
-}
 
 .register-form input[type=button] {
     margin-top: 10px;
@@ -260,4 +297,70 @@ body {
     margin-left: 5px;
     margin-right: 5px;
     text-decoration: underline;
+}
+
+textarea {
+    padding: 0.1em;
+    width: 100%;
+}
+
+.preview {
+    border-bottom: 1px solid #777777;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.format-save {
+    border-top:  1px solid #777777;
+    margin-top: 20px;
+    padding-top: 20px;
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+* tools
+*/
+
+.tools {
+    padding-bottom: 10px;
+    border-bottom:  1px solid #777777;
+    height: 70px;
+}
+
+.tools-img {
+    width: 64px;
+    height: 64px;
+    background: transparent url(/image/formatter.png) no-repeat;
+    float: left;
+    border: 1px solid gray;
+    margin-right: 10px;
+}
+
+.tools .description {
+    padding-top: 10px;
+}
+
+.tools .description h3 {
+    margin: 0;
+    padding: 0;
+    font-size: 100%;
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+* .item
+*/
+
+.item {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.item > a {
+    font-size: 110%;
+    color: #6A5EAB;
+}
+
+.item .info {
+    font-size: 90%;
 }

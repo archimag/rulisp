@@ -3,7 +3,8 @@
 (in-package :rulisp)
 
 (defun forum-admin-p (name)
-  (string= name "archimag"))
+  (find name '("archimag" "lispnik") :test #'string=))
+
 
 ;;; main
 

@@ -13,7 +13,7 @@
 ;; xsl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(xpath:define-xpath-function colorize (code)
+(defun code-to-html (code)
   (flet ((empty-line-p (line)
            (string= (string-trim #(#\Space #\Tab) line) "")))
     (let ((lines (split-sequence:split-sequence #\Newline code)))
@@ -39,6 +39,9 @@
                                  (subseq line min-space-count))))))
       (colorize::html-colorization :common-lisp
                                    (format nil "~{~A~%~}" lines)))))
+
+(xpath:define-xpath-function colorize (code)
+  (code-to-html code))
 
 (xslt:define-xslt-element text2html (self input output)
   (let ((text (xpath:find-string input
@@ -250,9 +253,14 @@
   (string= (form-field-value formdata field) ""))
 
 (defun fill-form (form formdata)
-  (iter (for field in-xpath-result "//input" on form)
+  (iter (for field in-xpath-result "//input|//textarea" on form)
         (let ((field-value (form-field-value formdata
                                              (xtree:attribute-value field "name"))))
           (if field-value
-              (setf (xtree:attribute-value field "value") field-value))))
+              (cond
+                ((string= (xtree:local-name field) "textarea") (setf (xtree:text-content field) field-value))
+                (t (setf (xtree:attribute-value field "value") field-value))))))
   form)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

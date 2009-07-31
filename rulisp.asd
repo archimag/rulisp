@@ -22,7 +22,9 @@
                          (:file "topics" :depends-on ("forum"))
                          (:file "messages" :depends-on ("forum"))
                          (:file "rss" :depends-on ("forum")))
-                        :depends-on ("core")))
+                        :depends-on ("core"))
+               (:file "apps" :depends-on ("core"))
+               (:file "format" :depends-on ("core")))
               :depends-on ("pref"))
      (:file "start" :depends-on ("src"))))
 
