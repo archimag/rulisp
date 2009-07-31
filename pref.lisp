@@ -26,7 +26,7 @@
 
 (defparameter *cookie-cipher-key* (ironclad:ascii-string-to-byte-array "Specify the secure key"))
 
-(defparameter *noreply-mail-account* "noreply@lisp.catap.ru")
+(defparameter *noreply-mail-account* "noreply@lisper.ru")
 
 (defvar *reCAPTCHA.publick-key* "6LdZjAcAAAAAAGh_MzHcHfJWp6rpI0XUNghGQB1f")
 (defvar *reCAPTCHA.privake-key* "6LdZjAcAAAAAAKJ2GPWTHPh1H1Foc0kyfbwgrFgO")

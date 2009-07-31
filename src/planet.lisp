@@ -5,8 +5,8 @@
 
 (planet:defplanet *planet* 
     :name "Russian Lisp Planet"
-    :alternate-href "http://lisp.catap.ru/planet/"
-    :self-href "http://lisp.catap.ru/planet/atom.xml"
+    :alternate-href (format nil "http://~A/planet" *host*)
+    :self-href (format nil "http://~A/planet/atom.xml" *host*)
     :feeds-path #P"/etc/planet-feeds.lisp")
 
 (defparameter *planet-path* (asdf:component-pathname (asdf:find-system :planet)))
