@@ -5,7 +5,7 @@
 
 (planet:defplanet *planet* 
     :name "Russian Lisp Planet"
-    :alternate-href (format nil "http://~A/planet" *host*)
+    :alternate-href (format nil "http://~A/planet/" *host*)
     :self-href (format nil "http://~A/planet/atom.xml" *host*)
     :feeds-path #P"/etc/planet-feeds.lisp")
 
@@ -16,7 +16,8 @@
 
 (define-filesystem-route planet-resources "planet/:(file)" (planet-path "resources/${file}"))
 
-(define-simple-route planet-atom ("planet/atom.xml")
+(define-simple-route planet-atom ("planet/atom.xml"
+                                  :content-type "application/atom+xml")
   (planet:planet-syndicate-feed *planet*))
 
 (define-simple-route planet-main ("planet/"
@@ -30,8 +31,8 @@
                           (xfactory:attributes :href "/planet/planet.css" :rel "stylesheet" :type "text/css"))
                    (xhtml :link
                           (xfactory:attributes :rel "alternate"
-                                               :href "/atom.xml"
-                                               :title "Sample PLANET implemented on Common Lisp"
+                                               :href (genurl 'planet-atom)
+                                               :title "Russian Lisp Planet"
                                                :type "application/atom+xml")))
             (xhtml "div"
                    (eid "content")
@@ -43,7 +44,7 @@
                                         (eid "syndicate")
                                         (xhtml :a
                                                "Подписаться"
-                                               (ehref "atom.xml")))
+                                               (ehref 'planet-atom)))
                                  (xhtml :div
                                         (eid "suggest")
                                         (xhtml :a
