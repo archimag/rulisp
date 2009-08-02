@@ -78,7 +78,7 @@
                                                                                               :ns-map planet:*feeds-ns-map*)))
                                                      (xhtml :div
                                                             (eclass "entry-author-info")
-                                                            (xhtml :strong "Источинк: ")
+                                                            (xhtml :strong "Источник: ")
                                                             (xhtml :a
                                                                    (ehref (xpath:find-string entry
                                                                                              "atom:author/atom:uri"
