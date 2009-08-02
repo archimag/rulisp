@@ -21,6 +21,8 @@
 
 (defparameter *acceptor* nil)
 
+(restas:reconnect-all-plugins)
+
 (if *acceptor*
     (error "web server has already been started")
     (setf *acceptor*
@@ -29,4 +31,3 @@
                                                     (if port
                                                         (parse-integer port)
                                                         80))))))
-(restas:reconnect-all-plugins)
