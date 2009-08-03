@@ -1,0 +1,235 @@
+body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #fff }
+
+a:link { text-decoration: underline }
+a:hover { text-decoration: none }
+a:active { color: #c00 }
+
+.top { background: #69e; color: #fff }
+
+#caution, #mainmenu, #content { margin: 0; padding: 1em }
+
+h1, h2, h3, h4, h5, h6 { font-weight: normal }
+
+#caution h1 { font-size: 160%; padding: 0; margin: 0 }
+
+.top { color: #fff }
+.top a:link, .top a:visited { color: #fff }
+
+.top li { display: inline; list-style-type: none; list-style-position: outside; list-style-image: none }
+
+.bottom {  font-size: 90%; color: #666; margin: 0; padding: 3em 1em 1em 1em }
+
+#login { font-size: 80%; padding: 1em; margin: 0; text-align: right }
+
+#mainmenu {
+    color: #665;
+    background: #f6f6e9;
+    padding: 1em;
+}
+
+#mainmenu > ul {
+    font-size: 120%;
+    margin: 0;
+    padding: 0;
+}
+
+#mainmenu li {
+    display: inline;
+    list-style-type: none;
+    list-style-position: outside;
+    list-style-image: none;
+    padding-right: 0.5em;
+}
+
+#mainmenu a { 
+    color: #443;
+}
+
+#second-menu {
+    padding: 3px;
+    border-bottom: 1px solid #b9b2ca;
+    margin-bottom: 5px;
+}
+
+#second-menu ul {
+    margin: 0;
+    padding: 0;
+}
+
+#second-menu li {
+    display: inline;
+    list-style-type: none;
+    padding-left: 5px;
+}
+
+#second-menu a {
+    color: #6A5EAB;
+}
+
+.item-nav-panel { 
+    color: gray;
+    font-size: 80%;
+    border-bottom: 1px solid #b9b2ca;
+}
+
+#content {
+    background: #fff;
+    padding: 1em;
+}
+
+#content h4 {
+    margin: 10px 0 5px;
+}
+
+#content h5 {
+    margin: 10px 0 0;
+}
+
+#content li {
+    padding: 5px 0;
+}
+
+#content blockquote {
+    font-style: italic;
+}
+
+.code {
+    background-color: #eee;
+    border: 1px solid #d0d0d0;
+    margin: 5px;
+    padding: 10px;
+
+    font-family: "Courier New", monospace;
+}
+
+.articles li {
+    margin-bottom: 10px;
+}
+
+.articles a {
+    font-weight: bold;
+    color: #526b66;
+}
+
+.login-form {
+    padding: 2px;
+    font-size: 90%;
+    font-weight: normal;
+
+    /*border: 1px solid #D0D0D0;*/
+
+    display: table;
+}
+
+.login-form > table {
+    padding: 10px;
+}
+
+.login-form tr > td:first-child {
+
+    font-weight: bold;
+    vertical-align: top;
+    width: auto;
+}
+
+.login-form > table td {
+    padding-right: 5px;
+    padding-top: 3px;
+}
+
+.register-form {
+    border: 1px solid #d0d0d0;
+    display: table;
+
+    padding-top: 30px;
+    padding-bottom: 30px;
+    padding-left: 10px;
+    padding-right: 20px;
+}
+
+.register-form td {
+    padding-bottom: 20px;
+}
+
+.register-form tr > td:first-child {
+    vertical-align: top;
+    font-weight: bold;
+    font-size: 90%;
+    
+}
+
+
+
+.register-form input[type=button] {
+    margin-top: 10px;
+}
+
+.error-info {
+    color: red;
+    font-size: 80%;
+}
+
+.fakelink { 
+    color: #0000CC;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-left: 5px;
+    margin-right: 5px;
+    text-decoration: underline;
+}
+
+textarea {
+    padding: 0.1em;
+    width: 100%;
+}
+
+.preview {
+    border-bottom: 1px solid #777777;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.format-save {
+    border-top:  1px solid #777777;
+    margin-top: 20px;
+    padding-top: 20px;
+}
+
+.tools {
+    padding-bottom: 10px;
+    border-bottom:  1px solid #777777;
+    height: 70px;
+}
+
+.tools-img {
+    width: 64px;
+    height: 64px;
+    background: transparent url(/image/formatter.png) no-repeat;
+    float: left;
+    border: 1px solid gray;
+    margin-right: 10px;
+}
+
+.tools .description {
+    padding-top: 10px;
+}
+
+.tools .description h3 {
+    margin: 0;
+    padding: 0;
+    font-size: 100%;
+}
+
+.item {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.item > a {
+    font-size: 110%;
+    color: #6A5EAB;
+}
+
+.item .info {
+    font-size: 90%;
+}

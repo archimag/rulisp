@@ -2,6 +2,7 @@
 
 (in-package :rulisp)
 
+(defparameter *rulisp-ns* "chrome://rulisp/")
 
 (xpath:define-xpath-function colorize (code)
   (code-to-html code))
@@ -52,3 +53,21 @@
 (define-simple-route favicon ("favicon.ico")
   (skinpath "favicon.ico"))
 
+
+
+(defparameter *mainmenu* '((main "Главная")
+                           (articles "Статьи")
+                           (planet-main "Планета")
+                           (forum-main "Форум")
+                           (tools-list "Сервисы")))
+
+(define-simple-route mainmenu ("mainmenu"
+                               :protocol :chrome)
+  (in-pool
+   (xfactory:with-document-factory ((E))
+     (E :ul
+        (iter (for (route name) in *mainmenu*)
+              (E :li
+                 (E :a
+                    (ehref route)
+                    (xfactory:text name))))))))

@@ -2,16 +2,6 @@
 
 (in-package :rulisp)
 
-(defun skinpath (path)
-  (merge-pathnames path *skindir*))
-
-(defun tmplpath (path)
-  (skinpath (merge-pathnames path "templates/")))
-
-(defparameter *master* (tmplpath "rulisp.html"))
-
-(defparameter *rulisp-ns* "chrome://rulisp/")
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; xsl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -252,3 +242,26 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(postmodern:defprepared user-theme* "SELECT theme FROM users WHERE login = $1" :single)
+
+(defun user-theme (name)
+  (let ((theme (if name
+                   (with-rulisp-db (user-theme* name)))))
+    (if (and theme
+             (not (eql theme :null)))
+        theme
+        "simple")))
+
+(defun skinpath (path)
+  (let ((result (merge-pathnames path
+                                 (format nil "~A/~A/"  *skindir* (user-theme (username))))))
+    (if (print (fad:file-exists-p result))
+        result
+        (merge-pathnames path
+                         (format nil "~A/default/"  *skindir*)))))
+
+(defun tmplpath (path)
+  (skinpath (merge-pathnames path "templates/")))
+
+(defparameter *master* (lambda () (tmplpath "rulisp.html")))
