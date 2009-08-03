@@ -14,7 +14,10 @@
 (defun planet-path (path)
   (merge-pathnames path *planet-path*))
 
-(define-filesystem-route planet-resources "planet/:(file)" (planet-path "resources/${file}"))
+(define-simple-route planet-resources ("planet/:(file)")
+  (declare (ignore file))
+  (planet-path (restas:expand-text "resources/${file}" *bindings*)))
+  
 
 (define-simple-route planet-atom ("planet/atom.xml"
                                   :content-type "application/atom+xml")

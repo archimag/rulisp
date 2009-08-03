@@ -105,7 +105,7 @@
 (define-simple-route auth-info ("auth/info-panel"
                                 :protocol :chrome
                                 :login-status :not-logged-on)
-  (expand-file (skinpath "auth/info-panel.xml")
+  (expand-file (tmplpath "account/info-panel.xml")
                (acons :callback
                       (hunchentoot:url-encode (format nil
                                                       "http://~A~A"
@@ -116,7 +116,7 @@
 (define-simple-route user-panel ("auth/info-panel"
                                 :protocol :chrome
                                 :login-status :logged-on)
-  (expand-file (skinpath "auth/user-info.xml")
+  (expand-file (tmplpath "account/user-info.xml")
                (acons :user (username) nil)))
 
 
@@ -124,10 +124,10 @@
 ;;; login
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-filesystem-route login "login"
-  (skinpath "auth/login.xml")
-  :login-status :not-logged-on
-  :overlay-master *master*)
+(define-simple-route login ("login"
+                            :login-status :not-logged-on
+                            :overlay-master *master*)
+  (tmplpath "account/login.xml"))
 
 (define-simple-route login/post ("login"
                                  :overlay-master *master*
@@ -162,11 +162,13 @@
 ;; register
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defparameter *register-form* (skinpath "auth/register.xml"))
+(defun register-form ()
+  (tmplpath "account/register.xml"))
 
-(define-filesystem-route registration "register" *register-form*
-                         :overlay-master *master*
-                         :login-status :not-logged-on)
+(define-simple-route registration ("register"
+                                   :overlay-master *master*
+                                   :login-status :not-logged-on)
+  (register-form))
 
 (postmodern:defprepared check-login-exist "select login from users where login = $1" :single)
 (postmodern:defprepared check-email-exist "select email from users where email = $1" :single)
@@ -177,7 +179,7 @@
     (flet ((form ()
              (or badform
                  (fill-form (setf badform
-                                  (gp:object-register (xtree:parse *register-form*)
+                                  (gp:object-register (xtree:parse (register-form))
                                                       *request-pool*))
                             formdata))))
       (with-rulisp-db
@@ -248,11 +250,11 @@
                (email (form-field-value formdata "email"))
                (password (calc-md5-sum (form-field-value formdata "password"))))
           (create-confirmation login email password)
-          (skinpath "auth/register-send-mail.xml")))))
+          (tmplpath "account/register-send-mail.xml")))))
 
 (defun show-confirmation-form ()
   (in-pool
-   (xtree:parse (expand-file (skinpath "auth/confirmation.xml")
+   (xtree:parse (expand-file (tmplpath "account/confirmation.xml")
                              (acons :recaptcha-pubkey *reCAPTCHA.publick-key* nil)))))
 
 (defun register-mark-exist-p (mark)
@@ -290,7 +292,7 @@
             (postmodern:execute (format nil
                                         "DELETE FROM confirmations WHERE mark = '~A'"
                                         mark))))
-        (skinpath "auth/success-register.xml"))
+        (tmplpath "account/success-register.xml"))
       (show-confirmation-form)))
 
 
@@ -298,11 +300,13 @@
 ;; forgot password
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defparameter *forgot-form* (skinpath "auth/forgot.xml"))
+(defun forgot-form ()
+  (tmplpath "account/forgot.xml"))
 
-(define-filesystem-route forgot-password "forgot-password" *forgot-form*
-                         :overlay-master *master*
-                         :login-status :not-logged-on)
+(define-simple-route forgot-password ("forgot-password"
+                                      :overlay-master *master*
+                                      :login-status :not-logged-on)
+  (forgot-form))
 
 (define-simple-route forgot-password/post ("forgot-password"
                                       :overlay-master *master*
@@ -330,15 +334,17 @@
                                                                       (hunchentoot:host)
                                                                       (genurl 'reset-password :mark mark))
                                                         nil))))
-          (skinpath "auth/forgot-send-email.xml"))
-        (let ((badform (in-pool (xtree:parse *forgot-form*))))
+          (tmplpath "account/forgot-send-email.xml"))
+        (let ((badform (in-pool (xtree:parse (forgot-form)))))
           (fill-form badform (hunchentoot:post-parameters*))
           (form-error-message badform
                               "email"
                               "Пользователь с таким email не зарегестрирован")
           badform))))
 
-(defparameter *reset-password-form* (skinpath "auth/reset-password.xml"))
+(defun reset-password-form ()
+  (tmplpath "account/reset-password.xml"))
+  
 
 (defun forgot-mark-exist-p (mark)
   (with-rulisp-db
@@ -351,7 +357,7 @@
                                      :overlay-master *master*
                                      :login-status :not-logged-on)
   (if (forgot-mark-exist-p mark)
-      *reset-password-form*
+      (reset-password-form)
       hunchentoot:+HTTP-NOT-FOUND+))
       
 (define-simple-route reset-password/post ("forgot-password/:(mark)"
@@ -359,7 +365,7 @@
                                           :method :post
                                           :login-status :not-logged-on)
   (if (forgot-mark-exist-p mark)
-      (let ((reset-form (in-pool (xtree:parse *reset-password-form*)))
+      (let ((reset-form (in-pool (xtree:parse (reset-password-form))))
             (password (hunchentoot:post-parameter "password"))
             (repassword (hunchentoot:post-parameter "confirmation"))
             (success nil))
@@ -386,7 +392,7 @@
                   (postmodern:execute (format nil
                                               "DELETE FROM forgot WHERE mark = '~A'"
                                               mark))))
-              (skinpath "auth/reset-password-success.xml"))
+              (tmplpath "account/reset-password-success.xml"))
             (progn
               (fill-form reset-form (hunchentoot:post-parameters*))
               reset-form)))

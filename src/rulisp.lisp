@@ -2,21 +2,53 @@
 
 (in-package :rulisp)
 
+
+(xpath:define-xpath-function colorize (code)
+  (code-to-html code))
+
+(xslt:define-xslt-element text2html (self input output)
+  (let ((text (xpath:find-string input
+                                 (xtree:attribute-value self "select"))))
+    (if text
+        (html:with-parse-html (doc text)
+          (let ((root (or (xpath:find-single-node (xtree:root doc) "body")
+                                             (xtree:root doc))))
+          (iter (for node in-child-nodes root)
+                (xtree:append-child output (xtree:copy node))))))))
+
 (xslt:defxsl *content-xsl* (merge-pathnames "xsl/content.xsl" *rulisp-path*))
 (xslt:defxsl *articles-xsl* (merge-pathnames "xsl/articles.xsl" *rulisp-path*))
 
-(define-fs-xsl-route main "" "content/index.xml" *content-xsl* :overlay-master *master*)
+(defun apply-xsl (style obj)
+  (let ((xpath:*lisp-xpath-functions* `((colorize "colorize" ,*rulisp-ns*)))
+        (xslt:*lisp-xslt-elements* `((text2html "text2html" ,*rulisp-ns*))))
+    (in-pool (xslt:transform style
+                             (merge-pathnames obj *basepath*)))))
 
-(define-filesystem-route css "css/:(file)" (format nil "~A~A" "skins/default/" "css/${file}"))
-(define-filesystem-route css/image "css/image/:(file)" (format nil "~A~A" "skins/default/" "css/image/${file}"))
-(define-filesystem-route image "image/:(file)" (format nil "~A~A" "skins/default/" "image/${file}"))
-
-(define-filesystem-route js "js/:(file)" (format nil "~A~A" "skins/default/" "js/${file}"))
-
-(define-fs-xsl-route articles "articles/" "content/articles/index.xml" *content-xsl* :overlay-master *master*)
-
-(define-fs-xsl-route article "articles/:(file).html" "content/articles/${file}.xml" *articles-xsl* :overlay-master *master*)
+(define-simple-route main (""
+                           :overlay-master *master*)
+  (apply-xsl *content-xsl* "content/index.xml"))
 
 
-(define-filesystem-route favicon "favicon.ico" (skinpath "favicon.ico"))
+(define-simple-route css ("css/:(file)")
+  (skinpath (format nil "css/~A" file)))
+
+(define-simple-route image ("image/:(file)")
+  (skinpath (format nil "image/~A" file)))
+
+(define-simple-route js ("js/:(file)")
+  (skinpath (format nil "js/~A" file)))
+
+(define-simple-route articles ("articles/"
+                              :overlay-master *master*)
+  (apply-xsl *content-xsl*
+             "content/articles/index.xml"))
+
+(define-simple-route article ("articles/:(file).html"
+                              :overlay-master *master*)
+  (apply-xsl *articles-xsl*
+             (format nil "content/articles/~A.xml" file)))
+
+(define-simple-route favicon ("favicon.ico")
+  (skinpath "favicon.ico"))
 

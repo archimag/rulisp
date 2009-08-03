@@ -5,7 +5,10 @@
 (defun skinpath (path)
   (merge-pathnames path *skindir*))
 
-(defparameter *master* (skinpath "rulisp.html"))
+(defun tmplpath (path)
+  (skinpath (merge-pathnames path "templates/")))
+
+(defparameter *master* (tmplpath "rulisp.html"))
 
 (defparameter *rulisp-ns* "chrome://rulisp/")
 
@@ -39,23 +42,6 @@
                                  (subseq line min-space-count))))))
       (colorize::html-colorization :common-lisp
                                    (format nil "~{~A~%~}" lines)))))
-
-(xpath:define-xpath-function colorize (code)
-  (code-to-html code))
-
-(xslt:define-xslt-element text2html (self input output)
-  (let ((text (xpath:find-string input
-                                 (xtree:attribute-value self "select"))))
-    (if text
-        (html:with-parse-html (doc text)
-          (let ((root (or (xpath:find-single-node (xtree:root doc) "body")
-                                             (xtree:root doc))))
-          (iter (for node in-child-nodes root)
-                (xtree:append-child output (xtree:copy node))))))))
-
-(push `(colorize "colorize" ,*rulisp-ns*) *xpath-functions*)
-(push `(text2html "text2html" ,*rulisp-ns*) *xslt-elements*)
-
 
 ;;; digest
 

@@ -4,5 +4,5 @@
 
 (define-simple-route tools-list ("apps/"
                                  :overlay-master *master*)
-  (skinpath "apps.xml"))
+  (tmplpath "apps.xml"))
                                  
