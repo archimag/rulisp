@@ -258,8 +258,10 @@
                                              (xtree:attribute-value field "name"))))
           (if field-value
               (cond
-                ((string= (xtree:local-name field) "textarea") (setf (xtree:text-content field) field-value))
-                (t (setf (xtree:attribute-value field "value") field-value))))))
+                ((string= (xtree:local-name field) "textarea") (setf (xtree:text-content field) 
+                                                                     (xtree:encode-special-chars nil field-value)))
+                (t (setf (xtree:attribute-value field "value") 
+                         (xtree:encode-special-chars nil field-value)))))))
   form)
 
 

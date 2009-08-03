@@ -5,8 +5,8 @@
 
 (planet:defplanet *planet* 
     :name "Russian Lisp Planet"
-    :alternate-href "http://lisp.catap.ru/planet/"
-    :self-href "http://lisp.catap.ru/planet/atom.xml"
+    :alternate-href (format nil "http://~A/planet/" *host*)
+    :self-href (format nil "http://~A/planet/atom.xml" *host*)
     :feeds-path #P"/etc/planet-feeds.lisp")
 
 (defparameter *planet-path* (asdf:component-pathname (asdf:find-system :planet)))
@@ -16,7 +16,8 @@
 
 (define-filesystem-route planet-resources "planet/:(file)" (planet-path "resources/${file}"))
 
-(define-simple-route planet-atom ("planet/atom.xml")
+(define-simple-route planet-atom ("planet/atom.xml"
+                                  :content-type "application/atom+xml")
   (planet:planet-syndicate-feed *planet*))
 
 (define-simple-route planet-main ("planet/"
@@ -30,8 +31,8 @@
                           (xfactory:attributes :href "/planet/planet.css" :rel "stylesheet" :type "text/css"))
                    (xhtml :link
                           (xfactory:attributes :rel "alternate"
-                                               :href "/atom.xml"
-                                               :title "Sample PLANET implemented on Common Lisp"
+                                               :href (genurl 'planet-atom)
+                                               :title "Russian Lisp Planet"
                                                :type "application/atom+xml")))
             (xhtml "div"
                    (eid "content")
@@ -43,7 +44,7 @@
                                         (eid "syndicate")
                                         (xhtml :a
                                                "Подписаться"
-                                               (ehref "atom.xml")))
+                                               (ehref 'planet-atom)))
                                  (xhtml :div
                                         (eid "suggest")
                                         (xhtml :a
@@ -77,7 +78,7 @@
                                                                                               :ns-map planet:*feeds-ns-map*)))
                                                      (xhtml :div
                                                             (eclass "entry-author-info")
-                                                            (xhtml :strong "Источинк: ")
+                                                            (xhtml :strong "Источник: ")
                                                             (xhtml :a
                                                                    (ehref (xpath:find-string entry
                                                                                              "atom:author/atom:uri"
