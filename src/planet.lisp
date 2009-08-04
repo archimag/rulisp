@@ -73,9 +73,12 @@
                                                             (ehref (xpath:find-string entry
                                                                                       "atom:link/@href"
                                                                                       :ns-map planet:*feeds-ns-map*))
-                                                            (xfactory:text (xpath:find-string entry
-                                                                                              "atom:title"
-                                                                                              :ns-map planet:*feeds-ns-map*)))
+                                                            (xfactory:text (let ((title (xpath:find-string entry
+                                                                                                           "atom:title"
+                                                                                                           :ns-map planet:*feeds-ns-map*)))
+                                                                             (if (and title (not (string= title "")))
+                                                                                 title
+                                                                                 "*notitle*"))))
                                                      (xhtml :div
                                                             (eclass "entry-author-info")
                                                             (xhtml :strong "Источник: ")
