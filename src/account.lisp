@@ -397,3 +397,26 @@
               (fill-form reset-form (hunchentoot:post-parameters*))
               reset-form)))
       hunchentoot:+HTTP-NOT-FOUND+))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; profile
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-simple-route user-profile ("profile"
+                                   :overlay-master *master*
+                                   :login-status :logged-on)
+  (tmplpath "account/profile.xml"))
+
+(postmodern:defprepared set-user-theme* "UPDATE users SET theme = $2 WHERE login = $1")
+
+(define-simple-route user-profile/post ("profile"
+                                        :method :post
+                                        :overlay-master *master*
+                                        :login-status :logged-on) 
+  (let ((theme (hunchentoot:post-parameter "theme")))
+    (when (and theme
+               (not (string= theme "")))
+      (with-rulisp-db
+        (set-user-theme* (username) theme))))
+  (redirect 'user-profile))
