@@ -403,6 +403,25 @@
 ;; profile
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define-simple-route all-themes-for-include ("theme/all"
+                                             :protocol :chrome)
+  (xtree:serialize 
+   (in-pool
+   (xfactory:with-document-factory ((E))
+     (E :ul
+        (iter (for skin in (fad:list-directory *skindir*))
+              (let ((skinname (car (last (pathname-directory skin)))))
+                (unless (string= skinname
+                                 "default")
+                  (E :li
+                     (E :input
+                        (xfactory:attributes :type "radio"
+                                             :value skinname
+                                             :name "theme"))
+                     (xfactory:text skinname))))))))
+   :to-string))
+
+
 (define-simple-route user-profile ("profile"
                                    :overlay-master *master*
                                    :login-status :logged-on)

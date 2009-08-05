@@ -1,34 +1,46 @@
-body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #fff }
+body { font-size: 90%; margin: 0; padding: 1em 5%; font-family: Arial, sans-serif; background: #fff }
 
 a:link { text-decoration: underline }
-a:hover { text-decoration: none }
+a:hover { color: #666 }
 a:active { color: #c00 }
 
-.top { background: #69e; color: #fff }
+#login, #caution, #mainmenu, #content, .bottom { margin: 0 }
 
-#caution, #mainmenu, #content { margin: 0; padding: 1em }
+#caution { padding: 0.5em; background: #58e url('bgr.png'); color: #fff }
 
-h1, h2, h3, h4, h5, h6 { font-weight: normal }
+#caution img { position: inline; vertical-align: bottom }
 
-#caution h1 { font-size: 160%; padding: 0; margin: 0 }
+#caution, #mainmenu { -moz-border-radius: 4px }
 
-.top { color: #fff }
-.top a:link, .top a:visited { color: #fff }
+h1, h2, h3, h4, h5, h6 { font-weight: normal; color: #06c; padding: 0; margin: 0.8em 0 0.4em 0 }
+
+p { padding: 0; margin: 0 0 0.6em 0 }
+
+h1 { font-size: 200% }
+h2 { font-size: 180% }
+h3 { font-size: 140% }
+h4 { font-size: 120% }
+
+.top { color: #ccc }
+.top a:link, .top a:visited { color: #999 }
 
 .top li { display: inline; list-style-type: none; list-style-position: outside; list-style-image: none }
 
-.bottom {  font-size: 90%; color: #666; margin: 0; padding: 3em 1em 1em 1em }
+.bottom { font-size: 90%; color: #666; padding: 3em 0 0 0; clear: both }
 
-#login { font-size: 80%; padding: 1em; margin: 0; text-align: right }
+#login { font-size: 80%; text-align: right; margin-bottom: 0.5em }
 
 #mainmenu {
-    color: #665;
-    background: #f6f6e9;
-    padding: 1em;
+    padding: 0.5em;
+    margin-top: 0.2em;
+    margin-bottom: 1em;
+    font-weight: bold;
+    color: #eee;
+    background: #aaa;
 }
 
 #mainmenu > ul {
-    font-size: 120%;
+    font-size: 80%;
     margin: 0;
     padding: 0;
 }
@@ -38,12 +50,11 @@ h1, h2, h3, h4, h5, h6 { font-weight: normal }
     list-style-type: none;
     list-style-position: outside;
     list-style-image: none;
-    padding-right: 0.5em;
+    padding-right: 1em;
 }
 
-#mainmenu a { 
-    color: #443;
-}
+#mainmenu a:link, #mainmenu a:visited { color: #fff }
+#mainmenu a:hover { color: #eee }
 
 #second-menu {
     padding: 3px;
@@ -73,9 +84,13 @@ h1, h2, h3, h4, h5, h6 { font-weight: normal }
 }
 
 #content {
-    background: #fff;
-    padding: 1em;
+    width: 79%; float: left;
+    background: #fff
 }
+
+#sidebar { font-size: 90%; width: 19%; float: right }
+#sidebar ul { list-style-type: none; padding: 0; margin: 0 }
+#sidebar ul li { padding: 0; margin: 0 0 0.6em 0 }
 
 #content h4 {
     margin: 10px 0 5px;
