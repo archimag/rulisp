@@ -193,10 +193,12 @@
   (format nil
           "=?~A?B?~A?="
           external-format
-          (base64:string-to-base64-string (coerce (mapcar #'code-char
-                                                          (coerce (sb-ext:string-to-octets subject :external-format external-format)
-                                                                  'list))
-                                                  'string))))
+          (base64:string-to-base64-string
+           (coerce (loop for code across (sb-ext:string-to-octets subject
+                                                                  :external-format external-format)
+                      collect (code-char code))
+                   'string))))
+
 
 (defun send-noreply-mail (receiver subject body &rest bindings)
   (send-mail (list receiver)
