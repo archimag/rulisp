@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<overlay>
+    <head>
+        <title>Регистрация</title>
+    </head>
+    
+    <div id="content">
+        <h3>Создайте учётную запись</h3>
+
+        <p>Учётная запись даст вам возможность обжаться в форуме, управлять своим профилем и некоторые другие возможности</p>
+        
+        <form class="register-form" method="post">
+            <table>
+                <tbody>
+                    <tr>
+                        <td>Имя входа (логин):</td>
+                        <td>
+                            <input name="name" size="30" /> 
+                            <div class="info">Например: graham, Piter.Norvig </div> 
+                            <!--<input type="button" value="проверьте, не занято ли имя" />-->
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Ваш email:</td>
+                        <td><input name="email" size="30"/></td>                        
+                    </tr>
+
+                    <tr>
+                        <td>Укажите пароль:</td>
+                        <td>
+                            <input name="password" type="password" size="30" />
+                            <div class="info">Минимальная длина - 8 символов</div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Введите пароль ещё раз:</td>
+                        <td>
+                            <input name="re-password" type="password" size="30" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td></td>
+                        <td>
+                            <input type="submit" value="Создать учётную запись" />
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </form>
+    </div>
+</overlay>

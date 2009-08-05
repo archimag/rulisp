@@ -1,0 +1,5 @@
+<div id="login">
+    <b>${user}</b> |
+    <a href="/profile">Настройки</a> |
+    <a href="/logout" id="logout">Выйти</a>
+</div>

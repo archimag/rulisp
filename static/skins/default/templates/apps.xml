@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<overlay>
+    <head>
+        <title>Инструменты</title>
+    </head>
+
+    <div id="content">
+        <div class="tools"> 
+            <a class="tools-img" href="/apps/format/" />
+            <div class="description">
+                <h3>Форматер</h3> 
+                <div>Инструмент для форматирования кода</div>
+            </div>
+        </div>
+    </div>
+</overlay>
