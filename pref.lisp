@@ -18,7 +18,7 @@
 
 (defparameter *rulisp-path* (asdf:component-pathname (asdf:find-system  :rulisp)))
 
-(defparameter *skindir* (merge-pathnames "skins/" *rulisp-path*))
+(defparameter *skindir* (merge-pathnames "static/skins/" *rulisp-path*))
 
 (defparameter *default-theme* "archimag")
 

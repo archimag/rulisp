@@ -17,8 +17,8 @@
           (iter (for node in-child-nodes root)
                 (xtree:append-child output (xtree:copy node))))))))
 
-(xslt:defxsl *content-xsl* (merge-pathnames "xsl/content.xsl" *rulisp-path*))
-(xslt:defxsl *articles-xsl* (merge-pathnames "xsl/articles.xsl" *rulisp-path*))
+(xslt:defxsl *content-xsl* (merge-pathnames "src/xsl/content.xsl" *rulisp-path*))
+(xslt:defxsl *articles-xsl* (merge-pathnames "src/xsl/articles.xsl" *rulisp-path*))
 
 (defun apply-xsl (style obj)
   (let ((xpath:*lisp-xpath-functions* `((colorize "colorize" ,*rulisp-ns*)))
@@ -31,14 +31,15 @@
   (apply-xsl *content-xsl* "content/index.xml"))
 
 
-(define-simple-route css ("/theme/:(theme)/css/:(file)")
-  (skinpath (format nil "css/~A" file)))
+(define-simple-route css ("/css/:(theme)/:(file)")
+  (skinpath (format nil "css/~A" file)
+            theme))
 
 (define-simple-route image ("image/:(file)")
-  (skinpath (format nil "image/~A" file)))
+  (staticpath (format nil "image/~A" file)))
 
 (define-simple-route js ("js/:(file)")
-  (skinpath (format nil "js/~A" file)))
+  (staticpath (format nil "js/~A" file)))
 
 (define-simple-route articles ("articles/"
                               :overlay-master *master*)
@@ -51,7 +52,7 @@
              (format nil "content/articles/~A.xml" afile)))
 
 (define-simple-route favicon ("favicon.ico")
-  (skinpath "favicon.ico"))
+  (staticpath "favicon.ico"))
 
 
 
@@ -76,7 +77,6 @@
 (define-simple-route theme-css-include ("theme/css/:(file)"
                                         :protocol :chrome)
   (format nil
-          "<link href=\"/theme/~A/css/~A\" rel=\"stylesheet\" type=\"text/css\" />"
-          (user-theme (username))
-          file))
+          "<link href=\"~A\" rel=\"stylesheet\" type=\"text/css\" />"
+          (genurl 'css :theme (user-theme (username)) :file file)))
   

@@ -243,7 +243,14 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defparameter *static-path* (merge-pathnames "static/" *basepath*))
+
+(defun staticpath (path)
+  (merge-pathnames path *static-path*))
+
 (postmodern:defprepared user-theme* "SELECT theme FROM users WHERE login = $1" :single)
+
+(defparameter *default-skin* "simple")
 
 (defun user-theme (name)
   (let ((theme (if name
@@ -251,7 +258,7 @@
     (if (and theme
              (not (eql theme :null)))
         theme
-        "simple")))
+        *default-skin*)))
 
 (defun skinpath (path &optional theme)
   (let ((result (merge-pathnames path

@@ -26,12 +26,11 @@
 (define-simple-route planet-main ("planet/"
                            :overlay-master *master*)
   (in-pool
-   (xfactory:with-document-factory ((xhtml "http://www.w3.org/1999/xhtml"))
+   (xfactory:with-document-factory ((xhtml))
      (xhtml "overlay"
             (xhtml :head
                    (xhtml :title "Russian Lisp Planet")
-                   (xhtml :link
-                          (xfactory:attributes :href "/planet/planet.css" :rel "stylesheet" :type "text/css"))
+                   (ecss 'planet-resources :file "planet.css")
                    (xhtml :link
                           (xfactory:attributes :rel "alternate"
                                                :href (genurl 'planet-atom)
