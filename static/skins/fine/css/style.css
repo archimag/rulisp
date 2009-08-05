@@ -26,7 +26,10 @@ h4 { font-size: 120% }
 
 .top li { display: inline; list-style-type: none; list-style-position: outside; list-style-image: none }
 
-.bottom { font-size: 90%; color: #666; padding: 3em 0 0 0; clear: both }
+.info {color: gray; font-size: 80%;}
+
+
+.bottom { font-size: 90%; color: #666; padding: 3em 0 0 0; clear: both; text-align: center; }
 
 #login { font-size: 80%; text-align: right; margin-bottom: 0.5em }
 
@@ -84,8 +87,8 @@ h4 { font-size: 120% }
 }
 
 #content {
-    width: 79%; float: left;
-    background: #fff
+    /*width: 9%; float: left;*/
+    /*background: #fff*/
 }
 
 #sidebar { font-size: 90%; width: 19%; float: right }
@@ -122,8 +125,8 @@ h4 { font-size: 120% }
 }
 
 .articles a {
-    font-weight: bold;
-    color: #526b66;
+    /*font-weight: bold;*/
+    /*color: #526b66;*/
 }
 
 .login-form {

@@ -30,7 +30,7 @@
      (xhtml "overlay"
             (xhtml :head
                    (xhtml :title "Russian Lisp Planet")
-                   (ecss 'planet-resources :file "planet.css")
+                   (ecss 'css :file "planet.css" :theme (user-theme (username)))
                    (xhtml :link
                           (xfactory:attributes :rel "alternate"
                                                :href (genurl 'planet-atom)
@@ -75,9 +75,13 @@
                                                             (ehref (xpath:find-string entry
                                                                                       "atom:link/@href"
                                                                                       :ns-map planet:*feeds-ns-map*))
-                                                            (xfactory:text (xpath:find-string entry
-                                                                                              "atom:title"
-                                                                                              :ns-map planet:*feeds-ns-map*)))
+                                                            (xfactory:text (let ((str (xpath:find-string entry
+                                                                                                         "atom:title"
+                                                                                                         :ns-map planet:*feeds-ns-map*)))
+                                                                             (if (and str
+                                                                                      (not (string= str "")))
+                                                                                 str
+                                                                                 "*notitle*"))))
                                                      (xhtml :div
                                                             (eclass "entry-author-info")
                                                             (xhtml :strong "Источник: ")

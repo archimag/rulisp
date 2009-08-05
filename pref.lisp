@@ -10,7 +10,8 @@
            :*noreply-mail-account*
            :*vardir*
            :*reCAPTCHA.publick-key*
-           :*reCAPTCHA.privake-key*))
+           :*reCAPTCHA.privake-key*
+           :*default-skin*))
 
 (in-package :rulisp.preferences)
 
@@ -32,3 +33,5 @@
 
 (defvar *reCAPTCHA.publick-key* "6LdZjAcAAAAAAGh_MzHcHfJWp6rpI0XUNghGQB1f")
 (defvar *reCAPTCHA.privake-key* "6LdZjAcAAAAAAKJ2GPWTHPh1H1Foc0kyfbwgrFgO")
+
+(defparameter *default-skin* "fine")

@@ -250,8 +250,6 @@
 
 (postmodern:defprepared user-theme* "SELECT theme FROM users WHERE login = $1" :single)
 
-(defparameter *default-skin* "simple")
-
 (defun user-theme (name)
   (let ((theme (if name
                    (with-rulisp-db (user-theme* name)))))
