@@ -253,10 +253,11 @@
         theme
         "simple")))
 
-(defun skinpath (path)
+(defun skinpath (path &optional theme)
   (let ((result (merge-pathnames path
-                                 (format nil "~A/~A/"  *skindir* (user-theme (username))))))
-    (if (print (fad:file-exists-p result))
+                                 (format nil "~A/~A/"  *skindir* (or theme
+                                                                     (user-theme (username)))))))
+    (if (fad:file-exists-p result)
         result
         (merge-pathnames path
                          (format nil "~A/default/"  *skindir*)))))
@@ -264,4 +265,8 @@
 (defun tmplpath (path)
   (skinpath (merge-pathnames path "templates/")))
 
-(defparameter *master* (lambda () (tmplpath "rulisp.html")))
+(defparameter *master*
+  (lambda ()
+    (tmplpath "rulisp.html")))
+    ;;(in-pool (xtree:parse (tmplpath "rulisp.html") :xml-parse-xinclude :xml-parse-noxincnode))))
+

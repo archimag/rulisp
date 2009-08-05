@@ -21,7 +21,7 @@
                                      :type "application/rss+xml"
                                      :title (format nil "Форумs '~A' - RSS-лента" (hunchentoot:host))
                                      :href (genurl 'all-forums-rss)))
-             (ecss 'css :file "forum.css"))
+             (ecss 'css :file "forum.css" :theme (user-theme (username))))
           (E :div
              (eid "content")
              (iter (for (id description)

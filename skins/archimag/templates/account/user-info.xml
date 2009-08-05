@@ -1,4 +1,4 @@
 <div id="login">
-    <b>${user}</b> 
+    <b>${user}</b> |
     <a href="/logout" id="logout">Выйти</a>
 </div>

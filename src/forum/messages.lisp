@@ -39,7 +39,8 @@
   (with-rulisp-db
     (bind:bind (((forum-id description) (get-forum-info topic-id))
                 ((title message-id all-message author body date) (select-message topic-id))
-                (reply-list (select-reply-list topic-id)))
+                (reply-list (select-reply-list topic-id))
+                (theme (user-theme (username))))
       (declare (ignore message-id))
       (in-pool
        (xfactory:with-document-factory ((E))
@@ -52,8 +53,8 @@
                                        :type "application/rss+xml"
                                        :title (format nil "Тема  '~A' - RSS-лента" title)
                                        :href (genurl 'topic-rss :topic-id topic-id)))
-               (ecss "/css/forum.css")
-               (ecss "/css/jquery.wysiwyg.css")
+               (ecss 'css :file "forum.css" :theme theme)
+               (ecss 'css :file  "jquery.wysiwyg.css" :theme theme)
                (escript "/js/jquery.js")
                (escript "/js/jquery.wysiwyg.js")
                (escript "/js/forum.js"))

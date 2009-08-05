@@ -31,7 +31,7 @@
   (apply-xsl *content-xsl* "content/index.xml"))
 
 
-(define-simple-route css ("css/:(file)")
+(define-simple-route css ("/theme/:(theme)/css/:(file)")
   (skinpath (format nil "css/~A" file)))
 
 (define-simple-route image ("image/:(file)")
@@ -45,10 +45,10 @@
   (apply-xsl *content-xsl*
              "content/articles/index.xml"))
 
-(define-simple-route article ("articles/:(file).html"
+(define-simple-route article ("articles/:(afile).html"
                               :overlay-master *master*)
   (apply-xsl *articles-xsl*
-             (format nil "content/articles/~A.xml" file)))
+             (format nil "content/articles/~A.xml" afile)))
 
 (define-simple-route favicon ("favicon.ico")
   (skinpath "favicon.ico"))
@@ -71,3 +71,12 @@
                  (E :a
                     (ehref route)
                     (xfactory:text name))))))))
+
+
+(define-simple-route theme-css-include ("theme/css/:(file)"
+                                        :protocol :chrome)
+  (format nil
+          "<link href=\"/theme/~A/css/~A\" rel=\"stylesheet\" type=\"text/css\" />"
+          (user-theme (username))
+          file))
+  

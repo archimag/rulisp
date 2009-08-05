@@ -54,7 +54,8 @@
   (with-rulisp-db 
     (bind:bind (((description all-topics) (car (forum-info forum-id)))
                 (last (min (+ 10 start) all-topics))
-                (topics (select-topics forum-id start)))
+                (topics (select-topics forum-id start))
+                (theme (user-theme (username))))
       (xfactory:with-document-factory ((E))
         (E :div
            (E :head
@@ -65,8 +66,8 @@
                                       :type "application/rss+xml"
                                       :title (format nil "Форум '~A' - RSS-лента" description)
                                       :href (genurl 'forum-rss :forum-id forum-id)))
-              (ecss 'css :file "forum.css")
-              (ecss 'css :file  "jquery.wysiwyg.css")
+              (ecss 'css :file "forum.css" :theme theme)
+              (ecss 'css :file  "jquery.wysiwyg.css" :theme theme)
               (escript "/js/jquery.js")
               (escript "/js/jquery.wysiwyg.js")
               (escript "/js/forum.js"))           
