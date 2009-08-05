@@ -29,6 +29,7 @@
   (hunchentoot:set-cookie *cookie-auth-name*
                           :value (user-auth-cookie-encrypt name password :version version)
                           :path "/"
+                          :expires (+ (get-universal-time) (* 60 60 24 4))
                           :http-only t))
 
 ;;; user-auth-cookie-get

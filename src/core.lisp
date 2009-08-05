@@ -256,7 +256,8 @@
   (let ((theme (if name
                    (with-rulisp-db (user-theme* name)))))
     (if (and theme
-             (not (eql theme :null)))
+             (not (eql theme :null))
+             (fad:directory-exists-p (merge-pathnames theme *skindir*)))
         theme
         *default-skin*)))
 
