@@ -21,6 +21,8 @@ h2 { font-size: 180% }
 h3 { font-size: 140% }
 h4 { font-size: 120% }
 
+pre { overflow: auto; }
+
 .top { color: #ccc }
 .top a:link, .top a:visited { color: #999 }
 

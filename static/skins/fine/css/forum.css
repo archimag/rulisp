@@ -65,12 +65,21 @@
 #forum-nav-panel li {
     display: inline;
     list-style-type: none;
-    padding-left: 5px;
 }
 
 #forum-nav-panel a {
     color: #6A5EAB;
 }
+
+#forum-nav-panel li:before {
+    font-weight: bold;
+    content: "»";
+    margin-right: 0.3em;
+} 
+
+#forum-nav-panel li:first-child:before {
+    content: "";
+} 
 
 
 /* ---------------------------------------------------------------------------------------------------- */
