@@ -24,7 +24,7 @@
   (let ((xpath:*lisp-xpath-functions* `((colorize "colorize" ,*rulisp-ns*)))
         (xslt:*lisp-xslt-elements* `((text2html "text2html" ,*rulisp-ns*))))
     (in-pool (xslt:transform style
-                             (merge-pathnames obj *basepath*)))))
+                             (in-pool (xtree:parse (merge-pathnames obj *basepath*) :xml-parse-noent ))))))
 
 (define-simple-route main (""
                            :overlay-master *master*)
