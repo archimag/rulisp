@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<page xmlns:xlink="http://www.w3.org/1999/xlink"
+<article xmlns:xlink="http://www.w3.org/1999/xlink"
       xlink:title="Чем SETF отличается от SETQ"
       xlink:href="http://lispnik.livejournal.com/130098.html">
 
@@ -39,4 +39,4 @@
     <p>В принципе, SETQ не нужен. SETF для символа вполне мог бы раскрываться во что-то системозависимое. SETQ добавили в Common Lisp только для совместимости с более старыми лиспами.</p>
 
     <p>Я считаю, что стилистически лучше использовать везде SETF. Почему — напишу как-нибудь попозже :)</p>
-</page>
+</article>

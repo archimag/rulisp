@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<page xmlns:xlink="http://www.w3.org/1999/xlink"
+<article xmlns:xlink="http://www.w3.org/1999/xlink"
       xlink:title="О пользе унификации и вреде предубеждений"
       xlink:href="http://lisp-univ-etc.blogspot.com/2008/07/blog-post_25.html">
 
@@ -194,4 +194,4 @@ use any given TEST-function. TYPE-ERRORs signaled by TEST-functions are ignored"
             <a name="5" href="#5">[5]</a> В этой реализации, конечно, есть не только скобки, но и специфические функции, а также несколько синтаксических элементов (называемых синтаксическим сахаром): ' ` , #' ,@. На самом деле, это практически исчерпывающий список всех подобных элементов в Common Lisp, более того все они имеют свои аналоги в форме (имя ...), т.е., в конце концов, можно ограничиться только скобками и именами.
         </li>
     </ul>
-</page>
+</article>

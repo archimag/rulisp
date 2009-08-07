@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE page [
+    <!ENTITY sbcl "<a href='http://sbcl.sourceforge.net/'>SBCL</a>">
+    <!ENTITY rulisp "<a href='http://lisper.ru/'>lisper.ru</a>">
+    <!ENTITY asdf "<a href='http://www.cliki.net/asdf'>asdf</a>">
+    <!ENTITY gentoo "<a href='http://www.gentoo.org/'>Gentoo GNU/Linux</a>">
+    <!ENTITY debian "<a href='http://www.debian.org/'>Debian GNU/Linux</a>">
+    <!ENTITY cl-libxml2 "<a href='http://code.google.com/p/cl-libxml2/'>cl-libxml2</a>">
+    <!ENTITY slime "<a href='http://common-lisp.net/project/slime/'>SLIME</a>">
+]>
+
+
+<page xmlns:xlink="http://www.w3.org/1999/xlink"
+      xlink:title="Развёртывание сайта на основе исходного кода lisper.ru">
+
+    <h2>Развёртывание сайта на основе исходного кода lisper.ru</h2>
+
+    <author xlink:title="archimag" xlink:href="http://archimag-dev.blogspot.com" />
+
+    <p>
+        Эта инструкция предназначена для тех, кто хочет развернуть сайт на основе исходного кода &rulisp;
+        на своём компьютере.
+        Это может потребоваться тем, кто желает ознакомиться с принципами работы данного сайта,
+        поэкспериментировать с исходным кодом или помочь в разработке проекта. Необходимым условием
+        для развёртывания системы является понимание принципов работы &asdf; и наличие практического
+        опыта установки &asdf;-пакетов.
+    </p>
+
+    <h3>Требования к система</h3>
+    <p>
+        Подтверждена успешная работа &rulisp; на двух типах систем: &gentoo; и &debian;.
+        Кроме того, есть все основания полагать, что с большими или меньшими усилиями
+        необходимое программное обеспечение можно успешно развернуть на любой
+        современной системе <a href="http://www.gnu.org/gnu/linux-and-gnu.ru.html">GNU/Linux</a>.
+        Возможность успешного запуска системы на *BSD-системах (в том числе, и на <a href="http://www.freebsd.org/">FreeBSD</a>),
+        на системах семейства Windows и т.п. представляется сомнительной
+        (пожалуйста, <a href="mailto:archimag@lisper.ru">сообщите</a>, если Вам это удастся), что связано,
+        с ограниченной поддержкой &sbcl; этих платформ.
+    </p>
+
+    <p>
+        В качестве реализации Common Lisp используется &sbcl;. 
+        В качестве сервера баз данных <a href="http://www.postgresql.org/">PostgreSQL</a> (версии 8.3 и выше). 
+        Для возможности отправки почты необходимо наличие в системе программы sendmail
+        (/usr/bin/sendmail или /usr/sbin/sendamil): на сервере &rulisp; используется <a href="http://www.exim.org">Exim</a>,
+        но в целях разработки проще всего использовать <a href="ftp://ftp.debian.org/debian/pool/main/s/ssmtp/">sSMTP</a>.
+        Установка данных компонент должна легко производиться средствами используемой системы и здесь не рассматривается.
+        Установка дополнительных lisp-пакетов будет рассмотрена ниже.
+    </p>
+
+    <h3>Подготовительный этап</h3>
+    Развёртывание &rulisp; проще всего начать с установки следующих ключевых пакетов:
+    
+    <ul>
+        <li>
+            <a href="http://weitz.de/hunchentoot/">hunchentoot</a> (версии 1.0)
+        </li>
+
+        <li>
+            <a href="http://weitz.de/drakma/">DRAKMA</a>
+        </li>
+        
+        <li>
+            <a href="http://common-lisp.net/project/postmodern/">postmodern</a>
+        </li>
+
+        <li>
+            <a href="http://method-combination.net/lisp/ironclad/">ironclad</a>
+        </li>
+
+        <li>
+            <a href="http://common-lisp.net/project/iterate/">iterate</a>
+        </li>
+
+        <li>
+            <a href="http://www.cliki.net/colorize">colorize</a>           
+        </li>
+
+        <li>
+            <a href="http://puri.b9.com/">puri</a>
+        </li>
+
+        <li>
+            <a href="http://common-lisp.net/project/metabang-bind">metabang-bind</a>
+        </li>
+
+        <li>
+            <a href="http://www.cliki.net/Clon">Clon</a> (task scheduler)
+        </li>
+
+        <li>
+            <a href="http://www.cliki.net/net-telent-date">net-telent-date</a>
+        </li>
+
+        <li>
+            <a href="http://common-lisp.net/project/local-time/">local-time</a>
+        </li>
+
+        <li>
+            <a href="http://code.google.com/p/garbage-pools/">garbage-pools</a>
+        </li>
+    </ul>
+    
+    Большинство из перечисленных пакетов имеют собственные зависимости, которые должны быть удовлетворены.
+    Во-избежание непредвиденных проблем рекомендуется устанавливать самые свежие стабильные версии данных пакетов.
+    На системах типа &gentoo; наиболее простым способом установки является использование
+    <a href="http://repo.or.cz/w/gentoo-lisp-overlay.git">gentoo-lisp overlay</a>
+    (доступен, в том числе, через <a href="http://layman.sourceforge.net">layman</a>, где называется - 'lisp').
+    Если целевой системой является &debian;, то, возможно, полезными окажутся deb-пакеты от
+    <a href="http://catap.ru/blog">catap</a>, получить доступ к которым можно на
+    <a href="http://catap.ru/debian-catap/">http://catap.ru/debian-catap/</a>. Для прочих систем, вероятно,
+    проще всего использовать <a href="http://www.cliki.net/ASDF-Install">ASDF-Install</a>, либо внимательно читать
+    инструкции по установке на сайтах этих проектов.
+    
+    
+    <h3>Установка основных пакетов</h3>
+    Под основными здесь понимаются пакеты, которые могут (и с большой вероятностью будут) изменяться
+    в процессе развития &rulisp; Это
+    <ul>
+        <li>
+            <a href="http://code.google.com/p/cl-routes/">cl-routes</a>
+        </li>
+
+        <li>
+            &cl-libxml2;
+        </li>
+
+        <li>
+            <a href="http://github.com/archimag/restas/tree/master">RESTAS</a>
+        </li>
+
+        <li>
+            <a href="https://github.com/archimag/restas-planet/tree">restas-planet</a>
+        </li>
+
+        <li>
+            <a href="https://github.com/archimag/rulisp/tree">rulisp</a>
+        </li>
+    </ul>
+
+    <p>
+        Все эти пакеты (за исключение &cl-libxml2;) надо брать (clone) из git-репозитория,
+        и устанавливать простым созданием символической ссылки на asd-файлы.
+        Инструкция по установке &cl-libxml2; доступна по адресу
+        <a href="http://cl-libxml2.googlecode.com/svn/doc/install.xml">http://cl-libxml2.googlecode.com/svn/doc/install.xml</a>.
+    </p>
+
+    <p>
+        Непосредственный код &rulisp; содержится в пакете <a href="https://github.com/archimag/rulisp/tree">rulisp</a>.
+    </p>
+
+    <p>
+        Если всё было установлено правильно, то загрузить систему можно командой:
+        <code>
+            CL-USER> (asdf:operate 'asdf:load-op :rulisp)
+        </code>
+        Если при установке были допущены ошибки (либо ошибка в данном документе), то Вы их увидите :)
+    </p>
+
+    <h3>Настройка база данных</h3>
+    В последующем, вероятно, будет использоваться какой-либо механизм "database migration", но пока без него.
+    Ниже считается что используется база rulisp и пользователь lisp, при желании можно использовать любые другие, но при этом
+    необходимо отредактировать файл rulisp/pref.lisp, изменив значение параметра *rulisp-db*.
+
+    <h4>Создание пользователя и базы</h4>
+    <code>
+        $ psql -U postgres
+        postgres=# CREATE USER lisp WITH PASSWORD '123';
+        postgres=# CREATE DATABASE rulisp WITH OWNER = lisp;
+        postgres=# \quit
+    </code>
+
+    <h4>Создание структуры базы данных</h4>
+    <code>
+        $ psql -U lisp -d rulisp -f /path/to/rulisp/install/rulisp.schema-dump.sql
+    </code>
+
+    <h4>Создание форума</h4>
+    <code>
+        $ psql -U lisp -d rulisp
+        rulisp=> INSERT INTO rlf_forums (description, pretty_forum_id) VALUES ('Common Lisp', 'common-lisp');
+        rulisp=> \quit
+    </code>
+
+    <h3>Тонкая настройка</h3>
+    Всё, развёртывание сайта на основе исходного кода &rulisp; завершено. Теперь, смотрим результат:
+    <code>
+        firefox http://localhost:8080/
+    </code>
+    Если получаем "Internal Server Error", то идём в SLIME, устанавливаем отладочный режим:
+    <code>
+        (setf restas::*catch-errors-p* nil)
+    </code>
+    <p>        
+        И наслаждаемся мощью отладчика :)
+    </p>
+
+    <p>
+        Все конфигурационные параметры находятся в файле rulisp/pref.lisp.
+        Источники для планеты в файле rulisp/planet-feeds.lip
+    </p>
+
+    <p>
+        <strong>Примечание:</strong> <br />
+        Приведённых инструкций достаточно для запуска сайта под контролем &slime;,
+        инструкции по "демонизации" лисп-процесса будут позже.
+    </p>
+</page>

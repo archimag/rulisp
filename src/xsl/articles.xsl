@@ -7,7 +7,7 @@
 
     <xsl:include href="content.xsl" />
     
-    <xsl:template match="/page">
+    <xsl:template match="/article">
         <overlay>
             <head>
                 <title><xsl:value-of select="@xlink:title" /></title>

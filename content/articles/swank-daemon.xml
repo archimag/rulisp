@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<page xmlns:xlink="http://www.w3.org/1999/xlink"
+<article xmlns:xlink="http://www.w3.org/1999/xlink"
       xlink:title="Демонизация sbcl" >
 
     <h4>Описание проблемы</h4>
@@ -12,4 +12,4 @@
 
     <h4>Тонкости</h4>
     
-</page>
+</article>
