@@ -3,7 +3,7 @@
 <page xmlns:xlink="http://www.w3.org/1999/xlink"
       xlink:title="Статьи">
 
-    <h4>Прекрасный и удивительный...</h4>
+    <h3>Прекрасный и удивительный...</h3>
     <ul class="articles">
         <li>
             <a href="common-lisp-technologies.html">Уникальные технологии Common Lisp</a>
@@ -14,7 +14,7 @@
         </li>
     </ul>
     
-    <h4>Подробности</h4>
+    <h3>Подробности</h3>
     <ul class="articles">
         <li><a href="cl-vars.html">Переменные в Common Lisp</a><br />
         В данной статье рассказывается о разнице между лексическими и динамическими переменными.
@@ -25,21 +25,21 @@
         </li>
     </ul>
 
-    <h4>Различные реализации</h4>
+    <h3>Различные реализации</h3>
     <ul class="articles">
         <li>
             <a href="clisp-vs-sbcl.html">Сравнение GNU CLISP и SBCL</a>
         </li>
     </ul>
 
-    <h4>Практика</h4>
+    <h3>Практика</h3>
     <ul class="articles">
         <li>
             <a href="sendind-smtp-mail-with-utf-8-characters.html">Отпавка эллектронного письма в кодироке utf-8</a>
         </li>
     </ul>
 
-    <h4>Ссылки на другие ресурсы</h4>
+    <h3>Ссылки на другие ресурсы</h3>
     <ul>
         <li>
             <a href="http://pcl.catap.ru/doku.php?id=pcl">Перевод на русский книги Practical Common Lisp</a>

@@ -12,6 +12,8 @@
 start () {
 	echo -n "Starting rulisp server... "
 
+    export LC_ALL="ru_RU.UTF-8"
+
     start-stop-daemon --start \
         --pidfile /var/rulisp/rulisp.pid \
         --startas /usr/bin/screen \

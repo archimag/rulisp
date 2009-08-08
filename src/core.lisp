@@ -2,13 +2,6 @@
 
 (in-package :rulisp)
 
-(defun skinpath (path)
-  (merge-pathnames path *skindir*))
-
-(defparameter *master* (skinpath "rulisp.html"))
-
-(defparameter *rulisp-ns* "chrome://rulisp/")
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; xsl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -39,23 +32,6 @@
                                  (subseq line min-space-count))))))
       (colorize::html-colorization :common-lisp
                                    (format nil "~{~A~%~}" lines)))))
-
-(xpath:define-xpath-function colorize (code)
-  (code-to-html code))
-
-(xslt:define-xslt-element text2html (self input output)
-  (let ((text (xpath:find-string input
-                                 (xtree:attribute-value self "select"))))
-    (if text
-        (html:with-parse-html (doc text)
-          (let ((root (or (xpath:find-single-node (xtree:root doc) "body")
-                                             (xtree:root doc))))
-          (iter (for node in-child-nodes root)
-                (xtree:append-child output (xtree:copy node))))))))
-
-(push `(colorize "colorize" ,*rulisp-ns*) *xpath-functions*)
-(push `(text2html "text2html" ,*rulisp-ns*) *xslt-elements*)
-
 
 ;;; digest
 
@@ -217,10 +193,12 @@
   (format nil
           "=?~A?B?~A?="
           external-format
-          (base64:string-to-base64-string (coerce (mapcar #'code-char
-                                                          (coerce (sb-ext:string-to-octets subject :external-format external-format)
-                                                                  'list))
-                                                  'string))))
+          (base64:string-to-base64-string
+           (coerce (loop for code across (sb-ext:string-to-octets subject
+                                                                  :external-format external-format)
+                      collect (code-char code))
+                   'string))))
+
 
 (defun send-noreply-mail (receiver subject body &rest bindings)
   (send-mail (list receiver)
@@ -266,3 +244,37 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defparameter *static-path* (merge-pathnames "static/" *basepath*))
+
+(defun staticpath (path)
+  (merge-pathnames path *static-path*))
+
+(postmodern:defprepared user-theme* "SELECT theme FROM users WHERE login = $1" :single)
+
+(defun user-theme (name)
+  (let ((theme (if name
+                   (with-rulisp-db (user-theme* name)))))
+    (if (and theme
+             (not (eql theme :null))
+             (fad:directory-exists-p (merge-pathnames theme *skindir*)))
+        theme
+        *default-skin*)))
+
+(defun skinpath (path &optional theme)
+  (let ((result (merge-pathnames path
+                                 (format nil "~A/~A/"  *skindir* (or theme
+                                                                     (user-theme (username)))))))
+    (if (fad:file-exists-p result)
+        result
+        (merge-pathnames path
+                         (format nil "~A/default/"  *skindir*)))))
+
+(defun tmplpath (path)
+  (skinpath (merge-pathnames path "templates/")))
+
+(defparameter *master*
+  (lambda ()
+    (tmplpath "rulisp.html")))
+    ;;(in-pool (xtree:parse (tmplpath "rulisp.html") :xml-parse-xinclude :xml-parse-noxincnode))))
+

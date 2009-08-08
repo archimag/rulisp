@@ -10,7 +10,8 @@
            :*noreply-mail-account*
            :*vardir*
            :*reCAPTCHA.publick-key*
-           :*reCAPTCHA.privake-key*))
+           :*reCAPTCHA.privake-key*
+           :*default-skin*))
 
 (in-package :rulisp.preferences)
 
@@ -18,7 +19,9 @@
 
 (defparameter *rulisp-path* (asdf:component-pathname (asdf:find-system  :rulisp)))
 
-(defparameter *skindir* (merge-pathnames "skins/default/" *rulisp-path*))
+(defparameter *skindir* (merge-pathnames "static/skins/" *rulisp-path*))
+
+(defparameter *default-theme* "archimag")
 
 (defparameter *rulisp-db* '("rulisp" "lisp" "123" "localhost"))
 
@@ -30,3 +33,5 @@
 
 (defvar *reCAPTCHA.publick-key* "6LdZjAcAAAAAAGh_MzHcHfJWp6rpI0XUNghGQB1f")
 (defvar *reCAPTCHA.privake-key* "6LdZjAcAAAAAAKJ2GPWTHPh1H1Foc0kyfbwgrFgO")
+
+(defparameter *default-skin* "fine")

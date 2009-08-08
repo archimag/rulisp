@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<overlay>
+    <head>
+        <title>Профиль</title>
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chrome://theme/css/profile.css" />
+    </head>
+    
+    <div id="content">
+        <form method="post" >
+            <div class="chapter">
+                <h1>Тема: </h1>
+                <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chrome://theme/all" />
+            </div>
+            <br />
+            <input type="submit" value="Сохранить" />
+        </form>
+    </div>
+</overlay>

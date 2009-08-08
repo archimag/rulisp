@@ -3,7 +3,7 @@
 (in-package :rulisp)
 
 (defun forum-admin-p (name)
-  (find name '("archimag" "lispnik") :test #'string=))
+  (find name '("archimag" "lispnik" "turtle") :test #'string=))
 
 
 ;;; main
@@ -21,7 +21,7 @@
                                      :type "application/rss+xml"
                                      :title (format nil "Форумs '~A' - RSS-лента" (hunchentoot:host))
                                      :href (genurl 'all-forums-rss)))
-             (ecss 'css :file "forum.css"))
+             (ecss 'css :file "forum.css" :theme (user-theme (username))))
           (E :div
              (eid "content")
              (iter (for (id description)

@@ -5,32 +5,27 @@
       	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
         <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-		<link href="/css/style.css" rel="stylesheet" type="text/css" />
-        <link href="/css/colorize.css" rel="stylesheet" type="text/css" />
+
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chrome://theme/css/style.css" />
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chrome://theme/css/colorize.css" />
 	</head>
 
 	<body>
         <div class="top">
             <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chrome://auth/info-panel" />
-
+            
             <!--<span id="caution">Осторожно! Территория секретных инопланетных технологий...</span>-->
             <span id="caution">Lisp - программируемый язык программирования</span>
         </div>
 
         <div id="mainmenu">
-            <ul>
-                <li><a href="/">Главная</a></li>
-                <li><a href="/articles/">Статьи</a></li>
-                <li><a href="/planet/">Планета</a></li>
-                <li><a href="/forum/">Форум</a></li>
-                <li><a href="/apps/">Сервисы</a></li>
-            </ul>
+          <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chrome://mainmenu" />
         </div>
 
         <div id="content" />
 
         <div class="bottom">@2009 lisper.ru</div>
 
-        <img id="logo" alt="Lisp Logo" src="/css/image/logo.png" />
+        <img id="logo" alt="Lisp Logo" src="/image/logo.png" />
     </body>
 </html>

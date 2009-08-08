@@ -97,7 +97,7 @@
 
 (define-simple-route newformat ("apps/format/"
                                :overlay-master *master*)
-  (skinpath "format.xml"))
+  (tmplpath "format.xml"))
 
 (postmodern:defprepared db-new-format-code "SELECT * FROM add_format_code($1, $2, $3)" :single)
   
@@ -105,7 +105,7 @@
                                     :method :post
                                     :overlay-master *master*)
   (if (hunchentoot:post-parameter "preview")
-      (let* ((doc (in-pool (xtree:parse (skinpath "format.xml"))))
+      (let* ((doc (in-pool (xtree:parse (tmplpath "format.xml"))))
              (form (xpath:find-single-node doc "//form")))
         (fill-form doc (hunchentoot:post-parameters*))
         (let ((xfactory:*node* (xtree:insert-child-before (xtree:make-element "div")  form)))
@@ -141,7 +141,7 @@
                 (redirect 'view-format-code
                           :format-id (with-rulisp-db
                                        (db-new-format-code (username) title code)))
-                (skinpath "format.xml")))
+                (tmplpath "format.xml")))
           hunchentoot:+HTTP-FORBIDDEN+)))
 
 

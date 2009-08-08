@@ -82,10 +82,6 @@ body {
     float: right;
     margin-top: 3px;
     margin-right: 5px;
-}
-
-#login b {
-    /*color: orange;*/
     color: #d3e6b8;
 }
 
@@ -99,7 +95,7 @@ body {
     margin-left: 100px;
     margin-right: 100px;
 
-    background-image: url('image/menu.png');
+    background-image: url('/image/menu.png');
     font-size: 130%;
     padding: 20px;
 

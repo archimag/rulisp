@@ -14,7 +14,10 @@
 (defun planet-path (path)
   (merge-pathnames path *planet-path*))
 
-(define-filesystem-route planet-resources "planet/:(file)" (planet-path "resources/${file}"))
+(define-simple-route planet-resources ("planet/:(file)")
+  (declare (ignore file))
+  (planet-path (restas:expand-text "resources/${file}" *bindings*)))
+  
 
 (define-simple-route planet-atom ("planet/atom.xml"
                                   :content-type "application/atom+xml")
@@ -23,12 +26,11 @@
 (define-simple-route planet-main ("planet/"
                            :overlay-master *master*)
   (in-pool
-   (xfactory:with-document-factory ((xhtml "http://www.w3.org/1999/xhtml"))
+   (xfactory:with-document-factory ((xhtml))
      (xhtml "overlay"
             (xhtml :head
                    (xhtml :title "Russian Lisp Planet")
-                   (xhtml :link
-                          (xfactory:attributes :href "/planet/planet.css" :rel "stylesheet" :type "text/css"))
+                   (ecss 'css :file "planet.css" :theme (user-theme (username)))
                    (xhtml :link
                           (xfactory:attributes :rel "alternate"
                                                :href (genurl 'planet-atom)

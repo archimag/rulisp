@@ -1,0 +1,255 @@
+body { font-size: 90%; margin: 0; padding: 1em 5%; font-family: Arial, sans-serif; background: #fff }
+
+a:link { text-decoration: underline }
+a:hover { color: #666 }
+a:active { color: #c00 }
+
+#login, #caution, #mainmenu, #content, .bottom { margin: 0 }
+
+#caution { padding: 0.5em; background: #58e url('bgr.png'); color: #fff }
+
+#caution img { position: inline; vertical-align: bottom }
+
+#caution, #mainmenu { -moz-border-radius: 4px }
+
+h1, h2, h3, h4, h5, h6 { font-weight: normal; color: #06c; padding: 0; margin: 0.8em 0 0.4em 0 }
+
+p { padding: 0; margin: 0 0 0.6em 0 }
+
+h1 { font-size: 200% }
+h2 { font-size: 180% }
+h3 { font-size: 140% }
+h4 { font-size: 120% }
+
+pre { overflow: auto; }
+
+.top { color: #ccc }
+.top a:link, .top a:visited { color: #999 }
+
+.top li { display: inline; list-style-type: none; list-style-position: outside; list-style-image: none }
+
+.info {color: gray; font-size: 80%;}
+
+
+.bottom { font-size: 90%; color: #666; padding: 3em 0 0 0; clear: both; text-align: center; }
+
+#login { font-size: 80%; text-align: right; margin-bottom: 0.5em }
+
+#mainmenu {
+    padding: 0.5em;
+    margin-top: 0.2em;
+    margin-bottom: 1em;
+    font-weight: bold;
+    color: #eee;
+    background: #aaa;
+}
+
+#mainmenu > ul {
+    font-size: 80%;
+    margin: 0;
+    padding: 0;
+}
+
+#mainmenu li {
+    display: inline;
+    list-style-type: none;
+    list-style-position: outside;
+    list-style-image: none;
+    padding-right: 1em;
+}
+
+#mainmenu a:link, #mainmenu a:visited { color: #fff }
+#mainmenu a:hover { color: #eee }
+
+#second-menu {
+    padding: 3px;
+    border-bottom: 1px solid #b9b2ca;
+    margin-bottom: 5px;
+}
+
+#second-menu ul {
+    margin: 0;
+    padding: 0;
+}
+
+#second-menu li {
+    display: inline;
+    list-style-type: none;
+    padding-left: 5px;
+}
+
+#second-menu a {
+    color: #6A5EAB;
+}
+
+.item-nav-panel { 
+    color: gray;
+    font-size: 80%;
+    border-bottom: 1px solid #b9b2ca;
+}
+
+#content {
+    /*width: 9%; float: left;*/
+    /*background: #fff*/
+}
+
+#sidebar { font-size: 90%; width: 19%; float: right }
+#sidebar ul { list-style-type: none; padding: 0; margin: 0 }
+#sidebar ul li { padding: 0; margin: 0 0 0.6em 0 }
+
+#content h4 {
+    margin: 10px 0 5px;
+}
+
+#content h5 {
+    margin: 10px 0 0;
+}
+
+#content li {
+    padding: 5px 0;
+}
+
+#content blockquote {
+    font-style: italic;
+}
+
+.code {
+    background-color: #eee;
+    border: 1px solid #d0d0d0;
+    margin: 5px;
+    padding: 10px;
+
+    font-family: "Courier New", monospace;
+}
+
+.articles li {
+    margin-bottom: 10px;
+}
+
+.articles a {
+    /*font-weight: bold;*/
+    /*color: #526b66;*/
+}
+
+.login-form {
+    padding: 2px;
+    font-size: 90%;
+    font-weight: normal;
+
+    /*border: 1px solid #D0D0D0;*/
+
+    display: table;
+}
+
+.login-form > table {
+    padding: 10px;
+}
+
+.login-form tr > td:first-child {
+
+    font-weight: bold;
+    vertical-align: top;
+    width: auto;
+}
+
+.login-form > table td {
+    padding-right: 5px;
+    padding-top: 3px;
+}
+
+.register-form {
+    border: 1px solid #d0d0d0;
+    display: table;
+
+    padding-top: 30px;
+    padding-bottom: 30px;
+    padding-left: 10px;
+    padding-right: 20px;
+}
+
+.register-form td {
+    padding-bottom: 20px;
+}
+
+.register-form tr > td:first-child {
+    vertical-align: top;
+    font-weight: bold;
+    font-size: 90%;
+    
+}
+
+
+
+.register-form input[type=button] {
+    margin-top: 10px;
+}
+
+.error-info {
+    color: red;
+    font-size: 80%;
+}
+
+.fakelink { 
+    color: #0000CC;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-left: 5px;
+    margin-right: 5px;
+    text-decoration: underline;
+}
+
+textarea {
+    padding: 0.1em;
+    width: 100%;
+}
+
+.preview {
+    border-bottom: 1px solid #777777;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.format-save {
+    border-top:  1px solid #777777;
+    margin-top: 20px;
+    padding-top: 20px;
+}
+
+.tools {
+    padding-bottom: 10px;
+    border-bottom:  1px solid #777777;
+    height: 70px;
+}
+
+.tools-img {
+    width: 64px;
+    height: 64px;
+    background: transparent url(/image/formatter.png) no-repeat;
+    float: left;
+    border: 1px solid gray;
+    margin-right: 10px;
+}
+
+.tools .description {
+    padding-top: 10px;
+}
+
+.tools .description h3 {
+    margin: 0;
+    padding: 0;
+    font-size: 100%;
+}
+
+.item {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.item > a {
+    font-size: 110%;
+    color: #6A5EAB;
+}
+
+.item .info {
+    font-size: 90%;
+}
