@@ -3,6 +3,14 @@
 <page xmlns:xlink="http://www.w3.org/1999/xlink"
       xlink:title="Статьи">
 
+    <h3>lisper.ru</h3>
+    <ul class="articles">
+        <li>
+            <a href="rulisp-installation.html">Развёртывание сайта на основе исходного кода lisper.ru</a>            
+        </li>
+    </ul>
+
+    
     <h3>Прекрасный и удивительный...</h3>
     <ul class="articles">
         <li>

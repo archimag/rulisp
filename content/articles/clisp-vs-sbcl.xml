@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<page xmlns:xlink="http://www.w3.org/1999/xlink"
+<article xmlns:xlink="http://www.w3.org/1999/xlink"
       xlink:title="Сравнение GNU CLISP и SBCL"
       xlink:href="http://lispnik.livejournal.com/156229.html">
 
@@ -20,4 +20,4 @@
     <p>Что касается многопоточности, в SBCL/x86 и SBCL/x86-64 на Linux-2.6.x (или более старым ядром, но с бэкпортом NPTL) поддерживается многопоточность, основанная на нитях POSIX и futex. На *BSD и другие платформы многопоточность ещё не портирована.</p>
 
     <p>В CLISP многопоточности нет.</p>
-</page>
+</article>

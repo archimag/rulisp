@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<page xmlns:xlink="http://www.w3.org/1999/xlink"
+<article xmlns:xlink="http://www.w3.org/1999/xlink"
       xlink:title="Отпавка эллектронного письма в кодироке utf-8"
       xlink:href="http://lisp-univ-etc.blogspot.com/2009/02/sendind-smtp-mail-with-utf-8-characters.html">
 
@@ -67,4 +67,4 @@
     </ol>
     
     
-</page>
+</article>
