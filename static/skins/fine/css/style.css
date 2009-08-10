@@ -253,3 +253,17 @@ textarea {
 .item .info {
     font-size: 90%;
 }
+
+/* * * * * * * * *  wiki * * * *  * * ** * * */
+
+.chapter {
+    padding-left: 20px;
+}
+.chapter > h3 {
+    border-bottom: 1px solid black;
+}
+
+.chapter:first-child {
+    padding-left: 0;
+}
+
