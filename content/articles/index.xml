@@ -6,7 +6,7 @@
     <h3>lisper.ru</h3>
     <ul class="articles">
         <li>
-            <a href="rulisp-installation.html">Развёртывание сайта на основе исходного кода lisper.ru</a>            
+            <a href="rulisp-installation">Развёртывание сайта на основе исходного кода lisper.ru</a>            
         </li>
     </ul>
 
@@ -14,46 +14,41 @@
     <h3>Прекрасный и удивительный...</h3>
     <ul class="articles">
         <li>
-            <a href="common-lisp-technologies.html">Уникальные технологии Common Lisp</a>
+            <a href="common-lisp-technologies">Уникальные технологии Common Lisp</a>
         </li>
         
         <li>
-            <a href="good-and-damage.html">О пользе унификации и вреде предубеждений</a>
+            <a href="good-and-damage">О пользе унификации и вреде предубеждений</a>
         </li>
     </ul>
     
     <h3>Подробности</h3>
     <ul class="articles">
-        <li><a href="cl-vars.html">Переменные в Common Lisp</a><br />
+        <li><a href="cl-vars">Переменные в Common Lisp</a><br />
         В данной статье рассказывается о разнице между лексическими и динамическими переменными.
         </li>
 
         <li>
-            <a href="setf-vs-setq.html">Чем SETF отличается от SETQ</a>
+            <a href="setf-vs-setq">Чем SETF отличается от SETQ</a>
         </li>
     </ul>
 
     <h3>Различные реализации</h3>
     <ul class="articles">
         <li>
-            <a href="clisp-vs-sbcl.html">Сравнение GNU CLISP и SBCL</a>
+            <a href="clisp-vs-sbcl">Сравнение GNU CLISP и SBCL</a>
         </li>
     </ul>
 
     <h3>Практика</h3>
     <ul class="articles">
         <li>
-            <a href="sendind-smtp-mail-with-utf-8-characters.html">Отправка электронного письма в кодироке utf-8</a>
+            <a href="sendind-smtp-mail-with-utf-8-characters">Отправка электронного письма в кодироке utf-8</a>
+        </li>
+
+        <li>
+            <a href="hello-world-with-cl-gtk2">Hello World с GUI на Common Lisp</a>
         </li>
     </ul>
 
-    <h3>Ссылки на другие ресурсы</h3>
-    <ul>
-        <li>
-            <a href="http://pcl.catap.ru/doku.php?id=pcl">Перевод на русский книги Practical Common Lisp</a>
-        </li>
-        <li>
-            <a href="http://cl-cookbook.sourceforge.net/">The Common Lisp Cookbook</a>
-        </li>
-    </ul>
 </page>

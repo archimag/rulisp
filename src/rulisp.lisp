@@ -46,7 +46,7 @@
   (apply-xsl *content-xsl*
              "content/articles/index.xml"))
 
-(define-simple-route article ("articles/:(afile).html"
+(define-simple-route article ("articles/:(afile)"
                               :overlay-master *master*)
   (apply-xsl *articles-xsl*
              (format nil "content/articles/~A.xml" afile)))

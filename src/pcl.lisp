@@ -277,7 +277,7 @@
              (E :td
                 (xfactory:attributes :width "20%"
                                      :align "right")
-                (when (< number (length *pcl-files-map*))
+                (when (< number (1- (length *pcl-files-map*)))
                   (E :a
                      (ehref 'pcl-chapter-view
                             :chapter (first (aref *pcl-files-map*
