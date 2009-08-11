@@ -295,6 +295,9 @@
         (in-pool
          (xfactory:with-document-factory ((E))
            (E :overlay
+              (E :head
+                 (E :title
+                    (xfactory:text "~A" (second (aref *pcl-files-map* number)))))
               (E :div
                  (eid "content")
                  (pcl-navigation-bar number)
@@ -303,6 +306,3 @@
                  (pcl-navigation-bar number)))))
         hunchentoot:+HTTP-NOT-FOUND+)))
 
-
-;;   (in-pool
-;;    (render-wiki-page *test-pcl-page*)))
