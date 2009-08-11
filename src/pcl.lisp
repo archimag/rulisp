@@ -17,7 +17,7 @@
                                   (if render
                                       (funcall render (cdr item))
                                       (render-wiki-item (cdr item)))))
-    ((consp item) (iter (for i in (cdr item))
+    ((consp item) (iter (for i in item)
                         (render-wiki-item i)))
     ((symbolp item) (let ((render (gethash item *wiki-render-map*)))
                       (if render
@@ -62,12 +62,17 @@
                          (car items)))
 
 (define-wiki-render dokuwiki:eol (items)
-  (declare (ignore items))
-  (e-break-line))
+  (declare (ignore items)))
+
+(define-wiki-render dokuwiki:paragraph (items)
+  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node*
+                                                   "p")))
+    (render-all-wiki-items items)))
+
 
 (define-wiki-render dokuwiki:footnote (items)
   (declare (ignore items))
-  (estrong "'footnote - fix me'")
+  ;;(estrong "'footnote - fix me'")
   )
 
 
@@ -79,15 +84,98 @@
   (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "strong")))
     (render-all-wiki-items items)))
 
+(define-wiki-render dokuwiki:emphasis (items)
+  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "em")))
+    (render-all-wiki-items items)))
 
+(define-wiki-render dokuwiki:preformatted (items)
+  ;;(error "~A" items)
+  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "pre")))
+    (iter (for item in items)
+          (render-wiki-item item)
+          (e-break-line))))
+  
 (define-wiki-render dokuwiki:code (items)
   (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "pre")))
     (eclass "code")
     (e-text2html (code-to-html (car items)))))
 
+(define-wiki-render dokuwiki:quoted (items)
+  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "blockquote")))
+    (render-all-wiki-items items)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-simple-route pcl-main ("pcl"
+(defparameter *pcl-files-map*
+  '(("introduction-why-lisp" "Введение: почему Lisp?" "%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5%D0%BF%D0%BE%D1%87%D0%B5%D0%BC%D1%83lisp")
+    ("lather-rinse-repeat-a-tour-of-the-repl" "Намылить, смыть, повторить: знакомство с REPL" "%D1%82%D1%83%D1%80%D0%B2repl")
+    ("practical-a-simple-database" "Практикум: Простая база данных" "%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D0%BA%D1%83%D0%BC%D0%BF%D1%80%D0%BE%D1%81%D1%82%D0%B0%D1%8F%D0%B1%D0%B0%D0%B7%D0%B0%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85")
+    ("syntax-and-semantics" "Синтаксис и семантика" "%D1%81%D0%B8%D0%BD%D1%82%D0%B0%D0%BA%D1%81%D0%B8%D1%81%D0%B8%D1%81%D0%B5%D0%BC%D0%B0%D0%BD%D1%82%D0%B8%D0%BA%D0%B0")
+    ("functions" "Функции" "%D1%84%D1%83%D0%BD%D0%BA%D1%86%D0%B8%D0%B8")
+    ("variables" "Переменные" "%D0%BF%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5")
+    ("macros-standard-control-constructs" "Макросы: Стандартные управляющие конструкции" "%D0%BC%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B%D1%81%D1%82%D0%B0%D0%BD%D0%B4%D0%B0%D1%80%D1%82%D0%BD%D1%8B%D0%B5%D1%83%D0%BF%D1%80%D0%B0%D0%B2%D0%BB%D1%8F%D1%8E%D1%89%D0%B8%D0%B5%D0%BA%D0%BE%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%86%D0%B8%D0%B8")
+    ("macros-defining-your-own" "Макросы: Создание собственных макросов" "%D0%BC%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5%D1%81%D0%BE%D0%B1%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D1%85%D0%BC%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D0%BE%D0%B2")
+    ("practical-building-a-unit-test-framework" "Практикум: Каркас для юнит-тестирования" "%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D0%BA%D1%83%D0%BC%D0%BA%D0%B0%D1%80%D0%BA%D0%B0%D1%81%D0%B4%D0%BB%D1%8F%D1%8E%D0%BD%D0%B8%D1%82%D1%82%D0%B5%D1%81%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F")
+    ("numbers-characters-and-strings" "Числа, знаки и строки" "%D1%87%D0%B8%D1%81%D0%BB%D0%B0%D1%81%D0%B8%D0%BC%D0%B2%D0%BE%D0%BB%D1%8B%D1%81%D1%82%D1%80%D0%BE%D0%BA%D0%B8")
+    ("collections" "Коллекции" "%D0%BA%D0%BE%D0%BB%D0%BB%D0%B5%D0%BA%D1%86%D0%B8%D0%B8")
+    ("they-called-it-lisp-for-a-reason-list-processing" "Он называется Lisp неспроста: обработка списков" "%D0%BE%D0%BD%D0%BD%D0%B0%D0%B7%D1%8B%D0%B2%D0%B0%D0%B5%D1%82%D1%81%D1%8Flisp%D0%BD%D0%B5%D1%81%D0%BF%D1%80%D0%BE%D1%81%D1%82%D0%B0%D0%BE%D0%B1%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B0%D1%81%D0%BF%D0%B8%D1%81%D0%BA%D0%BE%D0%B2")
+    ("beyond-lists-other-uses-for-cons-cells" "Не только списки: Другие применения cons-ячеек" "%D0%BD%D0%B5%D1%82%D0%BE%D0%BB%D1%8C%D0%BA%D0%BE%D1%81%D0%BF%D0%B8%D1%81%D0%BA%D0%B8")
+    ("files-and-file-io" "Файлы и файловый ввод/вывод" "%D1%84%D0%B0%D0%B9%D0%BB%D1%8B%D1%84%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2%D1%8B%D0%B9%D0%B2%D0%B2%D0%BE%D0%B4%D0%B2%D1%8B%D0%B2%D0%BE%D0%B4")
+    ("practical-a-portable-pathname-library" "Практика. Переносимая библиотека файловых путей" "practicalportablepathlib")
+    ("object-reorientation-generic-functions" "ООП: Обобщенные функции" "oopgenericfunctions")
+    ("object-reorientation-classes" "ООП: Классы" "oopclasses")
+    ("a-few-format-recipes" "Несколько рецептов для функции FORMAT" "%D0%BD%D0%B5%D1%81%D0%BA%D0%BE%D0%BB%D1%8C%D0%BA%D0%BE%D1%80%D0%B5%D1%86%D0%B5%D0%BF%D1%82%D0%BE%D0%B2%D0%B4%D0%BB%D1%8Fformat")
+    ("beyond-exception-handling-conditions-and-restarts" "Обработка исключений изнутри: Условия и Перезапуск" "%D0%BE%D0%B1%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B0%D0%B8%D1%81%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B9")
+    ("the-special-operators" "Специальные операторы" "%D1%81%D0%BF%D0%B5%D1%86%D0%B8%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%82%D0%BE%D1%80%D1%8B")
+    ("programming-in-the-large-packages-and-symbols" "Программирование по-взрослому: Пакеты и Символы" "%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D1%8B%D0%B8%D1%81%D0%B8%D0%BC%D0%B2%D0%BE%D0%BB%D1%8B")
+    ("loop-for-black-belts" "LOOP для мастеров с чёрным поясом" "loopforblackbelts")
+    ("practical-a-spam-filter" "Практика. Спам-фильтр" "practicespamfilter")
+    ("practical-parsing-binary-files" "Практика. Разбор двоичных файлов" "practiceparsingbinfiles")
+    ("practical-an-id3-parser" "Практика. Разбор ID3" "practiceanid3parser")
+    ("practical-web-programming-with-allegroserve" "Практика. Web-программирование с помощью AllegroServe" "practicewebprogramming")
+    ("practical-an-mp3-database" "Практика. База данных для MP3" "mp3database")
+    ("practical-a-shoutcast-server" "Практика. Сервер Shoutcast" "shoutcastserver")
+    ("practical-an-mp3-browser" "Практика. Браузер MP3 файлов" "practicemp3browser")
+    ("practical-an-html-generation-library-the-interpreter" "Практика: Библиотека для генерации HTML, Интерпретатор." "practicehtmlgenlibinterpreter")
+    ("practical-an-html-generation-library-the-compiler" "Практика: Библиотека для генерации HTML, Компилятор." "practicehtmlgenlibcompiler")
+    ("conclusion-whats-next" "Заключение: Что дальше ?" "conclusion")))
+
+                               
+(defun pcl-source-path (chapter)
+  (merge-pathnames (concatenate 'string
+                                (third (assoc chapter *pcl-files-map* :test #'string=))
+                                ".txt")
+                   *pcl-dir*))
+                               
+                               
+                               
+
+(define-simple-route pcl-main ("pcl/"
                                :overlay-master *master*)
   (in-pool
-   (render-wiki-page *test-pcl-page*)))
+   (xfactory:with-document-factory ((E))
+     (E :overlay
+        (E :head
+           (E :title "Перевод Practical Common Lisp"))
+        (E :div
+           (eid "content")
+
+           (E :ol
+              (iter (for chapter in *pcl-files-map*)
+                    (E :li
+                       (E :a
+                          (ehref 'pcl-chapter-view :chapter (first chapter))
+                          (xfactory:text (second chapter)))))))))))
+
+(define-simple-route pcl-chapter-view ("pcl/:(chapter)"
+                                       :overlay-master *master*)
+  (let ((path (pcl-source-path chapter)))
+    (if (fad:file-exists-p path)
+        (in-pool
+         (render-wiki-page (wiki-parser:parse :dokuwiki
+                                              path)))
+        hunchentoot:+HTTP-NOT-FOUND+)))
+
+
+;;   (in-pool
+;;    (render-wiki-page *test-pcl-page*)))

@@ -2,16 +2,17 @@
 
 (defpackage :rulisp.preferences
   (:use :cl)
-  (:export :*rulisp-path*
-           :*skindir*
-           :*rulisp-db*
-           :*host*
-           :*cookie-cipher-key*
-           :*noreply-mail-account*
-           :*vardir*
-           :*reCAPTCHA.publick-key*
-           :*reCAPTCHA.privake-key*
-           :*default-skin*))
+  (:export #:*rulisp-path*
+           #:*skindir*
+           #:*rulisp-db*
+           #:*host*
+           #:*cookie-cipher-key*
+           #:*noreply-mail-account*
+           #:*vardir*
+           #:*reCAPTCHA.publick-key*
+           #:*reCAPTCHA.privake-key*
+           #:*default-skin*
+           #:*pcl-dir*))
 
 (in-package :rulisp.preferences)
 
@@ -35,3 +36,5 @@
 (defvar *reCAPTCHA.privake-key* "6LdZjAcAAAAAAKJ2GPWTHPh1H1Foc0kyfbwgrFgO")
 
 (defparameter *default-skin* "fine")
+
+(defparameter *pcl-dir* #P"/var/www/localhost/htdocs/dokuwiki/data/pages/pcl/")

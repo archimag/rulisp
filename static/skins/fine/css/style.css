@@ -113,7 +113,7 @@ pre { overflow: auto; }
     font-style: italic;
 }
 
-.code {
+.code, pre {
     background-color: #eee;
     border: 1px solid #d0d0d0;
     margin: 5px;
