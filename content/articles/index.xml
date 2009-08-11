@@ -43,7 +43,7 @@
     <h3>Практика</h3>
     <ul class="articles">
         <li>
-            <a href="sendind-smtp-mail-with-utf-8-characters.html">Отпавка эллектронного письма в кодироке utf-8</a>
+            <a href="sendind-smtp-mail-with-utf-8-characters.html">Отправка электронного письма в кодироке utf-8</a>
         </li>
     </ul>
 
