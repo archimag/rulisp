@@ -10,6 +10,12 @@
 
 (defparameter *wiki-render-map* (make-hash-table))
 
+(defun todo-dokuwiki ()
+  (set-difference (iter (for (key value) in-hashtable dokuwiki::*symbols-category*)
+                        (collect key))
+                  (iter (for (key value) in-hashtable *wiki-render-map*)
+                        (collect key))))
+
 (defun render-wiki-item (item)
   (cond
     ((and (consp item)
@@ -59,11 +65,12 @@
                                                    "h3")
                          (car items)))
 
+(defparameter +endl+ (string #\Newline))
 
 (define-wiki-render dokuwiki:eol (items)
   (declare (ignore items))
-  (xfactory:text "
-"))
+  (xfactory:text +endl+))
+
 
 (define-wiki-render dokuwiki:paragraph (items)
   (let ((xfactory:*node* (xtree:make-child-element xfactory:*node*
@@ -76,6 +83,9 @@
   ;;(estrong "'footnote - fix me'")
   )
 
+(define-wiki-render dokuwiki:linebreak (items)
+  (declare (ignore items))
+  (xtree:make-child-element xfactory:*node* "br"))
 
 (define-wiki-render dokuwiki:monospace (items)
   (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "code")))
@@ -89,10 +99,13 @@
   (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "em")))
     (render-all-wiki-items items)))
 
+(define-wiki-render dokuwiki:underline (items)
+  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "u")))
+    (render-all-wiki-items items)))
+
 (define-wiki-render dokuwiki:preformatted (items)
-  ;;(error "~A" items)
   (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "pre")))
-    (iter (for item in items)
+    (iter (for item in items)pp
           (render-wiki-item item)
           (e-break-line))))
   
@@ -104,6 +117,66 @@
 (define-wiki-render dokuwiki:quoted (items)
   (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "blockquote")))
     (render-all-wiki-items items)))
+
+(define-wiki-render dokuwiki:unformatted (items)
+  (iter (for item in (alexandria:flatten items))
+        (cond
+          ((stringp item) (xfactory:text item))
+          ((eql item 'dokuwiki:eol) (xfactory:text +endl+)))))
+
+(define-wiki-render dokuwiki:unformattedalt (items)
+  (iter (for item in (alexandria:flatten items))
+        (cond
+          ((stringp item) (xfactory:text item))
+          ((eql item 'dokuwiki:eol) (xfactory:text +endl+)))))
+
+(define-wiki-render dokuwiki:html (items)
+  (xfactory:with-element-factory ((E))
+    (E :pre
+       (iter (for item in (alexandria:flatten items))
+        (cond
+          ((stringp item) (xfactory:text item))
+          ((eql item 'dokuwiki:eol) (xfactory:text +endl+)))))))
+       
+
+;;(define-wiki-render dokuwiki:html (items)
+
+(define-wiki-render dokuwiki:hr (items)
+  (declare (ignore items))
+  (xtree:make-child-element xfactory:*node* "hr"))
+
+(define-wiki-render dokuwiki:unordered-listblock (items)
+  (xfactory:with-element-factory ((E))
+    (E :ul
+       (iter (for item in items)
+             (E :li
+                (render-wiki-item item))))))
+
+(define-wiki-render dokuwiki:ordered-listblock (items)
+  (xfactory:with-element-factory ((E))
+    (E :ol
+       (iter (for item in items)
+             (E :li
+                (render-wiki-item item))))))
+
+;; (define-wiki-render dokuwiki:table (items)
+;;   (xfactory:with-element-factory ((E))
+;;     (E :pre
+;;        (xfactory:text (write-to-string items)))))
+
+(define-wiki-render dokuwiki:external-link (items)
+  (let ((delimiter (position #\| (car items))))
+    (xfactory:with-element-factory ((E))
+      (E :a
+         (ehref (string-trim '#(#\Space #\Tab)
+                             (if delimiter
+                                 (subseq (car items) 0 delimiter)
+                                 (car items))))
+         (xfactory:text (string-trim '#(#\Space #\Tab)
+                                     (if delimiter
+                                         (subseq (car items) (1+ delimiter))
+                                         (car items))))))))
+  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
