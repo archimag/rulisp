@@ -49,6 +49,10 @@
         <li>
             <a href="hello-world-with-cl-gtk2">Hello World с GUI на Common Lisp</a>
         </li>
+
+        <li>
+            <a href="icfpc-2009-virtual-mashine">Как написать виртуальную машину для ICFPC-2009 на Common Lisp</a>
+        </li>
     </ul>
 
 </page>

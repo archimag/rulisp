@@ -14,8 +14,8 @@
             </head>
             
             <div id="content">
-                <h3><xsl:value-of select="@xlink:title" /></h3>
-                
+                <h2><xsl:value-of select="@xlink:title" /></h2>
+
                 <table>
                     <tbody>
                         <tr>
@@ -33,7 +33,9 @@
                     </tbody>
                 </table>
 
-                <xsl:apply-templates select="*|text()" />
+               <div class="article">
+                    <xsl:apply-templates select="*|text()" />
+                </div>
             </div>
         </overlay>
     </xsl:template>

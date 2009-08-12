@@ -1,0 +1,673 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<article xmlns:xlink="http://www.w3.org/1999/xlink"
+      xlink:title="Как написать виртуальную машину для ICFPC-2009 на Common Lisp"
+      xlink:href="http://developer.bazon.ru/projects/icfpc-2009/wiki/ICFPC2009CLVMHowTo">
+
+    <author xlink:title="turtle"  />
+
+    <p>В данной статье мы рассмотрим, как можно написать виртуальную машину (довольно простую), которую необходимо было реализовать на <a href="http://icfpcontest.org/">международной олимпиаде по функциональному программированию</a> 2009 года. Сам отчёт можно посмотреть <a href="https://developer.bazon.ru/projects/icfpc-2009/">здесь</a>. Выступали мы на Common Lisp и в статье будет рассказано, как это сделать именно на Common Lisp. Конечно, реализация виртуальной машины лишь верхушка айсберга всего задания, но реализация виртуальной машины сама по себе есть довольно практическая задача, что и будет продемонстрировано.</p>
+    
+    <h3>Спецификация ВМ</h3>
+
+    <p>Оригинал спецификации приведён в задании, приложенному к данной статье.</p>
+
+    <p>Виртуальная машина состоит из области программы с 32-битными инструкциями, области данных с 64-битными дробными числами двойной точности одного однобитного статусного регистра и портов ввода/вывода, состоящих из 64-битных дробных чисел двойной точности. Доступ к область памяти и данных осуществляется с использованием 14-битного регистра указателя памяти. Порты ввода/вывода отделены друг от друга и также индексированы 14-битным значением.</p>
+
+    <p>Виртуальная машина начинает свою работу начиная с 0-ой инструкции и далее до окончания области памяти. Во время выполнения она читает с портов и также пишет на порты. После завершения своего шага контроллер может опять запустить виртуальную машину, которая произведёт ещё один шаг с новыми значениями на портах ввода и изменит значения портов вывода.</p>
+
+    <p>Инструкции подразделены на две группы: D-типа, которым необходимо два операнда, и S-типа, которым необходим лишь один операнд. Как правило, при выполнении инструкции по адресу idest значение сохраняется в памяти по адресу rdest соответственно idest. По факту индекс адреса назначения rdest равен индексу указателя инструкций idest.</p>
+
+    <p>Инструкции D-типа имеют вид Op r1 r2, где r1 и r2 - адреса участков памяти данных. Так как инструкция кодируется 32 битами, то биты с 28 по 31 кодируют инструкцию, с 14 по 27 - r1, с 0 по 13 - r2. Все инструкции D-типа можно свести в следующую таблицу:</p>
+
+    <table>
+        <thead>
+            <th>Инструкция</th>
+            <th>Оп.код</th>
+            <th>Значение</th>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>add r1 r2</td>
+                <td>0x1</td>
+                <td>mem[rd] = mem[r1] + mem[r2]</td>
+            </tr>
+
+            <tr>
+                <td>sub r1 r2</td>
+                <td>0x2</td>
+                <td>mem[rd] = mem[r1] - mem[r2]</td>
+            </tr>
+
+            <tr>
+                <td>mult r1 r2</td>
+                <td>0x3</td>
+                <td>mem[rd] = mem[r1] * mem[r2]</td>
+            </tr>
+
+            <tr>
+                <td>div r1 r2</td>
+                <td>0x4</td>
+                <td>
+                    if mem[r2] == 0 <br />
+                    then mem[rd] = 0 <br />
+                    else mem[rd] = mem[r1] / mem[r2]
+                </td>
+            </tr>
+
+            <tr>
+                <td>output r1 r2</td>
+                <td>0x5</td>
+                <td>outport[r1] = mem[r2]</td>
+            </tr>
+
+            <tr>
+                <td>phi r1 r2</td>
+                <td>0x6</td>
+                <td>
+                    if status == 1 <br />
+                    then mem[rd] = mem[r1] <br />
+                    else mem[rd] = mem[r2]
+                </td>
+            </tr>
+            
+        </tbody>
+    </table>
+
+
+    <p>Инструкции S-типа имеют вид Op r1, имеет один операнд и кодируется следующим образом: биты с 28 по 31 имеют значение 0, с 24 по 27 кодируют инструкцию, с 14 по 23 кодируют параметр для определённых инструкций (imm), с 0 по 13 - r1. Инструкции S-типа можно свести в следующую таблицу:</p>
+
+    <table>
+        <thead>
+            <th>Инструкция</th>
+            <th>Оп.код</th>
+            <th>Значение</th>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>noop</td>
+                <td>0x0</td>
+                <td>mem[rd] = mem[rd]</td>
+            </tr>
+
+            <tr>
+                <td>cmpz imm r1</td>
+                <td>0x1</td>
+                <td>status = mem[r1] op 0.0</td>
+            </tr>
+
+            <tr>
+                <td>sqrt r1</td>
+                <td>0x2</td>
+                <td>mem[rd] = abs(sqrt(mem[r1]))</td>
+            </tr>
+
+            <tr>
+                <td>copy r1</td>
+                <td>0x3</td>
+                <td>mem[rd] = mem[r1]</td>
+            </tr>
+
+            <tr>
+                <td>input r1</td>
+                <td>0x4</td>
+                <td>mem[rd] = inport[r1]</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <ul>
+        <li>op - в инструкции cmpz это значение imm;</li>
+        <li>для отрицательных значений sqrt не определён.</li>
+    </ul>
+
+    <p>Таблица операторов для cmpz:</p>
+
+    <table>
+        <thead>
+            <th>Мнемоника</th>
+            <th>Код</th>
+            <th>Операция</th>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>LTZ</td>
+                <td>0x0</td>
+                <td>&lt;</td>
+            </tr>
+            <tr>
+                <td>LEZ</td>
+                <td>0x1</td>
+                <td>&gt;=</td>
+            </tr>
+            
+            <tr>
+                <td>EQZ</td>
+                <td>0x2</td>
+                <td>=</td>
+            </tr>
+            
+            <tr>
+                <td>GEZ</td>
+                <td>0x3</td>
+                <td>&gt;</td>
+            </tr>
+            
+            <tr>
+                <td>GTZ</td>
+                <td>0x4</td>
+                <td>&gt;=</td>
+            </tr>
+
+        </tbody>
+    </table>
+
+
+    <p>Программа и начальные данные для виртуальной машины находятся в файле. Каждая область инструкция+данные хранятся в отдельном блоке из 96 бит (12 байт) начиная с 0-го блока, 32 бит (4 байта) из которых приходятся на инструкцию, а 64 бита (8 байт) - на данные. При этом что располагается вначале различается от местоположения блока. Если блок расположен по чётному адресу, то вначале идут 64 бит данных (дробные двойной точности), а затем 32 бит инструкции, а если же блок расположен по нечётному адресу, то наоборот - сначала 32 бит инструкции, а затем 64 бит данных.</p>
+    
+    <h3>Чтение программы для ВМ</h3>
+
+    <p>По завершению чтения из файла мы планируем получить два массива - один с инструкциями, другой с данными, оба одинаковой длины. При этом массив инструкций будет содержать списки вида (:OP &lt;r1&gt; &lt;r2&gt;?), например (:ADD 145 131), (:NOOP), (:INPUT 3). И данные, и инструкции хранятся в виде Little-Endian, что означает младшие байты вперёд. Итак, нам необходимо будет в цикле читать данные из файла и собирать в два массива - инструкции и данные. За шаг цикла будем считывать блок инструкция+данные из файла. При этом если из функции чтения (read-frame) пришло значение nil, то это будет сигнализировать о завершении потока и цикл будем прекращать. Блок данных (frame) будет представлять собой список вида (instruction . data). По завершению цикла (finally) собранные списки будут преобразованы в массивы значений.</p>
+
+    <code>
+(defun read-vm-info (file)
+  (with-open-file (stream file :element-type '(unsigned-byte 8))
+    (loop
+       for frame-number from 0
+       for frame = (read-frame stream frame-number)
+       while frame
+       collect (car frame) into instructions
+       collect (cdr frame) into data
+       finally (return (values (coerce instructions 'simple-vector)
+                               (coerce data 'simple-vector))))))
+    </code>
+
+    <p>Таким образом, мы определили каркас функции чтения, теперь перейдём к деталям. Остаётся нереализованной ещё функция read-frame для чтения блока данных. Мы планируем её сделать таким образом, чтобы сначала она обращалась к функции сырого чтения блока данных и проверяла полученный результат на наличие значения nil. При оном всё возвращаемое значение будет nil. В противном случае возвращается список (instruction . data), но предварительно из сырых данных будут получены действительные значения (parse-instruction, parse-data). Функция сырого чтения данных будет производить чтение из потока по правилам, определённым в спецификации, и возвращать список plist вида (:instruction instruction :data data). При чтении сырых 4-х байт инструкций и 8-ми байт данных используем функцию read-little-endian, которая преобразует считанные байты в целое число согласно порядку Little-Endian.</p>
+
+    <code>
+(defun read-frame (stream frame-number)
+  (let ((frame (read-frame-data stream frame-number)))
+    (cond
+      ((position nil frame) nil)
+      (t `(,(parse-instruction (getf frame :instruction)) .
+           ,(parse-data (getf frame :data)))))))
+
+(defun read-frame-data (stream frame-number)
+  (if (evenp frame-number)
+      (list :data (read-little-endian stream 8)
+            :instruction (read-little-endian stream 4))
+      (list :instruction (read-little-endian stream 4)
+            :data (read-little-endian stream 8))))
+
+(defun read-little-endian (stream length)
+  (loop
+     for byte-index from 0 to (- length 1)
+     sum (let ((readed-byte (read-byte stream nil)))
+           (cond
+             ((eq readed-byte nil) (return nil))
+             (t (ash readed-byte (* byte-index 8)))))))
+    </code>
+
+    <p>Осталась самая малость - написать функции parse-instruction и parse-data. Для последней используем библиотеку ieee-floats и функцию из неё decode-float64. Для первой (parse-instruction) согласно спецификации возможны два случая - инструкция S-типа и инструкция D-типа. Для доступа к определённым битам целого числа используем ldb. Далее согласно спецификации создадим список согласно нашим планам.</p>
+
+    <code>
+(defun parse-instruction (word32)
+  (cond
+    ((= 0 (ldb (byte 4 28) word32)) (parse-s-instruction word32))
+    (t (parse-d-instruction word32))))
+
+(defun parse-data (word64)
+  (decode-float64 word64))
+
+(defun parse-s-instruction (word32)
+  (let ((op-code (ldb (byte 4 24) word32))
+        (r1 (ldb (byte 14 0) word32))
+        (imm (ldb (byte 10 14) word32)))
+    (case op-code
+      (0 (list :noop))
+      (1 (list :cmpz
+               (ecase (ldb (byte 3 7) imm)
+                       (0 :ltz)
+                       (1 :lez)
+                       (2 :eqz)
+                       (3 :gez)
+                       (4 :gtz))
+               r1))
+      (otherwise (list
+                  (ecase op-code
+                    (2 :sqrt)
+                    (3 :copy)
+                    (4 :input))
+                  r1)))))
+
+(defun parse-d-instruction (word32)
+  (let ((op-code (ldb (byte 4 28) word32))
+        (r1 (ldb (byte 14 14) word32))
+        (r2 (ldb (byte 14 0)  word32)))
+    (list
+     (ecase op-code
+       (1 :add)
+       (2 :sub)
+       (3 :mul)
+       (4 :div)
+       (5 :output)
+       (6 :phi))
+     r1 r2)))
+    </code>
+    
+    <h3>Интерпретируемая ВМ</h3>
+
+    <p>Для начала определимся с тем, что мы собираемся изменять внутреннее состояние нашей виртуальной машины. Для хранения внутреннего состояния и возможности его передачи определим структуру виртуальной машины. Определим указатель памяти (ip) в начальное значение 0. Также определим значения по умолчанию статусный регистр (reg-status) в значение ложь (nil), а также массивы портов ввода/вывода, заполненными в значения 0. Область программ (program-memory) и область данных (data-memory) будет инициализирована результатами чтения из файла OBF.</p>
+
+    <code>
+(defstruct virtual-machine
+  (ip 0 :type integer)
+  program-memory
+  data-memory
+  (reg-status nil :type boolean)
+  (in-ports (make-array (expt 2 14)
+                        :element-type 'double-float
+                        :initial-element 0.0d0))
+  (out-ports (make-array (expt 2 14)
+                         :element-type 'double-float
+                         :initial-element 0.0d0)))
+
+(defun vm-configure (vm port value)
+  (setf (aref (virtual-machine-in-ports vm) port) (coerce value 'double-float)))
+    </code>
+
+    <p>Итак, машина есть. Определим главный цикл (vm-run). Определим условие завершения цикла по значению nil с функции шага интерпретации (vm-step-interpret). Перед началом цикла обнулим указатель инструкций (ip) у виртуальной машины.</p>
+
+    <code>
+(defun vm-run (vm)
+  (let ((program-memory (virtual-machine-program-memory vm))
+        (data-memory (virtual-machine-data-memory vm))
+        (in-ports (virtual-machine-in-ports vm))
+        (out-ports (virtual-machine-out-ports vm)))
+    (setf (virtual-machine-ip vm) 0)
+    (loop while (vm-step-interpret vm program-memory
+                                   data-memory in-ports out-ports))))
+    </code>
+    
+    <p>На каждом шаге будем считывать инструкцию по указателю памяти и, в зависимости от её значения вызывать определённые функции. На шаге будем возвращать nil если значение указателя вышло за пределы памяти. Для сопоставления инструкций и их параметров будем использовать библиотеку <a href="http://common-lisp.net/project/cl-match/doc/clmatch.htm">cl-match</a>. Далее при совпадении условий будем вызывать определённые действия согласно спецификации. Для обобщения арифметических операций создадим функцию vm-arith-op, которая будет принимать в качестве аргумента функцию (арифметическую).</p>
+
+    <code>
+(defun vm-step-interpret (vm program-memory data-memory in-ports out-ports)
+  (let* ((ip (virtual-machine-ip vm))
+         (instruction (aref program-memory ip)))
+    (setf (virtual-machine-ip vm) (+ ip 1))
+    (match instruction
+           ((list :noop)          (vm-noop))
+           ((list :cmpz   op r1)  (vm-cmpz vm data-memory op r1))
+           ((list :add    r1 r2)  (vm-add ip data-memory r1 r2))
+           ((list :sub    r1 r2)  (vm-sub ip data-memory r1 r2))
+           ((list :mul    r1 r2)  (vm-mul ip data-memory r1 r2))
+           ((list :div    r1 r2)  (vm-div ip data-memory r1 r2))
+           ((list :copy   r1)     (vm-copy ip data-memory r1))
+           ((list :sqrt   r1)     (vm-sqrt ip data-memory r1))
+           ((list :phi    r1 r2)  (vm-phi ip vm data-memory r1 r2))
+           ((list :output r1 r2)  (vm-output data-memory out-ports r1 r2))
+           ((list :input  r1)     (vm-input ip data-memory in-ports r1)))
+    (if (&gt;= (virtual-machine-ip vm) (length program-memory))
+        nil
+        :continue)))
+
+(defun vm-noop ()
+  '())
+
+(defun vm-arith-op (ip data-memory arith-f r1 r2)
+  (setf (aref data-memory ip)
+        (funcall arith-f
+                 (aref data-memory r1)
+                 (aref data-memory r2))))
+
+(defun vm-add (ip data-memory r1 r2)
+  (vm-arith-op ip data-memory #'+ r1 r2))
+
+(defun vm-sub (ip data-memory r1 r2)
+  (vm-arith-op ip data-memory #'- r1 r2))
+
+(defun vm-mul (ip data-memory r1 r2)
+  (vm-arith-op ip data-memory #'* r1 r2))
+
+(defun vm-div (ip data-memory r1 r2)
+  (let ((mem-r2 (aref data-memory r2)))
+    (if (= mem-r2 0.0d0)
+        (setf (aref data-memory ip) 0.0d0)
+        (vm-arith-op ip data-memory #'/ r1 r2))))
+
+(defun vm-output (data-memory out-ports r1 r2)
+  (setf (aref out-ports r1)
+        (aref data-memory r2)))
+
+(defun vm-input (ip data-memory in-ports r1)
+  (setf (aref data-memory ip)
+        (aref in-ports r1)))
+
+(defun vm-copy (ip data-memory r1)
+  (setf (aref data-memory ip)
+        (aref data-memory r1)))
+
+(defun vm-sqrt (ip data-memory r1)
+  (setf (aref data-memory ip)
+        (sqrt (abs (aref data-memory r1)))))
+
+(defun vm-phi (ip vm data-memory r1 r2)
+  (setf (aref data-memory ip)
+        (if (virtual-machine-reg-status vm)
+            (aref data-memory r1)
+            (aref data-memory r2))))
+
+(defun vm-cmpz (vm data-memory op r1)
+  (setf (virtual-machine-reg-status vm)
+        (funcall (ecase op
+                   (:ltz #'&lt;)
+                   (:lez #'&lt;=)
+                   (:eqz #'=)
+                   (:gez #'&gt;=)
+                   (:gtz #'&gt;))
+                 (aref data-memory r1)
+                 0.0d0)))
+    </code>
+
+    <h3>Компилируемая</h3>
+
+    <p>Идея заключается в том, что все операции по манипуляции с состоянием виртуальной машины производить определённой функцией, не интерпретируя на каждом шаге инструкцию и не производя сопоставления. То есть нам необходимо будет преобразовать область программ в эквивалентную функцию на языке лисп. Сделаем так, что функция будет принимать в себя структуру виртуальной машины, состояние которой она будет изменять. Таким образом пуск виртуальной машины будет заключаться в вызове созданной функции:</p>
+
+    <code>
+(defun vmc-run (vm vm-function)
+  (funcall vm-function vm))
+    </code>
+
+    <p>Функция будет стандартна языку лисп и представлять собой список s-выражений, которые будут оперировать виртуальной машиной. После того, как список выражений будет сгенерирован на основании кода виртуальной машины, то функцию необходимо будет скомпилировать.</p>
+
+    <code>
+(defun vmc-compiled-function (vm)
+  (compile nil (vmc-function vm)))
+    </code>
+
+    <p>Генерация будет происходить так же, как и интерпретация с одним небольшим отличием - вместо непосредственного выполнения действий будет возвращаться выражение для данной инструкции.</p>
+
+    <code>
+(defun vmc-function (vm)
+  (let ((program-memory (virtual-machine-program-memory vm))
+        (vm-var (gensym "VM"))
+        (data-memory-var (gensym "DATA-MEMORY"))
+        (in-ports-var (gensym "IN-PORTS"))
+        (out-ports-var (gensym "OUT-PORTS")))
+    `(lambda (,vm-var)
+       (let ((,data-memory-var (virtual-machine-data-memory ,vm-var))
+             (,in-ports-var (virtual-machine-in-ports ,vm-var))
+             (,out-ports-var (virtual-machine-out-ports ,vm-var)))
+         ,@(loop
+              for ip from 0
+              for instruction across program-memory
+              collect
+              (match instruction
+                     ((list :noop)          (vmc-noop))
+                     ((list :cmpz   op r1)  (vmc-cmpz vm-var data-memory-var op
+r1))
+                     ((list :add    r1 r2)  (vmc-add ip data-memory-var r1 r2))
+                     ((list :sub    r1 r2)  (vmc-sub ip data-memory-var r1 r2))
+                     ((list :mul    r1 r2)  (vmc-mul ip data-memory-var r1 r2))
+                     ((list :div    r1 r2)  (vmc-div ip data-memory-var r1 r2))
+                     ((list :copy   r1)     (vmc-copy ip data-memory-var r1))
+                     ((list :sqrt   r1)     (vmc-sqrt ip data-memory-var r1))
+                     ((list :phi    r1 r2)  (vmc-phi ip vm-var data-memory-var r1 r2))
+                     ((list :output r1 r2)  (vmc-output data-memory-var out-ports-var r1 r2))
+                     ((list :input  r1)     (vmc-input ip data-memory-var in-ports-var r1))
+                     (_ (error "Undefined instruction"))))))))
+
+(defun vmc-noop ()
+  `())
+
+(defun vmc-arith-op (ip data-memory arith-f r1 r2)
+  `(setf (aref ,data-memory ,ip)
+         (funcall ,arith-f
+                  (aref ,data-memory ,r1)
+                  (aref ,data-memory ,r2))))
+
+(defun vmc-add (ip data-memory r1 r2)
+  (vmc-arith-op ip data-memory #'+ r1 r2))
+
+(defun vmc-sub (ip data-memory r1 r2)
+  (vmc-arith-op ip data-memory #'- r1 r2))
+
+(defun vmc-mul (ip data-memory r1 r2)
+  (vmc-arith-op ip data-memory #'* r1 r2))
+
+(defun vmc-div (ip data-memory r1 r2)
+  (let ((mem-r2-var (gensym "MEM-R2")))
+    `(let ((,mem-r2-var (aref ,data-memory ,r2)))
+       (if (= ,mem-r2-var 0.0d0)
+           (setf (aref ,data-memory ,ip) 0.0d0)
+           ,(vmc-arith-op ip data-memory #'/ r1 r2)))))
+
+(defun vmc-output (data-memory out-ports r1 r2)
+  `(setf (aref ,out-ports ,r1)
+         (aref ,data-memory ,r2)))
+
+(defun vmc-input (ip data-memory in-ports r1)
+  `(setf (aref ,data-memory ,ip)
+         (aref ,in-ports ,r1)))
+
+(defun vmc-copy (ip data-memory r1)
+  `(setf (aref ,data-memory ,ip)
+         (aref ,data-memory ,r1)))
+
+(defun vmc-sqrt (ip data-memory r1)
+  `(setf (aref ,data-memory ,ip)
+         (sqrt (abs (aref ,data-memory ,r1)))))
+
+(defun vmc-phi (ip vm data-memory r1 r2)
+  `(setf (aref ,data-memory ,ip)
+         (if (virtual-machine-reg-status ,vm)
+             (aref ,data-memory ,r1)
+             (aref ,data-memory ,r2))))
+
+(defun vmc-cmpz (vm data-memory op r1)
+  `(setf (virtual-machine-reg-status ,vm)
+         (funcall ,(ecase op
+                          (:ltz #'&lt;)
+                          (:lez #'&lt;=)
+                          (:eqz #'=)
+                          (:gez #'&gt;=)
+                          (:gtz #'&gt;))
+                  (aref ,data-memory ,r1)
+                  0.0d0)))
+    </code>
+
+    <h3>Пилотируемый запуск</h3>
+
+    <p>Виртуальная машина готова. Даже в двух вариантах. Теперь нам необходимо её запустить. Для этого напишем отдельные функции запуска для интерпретируемой и компилируемой ВМ. Параметром также будем передавать функцию управления (controller), которая будет будет подавать управляющие воздействия. Так как мы не акцентируемся на функции управления, то создадим две простые - пустую и печатающую топливо и координаты.</p>
+
+    <code>
+(defun start-vmi (file problem &amp;optional &amp;key (max-steps 100000) (controller #'empty-controller))
+  (let ((vm (multiple-value-bind (program-array data-array)
+                (read-vm-info file)
+              (make-virtual-machine :program-memory program-array
+                                    :data-memory data-array))))
+    (vm-configure vm #x3e80 problem)
+    (loop
+       for time from 0 to max-steps
+       do
+       (progn
+         (funcall controller vm)
+         (vm-run vm)))))
+
+(defun start-vmc (file problem &amp;optional &amp;key  (max-steps 100000) (controller #'empty-controller))
+  (let* ((vm (multiple-value-bind (program-array data-array)
+                 (read-vm-info file)
+               (make-virtual-machine :program-memory program-array
+                                     :data-memory data-array)))
+         (vm-function (vmc-compiled-function vm)))
+    (vm-configure vm #x3e80 problem)
+    (loop
+       for time from 0 to max-steps
+       do
+       (progn
+         (funcall controller vm)
+         (vmc-run vm vm-function)))))
+
+(defun empty-controller (vm)
+  )
+
+(defun printing-controller (vm)
+  (format t "F: ~a, X: ~a, Y: ~a~%"
+          (aref (virtual-machine-out-ports vm) 1)
+          (aref (virtual-machine-out-ports vm) 2)
+          (aref (virtual-machine-out-ports vm) 3)))
+    </code>
+
+    <p>Таким образом, чтобы запустить первое задание, нужно выполнить следующее:</p>
+
+    <code>
+(start-vmc "../task/bin1.obf" 1001 :max-steps 10000 :controller #'printing-controller)
+    </code>
+
+    или
+
+    <code>
+(start-vmi "../task/bin1.obf" 1001 :max-steps 10000 :controller #'printing-controller)
+    </code>
+
+    <h3>Выводы</h3>
+
+    <p>Ну и по завершению нашей работы замерим время выполнения при 1000000 прогонах программы. Результаты сведены в таблицу. Как виддно из неё, как правило, компилируемый код выполняется значительное быстрее интерпретируемого. Время для компилируемой машины включает в себя и время создания функции виртуальной машины и её компиляции. Стоит отметить, что в данном примере не происходит попытки достичь максимальной производительности. Ну и итоговый вывод - язык лисп годится для написания виртуальных машин. Хотя, конечно, реализованная виртуальная машина не заканчивает задание ICFPC-2009, а только начинает его. Ну а реализацию функций управления ещё предстоит выполнить. Кому будет интересно - подробности в спецификации.</p>
+
+    <table>
+    <thead>
+        <th>Файл задачи</th>
+        <th>Номер сценария</th>
+        <th>start-vmc (сек)</th>
+        <th>start-vmi (сек)</th>
+    </thead>
+
+    <tbody>
+        <tr>
+            <td>../task/bin1.obf</td>
+            <td>1001</td>
+            <td>18.41</td>
+            <td>31.48</td>
+        </tr>
+        <tr>
+            <td>../task/bin1.obf</td>
+            <td>1002</td>
+            <td>18.27</td>
+            <td>31.75</td>
+        </tr>
+        <tr>
+            <td>../task/bin1.obf</td>
+            <td>1003</td>
+            <td>19.28</td>
+            <td>31.62</td>
+        </tr>
+        <tr>
+            <td>../task/bin1.obf</td>
+            <td>1004</td>
+            <td>18.55</td>
+            <td>31.70</td>
+        </tr>
+        <tr>
+            <td>../task/bin2.obf</td>
+            <td>2001</td>
+            <td>30.49</td>
+            <td>48.06</td>
+        </tr>
+        <tr>
+            <td>../task/bin2.obf</td>
+            <td>2002</td>
+            <td>30.90</td>
+            <td>48.42</td>
+        </tr>
+        <tr>
+            <td>../task/bin2.obf</td>
+            <td>2003</td>
+            <td>34.00</td>
+            <td>48.13</td>
+        </tr>
+        <tr>
+            <td>../task/bin2.obf</td>
+            <td>2004</td>
+            <td>32.38</td>
+            <td>48.16</td>
+        </tr>
+        <tr>
+            <td>../task/bin3.obf</td>
+            <td>3001</td>
+            <td>31.07</td>
+            <td>49.10</td>
+        </tr>
+        <tr>
+            <td>../task/bin3.obf</td>
+            <td>3002</td>
+            <td>32.45</td>
+            <td>49.50</td>
+        </tr>
+        <tr>
+            <td>../task/bin3.obf</td>
+            <td>3003</td>
+            <td>38.72</td>
+            <td>49.57</td>
+        </tr>
+        <tr>
+            <td>../task/bin3.obf</td>
+            <td>3004</td>
+            <td>42.28</td>
+            <td>49.34</td>
+        </tr>
+        <tr>
+            <td>../task/bin4.obf</td>
+            <td>4001</td>
+            <td>294.37</td>
+            <td>280.14</td>
+        </tr>
+        <tr>
+            <td>../task/bin4.obf</td>
+            <td>4002</td>
+            <td>324.38</td>
+            <td>280.49</td>
+        </tr>
+        <tr>
+            <td>../task/bin4.obf</td>
+            <td>4003</td>
+            <td>404.75</td>
+            <td>279.84</td>
+        </tr>
+        <tr>
+            <td>../task/bin4.obf</td>
+            <td>4004</td>
+            <td>456.48</td>
+            <td>280.50</td>
+        </tr>
+    </tbody>
+    </table>
+
+    <h3>Исходный код</h3>
+
+    <p>К данной статье приложен исходный код, оформленный в виде пакета asdf. Типичный запуск из корня проекта под sbcl будет:</p>
+
+    <code>
+(require 'asdf)
+(asdf:operate 'asdf:load-op 'bazon-icfpc-2009)
+(bazon-icfpc-2009:start-vmc "../task/bin1.obf" 1001 :max-steps 1000 :controller #'bazon-icfpc-2009:printing-controller)
+    </code>
+
+    <h3>Attachments</h3>
+    <ul>
+        <li>
+            <a href="http://developer.bazon.ru/projects/icfpc-2009/attachment/wiki/ICFPC2009CLVMHowTo/task-1.9.pdf">
+                Оригинал задания для ICFPC-2009</a> (167.7 kB)
+        </li>
+        <li>
+            <a href="http://developer.bazon.ru/projects/icfpc-2009/attachment/wiki/ICFPC2009CLVMHowTo/icfpcontest-2009.tar.bz2">
+                Исходный код к статье
+            </a>
+            (157.9 kB) 
+        </li>
+    </ul>
+
+</article>

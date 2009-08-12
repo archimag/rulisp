@@ -254,6 +254,16 @@ textarea {
     font-size: 90%;
 }
 
+/* * * * * * * * *  article * * * *  * * ** * * */
+
+.article { margin-top: 1em; }
+
+.article table {border: 1px solid #cccccc; border-collapse: collapse;}
+
+.article th {border: 1px solid #cccccc; border-collapse: collapse; padding: 0.2em; }
+
+.article td {border: 1px solid #cccccc; border-collapse: collapse; padding: 0.2em; }
+
 /* * * * * * * * *  wiki * * * *  * * ** * * */
 
 .chapter {
@@ -266,4 +276,6 @@ textarea {
 .chapter:first-child {
     padding-left: 0;
 }
+
+
 
