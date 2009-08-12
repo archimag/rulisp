@@ -100,7 +100,7 @@
 
     <p>Далее надо с помощью cl-launch создать шелл-скрипт, запускающий программу из созданного образа:</p>
 
-    <pre>cl-launch.sh -m hello-world-image -i '(helo-world:run)' -o hello-world</pre>
+    <pre>cl-launch.sh -m hello-world-image -i '(hello-world:run)' -o hello-world</pre>
 
     <p>(если установлено несколько реализаций лиспа, то также можно добавить ключ --lisp)</p>
 
