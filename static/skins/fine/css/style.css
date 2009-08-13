@@ -256,7 +256,7 @@ textarea {
 
 /* * * * * * * * *  article * * * *  * * ** * * */
 
-.article { margin-top: 1em; }
+.article { margin-top: 1em; text-align: justify; }
 
 .article table {border: 1px solid #cccccc; border-collapse: collapse;}
 
@@ -270,12 +270,18 @@ textarea {
     padding-left: 20px;
 }
 .chapter > h3 {
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid #cccccc;
 }
 
 .chapter:first-child {
     padding-left: 0;
 }
 
+.footnotes { border-top: 1px solid #cccccc; margin-top: 1em; padding-top: 0.5em; }
+
+.footnotes > div { font-size: 95%; margin-top: 0.3em; margin-bottom: 0.3em; }
 
 
+.fn_top { font-size: 80%; vertical-align: super; margin-left: 0.1em; }
+
+.fn_bot { font-size: 90%; font-weight: bold; vertical-align: super; margin-right: 0.2em; }

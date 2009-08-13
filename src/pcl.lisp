@@ -30,11 +30,21 @@
                           (funcall render nil))))
     ((stringp item) (xfactory:text item))))
 
+(defvar *footnotes*)
+(defvar *footnote-number*)
+
 (defun render-wiki-page (wikidoc)
-  (xfactory:with-element-factory ((E))
-    (E :div
-       (estyle "margin-bottom: 1em")
-       (render-wiki-item wikidoc))))
+  (let ((*footnotes* (xtree:make-element "div"))
+        (*footnote-number* 0))
+    (xfactory:with-element-factory ((E))
+      (E :div
+         (eclass "article")
+         (render-wiki-item wikidoc)
+         (if (xtree:first-child *footnotes*)
+             (progn
+               (setf (xtree:attribute-value *footnotes* "class") "footnotes")
+               (xtree:append-child xfactory:*node* *footnotes*))
+             (xtree:release *footnotes*))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -79,9 +89,22 @@
 
 
 (define-wiki-render dokuwiki:footnote (items)
-  (declare (ignore items))
-  ;;(estrong "'footnote - fix me'")
-  )
+  (incf *footnote-number*)
+  (xfactory:with-element-factory ((E))
+    (E :a
+       (eclass "fn_top")
+       (eid "fnt__~A" *footnote-number*)
+       (ehref "#fn__~A" *footnote-number*)
+       (xfactory:text "~A)" *footnote-number*)))
+  (let ((xfactory:*node* *footnotes*))
+    (xfactory:with-element-factory ((E))
+      (E :div
+         (E :a
+            (eclass "fn_bot")
+            (eid "fn__~A" *footnote-number*)
+            (ehref "#fnt__~A" *footnote-number*)
+            (xfactory:text "~A)" *footnote-number*))
+         (render-all-wiki-items items)))))
 
 (define-wiki-render dokuwiki:linebreak (items)
   (declare (ignore items))
