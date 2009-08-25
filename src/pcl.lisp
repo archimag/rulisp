@@ -187,6 +187,14 @@
 ;;     (E :pre
 ;;        (xfactory:text (write-to-string items)))))
 
+(define-wiki-render dokuwiki:en-dash (items)
+  (declare (ignore items))
+  (xfactory:text (string #\EN_DASH)))
+
+(define-wiki-render dokuwiki:em-dash (items)
+  (declare (ignore items))
+  (xfactory:text (string #\EM_DASH)))
+
 (define-wiki-render dokuwiki:external-link (items)
   (let ((delimiter (position #\| (car items))))
     (xfactory:with-element-factory ((E))
