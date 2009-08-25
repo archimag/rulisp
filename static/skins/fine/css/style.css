@@ -260,9 +260,13 @@ textarea {
 
 .article table {border: 1px solid #cccccc; border-collapse: collapse;}
 
-.article th {border: 1px solid #cccccc; border-collapse: collapse; padding: 0.2em; }
+.article th {border: 1px solid #cccccc; border-collapse: collapse; padding: 0.2em; background-color: #eeeeee; }
 
 .article td {border: 1px solid #cccccc; border-collapse: collapse; padding: 0.2em; }
+
+.leftalign { text-align: left; }
+.rightalign { text-align: right; }
+.centeralign { text-align: center; }
 
 /* * * * * * * * *  wiki * * * *  * * ** * * */
 

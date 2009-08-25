@@ -207,7 +207,45 @@
                                      (if delimiter
                                          (subseq (car items) (1+ delimiter))
                                          (car items))))))))
-  
+
+(define-wiki-render dokuwiki:table (items)
+  (xfactory:with-element-factory ((E))
+    (E :table
+       (E :tbody
+          (iter (for item in items)
+                (E :tr
+                   (render-all-wiki-items (remove-if-not #'consp item))))))))
+
+(defun render-table-cell (type items)
+  (if (or items
+          (null (xtree:first-child xfactory:*node*)))
+      (let* ((xfactory:*node* (xtree:make-child-element xfactory:*node* type))
+             (first (first items))
+             (right (and (stringp first)
+                         (> (length first) 1)
+                         (string= (subseq first 0 2) "  ")))
+             (last (car (last items)))
+             (left (and (stringp last)
+                        (> (length last) 1)
+                        (string= (subseq last (- (length last) 2)) "  "))))
+        (cond
+          ((and right left) (eclass "centeralign"))
+          (left (eclass "leftalign"))
+          (right (eclass "rightalign")))
+        (render-all-wiki-items items))
+      (let* ((cell (xtree:last-child xfactory:*node*))
+             (colspan (xtree:attribute-value cell "colspan")))
+        (setf (xtree:attribute-value cell "colspan")
+              (if colspan
+                  (write-to-string (1+ (parse-integer colspan)))
+                  "2")))))
+        
+
+(define-wiki-render dokuwiki:table-header-cell (items)
+  (render-table-cell "th" items))
+
+(define-wiki-render dokuwiki:table-cell (items)
+  (render-table-cell "td" items))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
