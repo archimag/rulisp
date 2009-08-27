@@ -7,7 +7,7 @@
     <div id="content">
         <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chrome://formater/topmenu" />
         <form method="post">
-            <textarea rows="30" name="code" id="wysiwyg" cols="80"  />
+            <textarea rows="30" name="code" cols="80"  />
             <br />
             <input type="submit" value="Отформатировать" name="preview" />
         </form>

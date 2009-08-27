@@ -1,0 +1,19 @@
+/* wiki.css */
+
+.wiki-page-menu { text-align: right; }
+
+.wiki-page-menu > ul {
+    font-size: 80%;
+    margin: 0;
+    padding: 0;
+}
+
+.wiki-page-menu li {
+    display: inline;
+    list-style-type: none;
+    list-style-position: outside;
+    list-style-image: none;
+    padding-right: 1em;
+}
+
+/*textarea { width: 100%;  }*/

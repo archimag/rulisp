@@ -59,9 +59,10 @@
 (defparameter *mainmenu* '((main "Главная")                           
                            (articles "Статьи")
                            (planet-main "Планета")
-                           (forum-main "Форум")
+                           (forum-main "Форум")                           
                            (tools-list "Сервисы")
-                           (pcl-main "Practical Common Lisp")))
+                           (pcl-main "Practical Common Lisp")
+                           (wiki-main-page "wiki")))
 
 (define-simple-route mainmenu ("mainmenu"
                                :protocol :chrome)

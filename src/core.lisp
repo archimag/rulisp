@@ -47,6 +47,26 @@
   "Calc sha1 sum of the val (string)"
   (calc-digest-sum val :sha1))
 
+
+;;;; gzip
+
+(defun write-string-into-gzip-file (string path)
+  (with-open-file (ostream
+                   path
+                   :element-type '(unsigned-byte 8)
+                   :direction :output
+                   :if-exists :supersede)
+    (salza2:with-compressor (compressor 'salza2:gzip-compressor
+                                        :callback (salza2:make-stream-output-callback ostream))
+      (salza2:compress-octet-vector (sb-ext:string-to-octets string)  
+                                    compressor))))
+
+(defun read-gzip-file-into-string (path)
+  (sb-ext:octets-to-string (with-open-file (in path :element-type '(unsigned-byte 8))
+                             (zip:skip-gzip-header in)
+                             (flex:with-output-to-sequence (out)
+                               (zip:inflate in out)))))
+
 ;;; misc
 
 (defun substring (text end)
@@ -82,7 +102,12 @@
           format)))
 
 (defun redirect (route-symbol &rest args)
-  (let* ((url (apply-format-aux route-symbol args))
+  (let* ((url (apply-format-aux route-symbol
+                                (mapcar #'(lambda (s)
+                                            (if (stringp s)
+                                                (hunchentoot:url-encode s)
+                                                s))
+                                        args)))
          (route (car (routes:match restas::*mapper*
                                    url
                                    (acons :method :get nil))))
@@ -92,7 +117,7 @@
                                        (username))
                                   (and (eql required-login-status :not-logged-on)
                                        (null (username))))
-                              url
+                              (hunchentoot:url-decode url)
                               "/"))))
 
 (defun genurl-with-host (route &rest args)
@@ -156,6 +181,11 @@
                                    (collect node)))
                 (xtree:detach node)
                 (xtree:append-child xfactory:*node* node))))))
+
+(defun etext (format &rest args)
+  (apply #'xfactory:text
+         format
+         args))
 
 ;;; mail
 

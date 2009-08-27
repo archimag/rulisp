@@ -12,7 +12,8 @@
            #:*reCAPTCHA.publick-key*
            #:*reCAPTCHA.privake-key*
            #:*default-skin*
-           #:*pcl-dir*))
+           #:*pcl-dir*
+           #:*wiki-dir*))
 
 (in-package :rulisp.preferences)
 
@@ -38,3 +39,6 @@
 (defparameter *default-skin* "fine")
 
 (defparameter *pcl-dir* #P"/var/www/localhost/htdocs/dokuwiki/data/pages/pcl/")
+
+(defparameter *wiki-dir* #P"/var/rulisp/wiki/")
+
