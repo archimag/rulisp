@@ -67,7 +67,7 @@
                                      :overlay-master *master*
                                      :login-status :logged-on)
   (let ((doc (in-pool (xtree:parse (expand-file (tmplpath "wiki/edit.xml")
-                                                `((:title . ,page)))))))
+                                                `((:title . ,(hunchentoot:url-decode page))))))))
     (if (fad:file-exists-p (wiki-page-pathname page))        
         (fill-form doc (acons "page-content"
                               (alexandria:read-file-into-string (wiki-page-pathname page))
@@ -161,7 +161,9 @@
                                                               (local-time:universal-to-timestamp (first item))
                                                               :format time-format))
                          (E :a
-                            (ehref 'view-archive-wiki-page :page page :time (first item))
+                            (ehref 'view-archive-wiki-page
+                                   :page (hunchentoot:url-decode page)
+                                   :time (first item))
                             (etext (fourth item)))
                          (E :spane
                             (estyle "color: #666")

@@ -32,12 +32,34 @@
                                  (subseq line min-space-count))))))
       (colorize::html-colorization :common-lisp
                                    (format nil "~{~A~%~}" lines)))))
+;;;; string<->octets
+
+(defun string-to-octets (string &key (external-format :utf-8) (start 0) end)
+  #+sbcl(sb-ext:string-to-octets string
+                                 :external-format external-format
+                                 :start start
+                                 :end end)
+  #-sbcl(babel:string-to-octets string
+                                :encoding external-format
+                                :start start
+                                :end end))
+
+(defun octets-to-string (vector &key (external-format :utf-8) (start 0) end)
+  #+sbcl(sb-ext:octets-to-string vector
+                                 :external-format external-format
+                                 :start start
+                                 :end end)
+  #-sbcl(babel:octets-to-string vector
+                                :encoding external-format
+                                :start start
+                                :end end))
+                                 
 
 ;;; digest
 
 (defun calc-digest-sum (val digest)
   (ironclad:byte-array-to-hex-string (ironclad:digest-sequence digest
-                                                               (sb-ext:string-to-octets val))))
+                                                               (string-to-octets val))))
 
 (defun calc-md5-sum (val)
   "Calc md5 sum of the val (string)"
@@ -46,7 +68,6 @@
 (defun calc-sha1-sum (val)
   "Calc sha1 sum of the val (string)"
   (calc-digest-sum val :sha1))
-
 
 ;;;; gzip
 
@@ -58,14 +79,14 @@
                    :if-exists :supersede)
     (salza2:with-compressor (compressor 'salza2:gzip-compressor
                                         :callback (salza2:make-stream-output-callback ostream))
-      (salza2:compress-octet-vector (sb-ext:string-to-octets string)  
+      (salza2:compress-octet-vector (string-to-octets string)  
                                     compressor))))
 
 (defun read-gzip-file-into-string (path)
-  (sb-ext:octets-to-string (with-open-file (in path :element-type '(unsigned-byte 8))
-                             (zip:skip-gzip-header in)
-                             (flex:with-output-to-sequence (out)
-                               (zip:inflate in out)))))
+  (octets-to-string (with-open-file (in path :element-type '(unsigned-byte 8))
+                      (zip:skip-gzip-header in)
+                      (flex:with-output-to-sequence (out)
+                        (zip:inflate in out)))))
 
 ;;; misc
 
@@ -195,37 +216,37 @@
                  "/usr/sbin/sendmail")))
 
 (defun send-mail (to head content)
-  (let* ((sendmail-process (sb-ext:run-program *sendmail*
-                                               to
-                                               :input :stream
-                                               :output nil
-                                               :error nil
-                                               :wait nil))
-         (sendmail (sb-ext:process-input sendmail-process)))
-    (unwind-protect
-         (progn
-           (iter (for head-line in (acons "To" (format nil "~{~A ~}" to)  head))
-                 (format sendmail
-                         "~A: ~A~%"
-                         (car head-line)
-                         (cdr head-line)))
-           (format sendmail "Content-Type: text/html; charset=\"utf-8\"~%~%")
-           (typecase content
-             (xtree::libxml2-cffi-object-wrapper (xtree:serialize content sendmail))
-             (string (write-string content sendmail))
-             (pathname (write-string (alexandria:read-file-into-string content) sendmail)))
-           t)
-      (close sendmail)
-      (sb-ext:process-wait sendmail-process)
-      (sb-ext:process-close sendmail-process))))
+  #+sbcl(let* ((sendmail-process (sb-ext:run-program *sendmail*
+                                                     to
+                                                     :input :stream
+                                                     :output nil
+                                                     :error nil
+                                                     :wait nil))
+               (sendmail (sb-ext:process-input sendmail-process)))
+          (unwind-protect
+               (progn
+                 (iter (for head-line in (acons "To" (format nil "~{~A ~}" to)  head))
+                       (format sendmail
+                               "~A: ~A~%"
+                               (car head-line)
+                               (cdr head-line)))
+                 (format sendmail "Content-Type: text/html; charset=\"utf-8\"~%~%")
+                 (typecase content
+                   (xtree::libxml2-cffi-object-wrapper (xtree:serialize content sendmail))
+                   (string (write-string content sendmail))
+                   (pathname (write-string (alexandria:read-file-into-string content) sendmail)))
+                 t)
+            (close sendmail)
+            (sb-ext:process-wait sendmail-process)
+            (sb-ext:process-close sendmail-process))))
 
 (defun prepare-subject (subject &optional (external-format :utf-8))
   (format nil
           "=?~A?B?~A?="
           external-format
           (base64:string-to-base64-string
-           (coerce (loop for code across (sb-ext:string-to-octets subject
-                                                                  :external-format external-format)
+           (coerce (loop for code across (string-to-octets subject
+                                                           :external-format external-format)
                       collect (code-char code))
                    'string))))
 

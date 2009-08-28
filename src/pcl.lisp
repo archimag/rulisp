@@ -448,3 +448,35 @@
                  (pcl-navigation-bar number)))))
         hunchentoot:+HTTP-NOT-FOUND+)))
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; load snapshot from http://pcl.catap.ru/
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun load-pcl-snapshot ()
+  (when *pcl-load-snapshot-p*
+    (let ((snapshot-path (ensure-directories-exist (merge-pathnames (car (last (puri:uri-parsed-path *pcl-snapshot-url*)))
+                                                                    *pcl-snapshot-dir*)))
+          (snapshot (drakma:http-request *pcl-snapshot-url*
+                                         :force-binary t)))
+      (when snapshot
+        (with-open-file (out
+                         snapshot-path
+                         :direction :output
+                         :element-type '(unsigned-byte 8)
+                         :if-exists :supersede)
+          (write-sequence snapshot out))
+        (zip:unzip snapshot-path
+                   *pcl-snapshot-dir*
+                   :if-exists :supersede)
+        (setf *pcl-dir*
+              (merge-pathnames "var/www/pcl.catap.ru/htdocs/data/pages/pcl/"
+                               *pcl-snapshot-dir*))
+        t))))
+
+(if *pcl-load-snapshot-p*
+    (clon:schedule-function 'load-pcl-snapshot
+                            (clon:make-scheduler (clon:make-typed-cron-schedule :hour '*)
+                                                 :allow-now-p t)
+                            :thread t))

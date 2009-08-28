@@ -1,3 +1,4 @@
+
 ;;; pref.lisp
 
 (defpackage :rulisp.preferences
@@ -13,7 +14,10 @@
            #:*reCAPTCHA.privake-key*
            #:*default-skin*
            #:*pcl-dir*
-           #:*wiki-dir*))
+           #:*wiki-dir*
+           #:*pcl-snapshot-url*
+           #:*pcl-snapshot-dir*
+           #:*pcl-load-snapshot-p*))
 
 (in-package :rulisp.preferences)
 
@@ -39,6 +43,13 @@
 (defparameter *default-skin* "fine")
 
 (defparameter *pcl-dir* #P"/var/www/localhost/htdocs/dokuwiki/data/pages/pcl/")
+
+(defparameter *pcl-snapshot-url* #u"http://pcl.catap.ru/snapshot.zip")
+
+(defparameter *pcl-snapshot-dir* #P"/var/rulisp/pcl/")
+
+(defparameter *pcl-load-snapshot-p* nil)
+
 
 (defparameter *wiki-dir* #P"/var/rulisp/wiki/")
 
