@@ -22,9 +22,12 @@
 
 (defun apply-xsl (style obj)
   (let ((xpath:*lisp-xpath-functions* `((colorize "colorize" ,*rulisp-ns*)))
-        (xslt:*lisp-xslt-elements* `((text2html "text2html" ,*rulisp-ns*))))
-    (in-pool (xslt:transform style
-                             (in-pool (xtree:parse (merge-pathnames obj *basepath*) :xml-parse-noent ))))))
+        (xslt:*lisp-xslt-elements* `((text2html "text2html" ,*rulisp-ns*)))
+        (path (merge-pathnames obj *basepath*)))
+    (if (fad:file-exists-p path)
+        (in-pool (xslt:transform style
+                                 (in-pool (xtree:parse path :xml-parse-noent ))))
+        hunchentoot:+HTTP-NOT-FOUND+)))
 
 (define-simple-route main (""
                            :overlay-master *master*)
@@ -48,8 +51,13 @@
 
 (define-simple-route article ("articles/:(afile)"
                               :overlay-master *master*)
-  (apply-xsl *articles-xsl*
-             (format nil "content/articles/~A.xml" afile)))
+  (let ((afile-length (length afile)))
+    (if (and (> afile-length 4)
+             (string= (subseq afile (- afile-length 5))
+                      ".html"))
+        (redirect 'article :afile (subseq afile 0 (- afile-length 5)))
+        (apply-xsl *articles-xsl*
+                   (format nil "content/articles/~A.xml" afile)))))
 
 (define-simple-route favicon ("favicon.ico")
   (staticpath "favicon.ico"))
