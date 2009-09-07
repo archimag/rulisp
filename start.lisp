@@ -21,7 +21,8 @@
 
 (defparameter *acceptor* nil)
 
-(restas:reconnect-all-plugins)
+;;(restas:reconnect-all-plugins)
+(restas::reconnect-all-sites)
 
 (if *acceptor*
     (error "web server has already been started")

@@ -2,6 +2,8 @@
 
 (in-package :rulisp)
 
+(defparameter *basepath* (asdf:component-pathname (asdf:find-system :rulisp)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; xsl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -90,14 +92,9 @@
 
 ;;; misc
 
-(defun substring (text end)
-  (if (> (length text) end)
-      (subseq text 0 end)
-      text))
-
 (defun username ()
   "Return name of the user if he loggen on"
-  (cdr (assoc :user-login-name *bindings*)))
+  (cdr (assoc :user-login-name restas:*bindings*)))
 
 (defun expand-file (path bindings)
   "Loads a template file and substitutes the value of the bindings"
@@ -105,7 +102,7 @@
                        bindings))
 
 (defun in-pool (obj)
-  (gp:object-register obj *request-pool*))
+  (gp:object-register obj restas:*request-pool*))
 
 
 (defmacro with-rulisp-db (&body body)
@@ -117,7 +114,7 @@
 
 (defun apply-format-aux (format args)
   (if (symbolp format)
-      (apply #'genurl format args)
+      (apply #'restas:genurl format args)
       (if args
           (apply #'format nil (cons format args))
           format)))
@@ -145,7 +142,7 @@
   (format nil
           "http://~A~A"
           (hunchentoot:host)
-          (apply #'genurl route args)))
+          (apply #'restas:genurl route args)))
 
 ;;; xfactory
 
@@ -324,8 +321,8 @@
 (defun tmplpath (path)
   (skinpath (merge-pathnames path "templates/")))
 
-(defparameter *master*
-  (lambda ()
-    (tmplpath "rulisp.html")))
+;; (defparameter *master*
+;;   (lambda ()
+;;     (tmplpath "rulisp.html")))
     ;;(in-pool (xtree:parse (tmplpath "rulisp.html") :xml-parse-xinclude :xml-parse-noxincnode))))
 

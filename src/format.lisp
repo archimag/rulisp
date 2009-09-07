@@ -1,6 +1,9 @@
 ;;; format.lisp
 
-(in-package :rulisp)
+(restas:define-plugin :rulisp.format
+  (:use :cl :iter :rulisp))
+
+(in-package :rulisp.format)
 
 (defun formater-menu ()
   (xfactory:with-element-factory ((E))
@@ -60,8 +63,8 @@
 (defun select-formats (start &optional (limit 10))
   (select-formats* start limit))
 
-(define-simple-route format-main ("apps/format/all"
-                                  :overlay-master *master*)
+
+(define-simple-route format-main ("all")
   (let* ((start* (hunchentoot:get-parameter "start"))
          (start (if start*
                     (parse-integer start*)
@@ -95,15 +98,13 @@
                        
 
 
-(define-simple-route newformat ("apps/format/"
-                               :overlay-master *master*)
-  (tmplpath "format.xml"))
+(define-simple-route newformat ("")
+  (in-pool (xtree:parse (tmplpath "format.xml"))))
 
 (postmodern:defprepared db-new-format-code "SELECT * FROM add_format_code($1, $2, $3)" :single)
   
-(define-simple-route newformat/post ("apps/format/"
-                                    :method :post
-                                    :overlay-master *master*)
+(define-simple-route newformat/post (""
+                                    :method :post)
   (if (hunchentoot:post-parameter "preview")
       (let* ((doc (in-pool (xtree:parse (tmplpath "format.xml"))))
              (form (xpath:find-single-node doc "//form")))
@@ -141,7 +142,7 @@
                 (redirect 'view-format-code
                           :format-id (with-rulisp-db
                                        (db-new-format-code (username) title code)))
-                (tmplpath "format.xml")))
+                (in-pool (xtree:parse (tmplpath "format.xml")))))
           hunchentoot:+HTTP-FORBIDDEN+)))
 
 
@@ -151,8 +152,7 @@
      WHERE format_id = $1"
   :row)
 
-(define-simple-route view-format-code ("apps/format/:(format-id)"
-                                       :overlay-master *master*)
+(define-simple-route view-format-code (":(format-id)")
   (let ((row (with-rulisp-db (get-format-code format-id))))
     (if row
         (in-pool

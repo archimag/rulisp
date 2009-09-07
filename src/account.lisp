@@ -1,6 +1,11 @@
 ;;; account.lisp
 
-(in-package :rulisp)
+(restas:define-plugin :rulisp.account
+  (:use :cl :iter :rulisp :rulisp.preferences)
+  (:export #:compute-user-login-name))
+
+(in-package :rulisp.account)
+
 
 (defparameter *cookie-auth-name* "userauth")
 
@@ -58,7 +63,7 @@
     (let ((result (hex-string-to-byte-array str)))
       (ironclad:decrypt-in-place *user-auth-cipher*
                                  result)
-      (user-auth-cookie-unpack (octets-to-string result)))))
+      (user-auth-cookie-unpack (rulisp::octets-to-string result)))))
 
 (defun user-auth-cookie-get ()
   (let ((cookie (hunchentoot:cookie-in *cookie-auth-name*)))
@@ -126,12 +131,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-simple-route login ("login"
-                            :login-status :not-logged-on
-                            :overlay-master *master*)
-  (tmplpath "account/login.xml"))
+                            :login-status :not-logged-on)
+  (in-pool (xtree:parse (tmplpath "account/login.xml"))))
 
 (define-simple-route login/post ("login"
-                                 :overlay-master *master*
                                  :login-status :not-logged-on
                                  :method :post)
   (let ((name (hunchentoot:post-parameter "name"))
@@ -151,7 +154,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-simple-route LOGOUT ("logout"
-                             :overlay-master *master*
                              :login-status :logged-on)
   (run-logout)
   (redirect (or (hunchentoot:header-in :referer hunchentoot:*request*)
@@ -167,7 +169,6 @@
   (tmplpath "account/register.xml"))
 
 (define-simple-route registration ("register"
-                                   :overlay-master *master*
                                    :login-status :not-logged-on)
   (register-form))
 
@@ -241,7 +242,6 @@
 
 (define-simple-route registration/post ("register"
                                         :login-status :not-logged-on
-                                        :overlay-master *master*
                                         :method :post)
   (let* ((formdata (hunchentoot:post-parameters hunchentoot:*request*))
          (check-form (check-register-form formdata)))
@@ -266,7 +266,6 @@
                       :single)))
   
 (define-simple-route registration-confirmation ("register/confirmation/:(mark)"
-                                                :overlay-master *master*
                                                 :login-status :not-logged-on)
   (if (register-mark-exist-p mark)
       (show-confirmation-form)
@@ -275,7 +274,6 @@
 
 (define-simple-route registration-confirmation/post ("register/confirmation/:(mark)"
                                                      :method :post
-                                                     :overlay-master *master*
                                                      :login-status :not-logged-on)
   (if (and (register-mark-exist-p mark)
            (cl-recaptcha:verify-captcha (hunchentoot:post-parameter "recaptcha_challenge_field")
@@ -302,15 +300,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun forgot-form ()
-  (tmplpath "account/forgot.xml"))
+  (in-pool (xtree:parse (tmplpath "account/forgot.xml"))))
 
 (define-simple-route forgot-password ("forgot-password"
-                                      :overlay-master *master*
                                       :login-status :not-logged-on)
   (forgot-form))
 
 (define-simple-route forgot-password/post ("forgot-password"
-                                      :overlay-master *master*
                                       :login-status :not-logged-on
                                       :method :post)
   (let ((login-info (with-rulisp-db
@@ -355,14 +351,12 @@
                       :single)))
 
 (define-simple-route reset-password ("forgot-password/:(mark)"
-                                     :overlay-master *master*
                                      :login-status :not-logged-on)
   (if (forgot-mark-exist-p mark)
       (reset-password-form)
       hunchentoot:+HTTP-NOT-FOUND+))
       
 (define-simple-route reset-password/post ("forgot-password/:(mark)"
-                                          :overlay-master *master*
                                           :method :post
                                           :login-status :not-logged-on)
   (if (forgot-mark-exist-p mark)
@@ -424,15 +418,13 @@
 
 
 (define-simple-route user-profile ("profile"
-                                   :overlay-master *master*
                                    :login-status :logged-on)
-  (tmplpath "account/profile.xml"))
+  (in-pool (xtree:parse (tmplpath "account/profile.xml"))))
 
 (postmodern:defprepared set-user-theme* "UPDATE users SET theme = $2 WHERE login = $1")
 
 (define-simple-route user-profile/post ("profile"
                                         :method :post
-                                        :overlay-master *master*
                                         :login-status :logged-on) 
   (let ((theme (hunchentoot:post-parameter "theme")))
     (when (and theme
