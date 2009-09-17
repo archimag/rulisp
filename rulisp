@@ -20,7 +20,7 @@ start () {
 #         --chuid rulisp \
 #         -- \
 #         -d -m -c /dev/null -S rulisp /usr/bin/sbcl --dynamic-space-size 400 --no-userinit --load /usr/share/rulisp/rulisp-start.lisp
-    sbcl --noinform --no-userinit --no-systeminit --load /usr/share/rulisp/rulisp-daemon.lisp start
+    sbcl --noinform --dynamic-space-size 400 --no-userinit --no-systeminit --load /usr/share/rulisp/rulisp-daemon.lisp start
 		       
 	[ $? -eq 0 ] && echo "done." || echo "failed!"
 }
