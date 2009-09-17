@@ -268,6 +268,44 @@ textarea {
 .rightalign { text-align: right; }
 .centeralign { text-align: center; }
 
+
+.toc {
+    margin-left: 2em;
+    border: 1px solid #cccccc;
+    float: right;
+    width: 250px;
+    clear: both;
+    background-color: white;
+    
+    text-align: left;
+    line-height: 1.2em;
+}
+
+.toc-header {
+    font-size: 80%;
+    padding: 0.25em;
+    background-color: #eeeeee;
+    border-bottom: 1px solid #cccccc;
+    font-weight: bold;
+}
+
+.toc-body {
+    font-size: 90%;
+    background-color: white;
+    padding-top: 0.3em;
+    padding-bottom: 0.3em;
+    padding-right: 0.2em;
+}
+
+.toc-body ul {
+    padding: 0;
+    padding-left: 1.5em;
+    margin: 0;
+}
+
+.toc a { color: #0066cc; }
+
+
 /* * * * * * * * *  wiki * * * *  * * ** * * */
 
 .chapter {

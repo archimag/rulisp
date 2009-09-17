@@ -33,12 +33,39 @@
 (defvar *footnotes*)
 (defvar *footnote-number*)
 
+(defun make-wiki-toc (wikidoc)
+  (iter (for item in wikidoc)
+        (when (and (consp item)
+                   (eql (car item) 'dokuwiki:chapter))
+          (let* ((suppose-ul (xtree:last-child xfactory:*node*))
+                 (ul (if (and suppose-ul
+                              (string= (xtree:local-name suppose-ul) "ul"))
+                         suppose-ul
+                         (xtree:make-child-element xfactory:*node*
+                                                   "ul")))                 
+                 (xfactory:*node* (xtree:make-child-element ul "li"))
+                 (name (second (second item))))
+            (xfactory:with-element-factory ((E))
+              (E :div
+                 (E :a
+                    (ehref "#~A" (calc-md5-sum name))
+                    (etext name))
+                 (make-wiki-toc (cddr item))))))))
+
 (defun render-wiki-page (wikidoc)
   (let ((*footnotes* (xtree:make-element "div"))
         (*footnote-number* 0))
     (xfactory:with-element-factory ((E))
       (E :div
          (eclass "article")
+         (E :div
+            (eclass "toc")
+            (E :div
+               (eclass "toc-header")
+               "Содержание")
+            (E :div
+               (eclass "toc-body")
+               (make-wiki-toc wikidoc)))
          (render-wiki-item wikidoc)
          (if (xtree:first-child *footnotes*)
              (progn
@@ -67,13 +94,14 @@
   (let ((xfactory:*node* (xtree:make-child-element xfactory:*node*
                                                    "div")))
     (eclass "chapter")
+    (eid (calc-md5-sum (second (first items))))
     (render-all-wiki-items items)))
 
 
 (define-wiki-render dokuwiki:header (items)
   (xtree:make-child-text (xtree:make-child-element xfactory:*node*
                                                    "h3")
-                         (car items)))
+                         ( items)))
 
 (defparameter +endl+ (string #\Newline))
 
