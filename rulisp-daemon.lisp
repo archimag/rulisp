@@ -20,7 +20,7 @@
 
 (in-package :sbcl.daemon)
 
-(defparameter *fasldir* #P"/var/cache/rulisp/fasl")
+(defparameter *fasldir* #P"/var/cache/rulisp/fasl/")
 (defparameter *pidfile* #P"/var/run/rulisp/rulisp.pid")
 (defparameter *swank-port* 10010)
 (defparameter *daemon-user* "rulisp")
@@ -223,9 +223,9 @@
 
 (setf swank:*use-dedicated-output-stream* nil)
 
-(swank:create-server :port *swank-port*
-                     :coding-system "utf-8-unix"
-                     :dont-close t)
+;; (swank:create-server :port *swank-port*
+;;                      :coding-system "utf-8-unix"
+;;                      :dont-close t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Start rulisp server
