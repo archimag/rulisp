@@ -1,31 +1,46 @@
-;;; rulisp-daemon.lisp
-;;;
+;;;; rulisp-daemon.lisp
+;;;; author: Moskvitin Andrey (archimag)
+;;;;
+;;;; "Pure lisp" SBCL daemon, which is used on the site http://lisper.ru/
+;;;;
+;;;; Usage:
+;;;; sbcl --noinform --no-userinit --no-sysinit --load /path/to/rulisp-daemon.lisp COMMAND
+;;;; where COMMAND one of: start stop zap kill restart
+;;;;
+;;;; If successful, the exit code is 0, otherwise 1
+;;;;
+;;;; Error messages look in /var/log/messages (usually, depend on syslog configuration)
+;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Пример pure-lisp демона, который может использоваться для запуска сайта http://lisper.ru
-;;;
-;;; Использовать так:
-;;; sbcl --noinform --no-userinit --no-sysinit --load rulisp-daemon.lisp COMMAND
-;;; где COMMAND может быть: start stop zap kill restart
-;;;
-;;; Сообщения об ошибках смотреть в /var/log/message
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(unless (boundp 'sb-unix:tiocnotty)
-  (defconstant sb-unix:tiocnotty 21538))
 
 (defpackage :sbcl.daemon
   (:use :cl :sb-alien :sb-ext))
 
 (in-package :sbcl.daemon)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; WARNING!
+;;;; plantform-depends constant :(
+;;;; changes for you platform... or make path for sbcl ;)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(unless (boundp 'sb-unix:tiocnotty)
+  (defconstant sb-unix:tiocnotty 21538))
+
 (defconstant +PR_SET_KEEPCAPS+ 8)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; basic parameters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defparameter *fasldir* #P"/var/cache/rulisp/fasl/")
 (defparameter *pidfile* #P"/var/run/rulisp/rulisp.pid")
 (defparameter *swank-port* 9999)
 (defparameter *daemon-user* "rulisp")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; aux
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro with-exit-on-error (&body body)
   `(handler-case (progn ,@body)
@@ -41,29 +56,28 @@
      (with-output-to-string (*standard-output*)
        ,@body)))
 
-;;;; get command-line argument
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Processing command line arguments
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;; command-line COMMAND
+
 (defvar *daemon-command* (second *posix-argv*))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; quit if command is unknow
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; quit if COMMAND is unknown
 
 (unless (find *daemon-command* '("start" "stop" "zap" "kill" "restart") :test #'string-equal)
   (with-exit-on-error
-    (error "bad options")))
+    (error "Bad command-line options")))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; zap handler - remove pid file
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; zap - remove pid file
 
 (when (string-equal *daemon-command* "zap")
   (with-exit-on-error     
     (delete-file *pidfile*)
     (sb-ext:quit :unix-status 0)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; stop handler - send to daemon sigusr1 signal, wait and remove pid file
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; stop - send to daemon sigusr1 signal, wait and remove pid file
 
 (with-silence
   (require 'sb-posix))
@@ -85,9 +99,7 @@
     (stop-daemon)
     (sb-ext:quit :unix-status 0)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; kill handler - send to daemon kill signal and remove pid file
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; kill - send to daemon kill signal and remove pid file
 
 (when (string-equal *daemon-command* "kill")
   (with-exit-on-error
@@ -96,17 +108,25 @@
     (delete-file *pidfile*)
     (sb-ext:quit :unix-status 0)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; restart daemon
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (when (string-equal *daemon-command* "restart")
   (with-exit-on-error
     (stop-daemon)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; start daemon
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;
+;;;; Start daemon!
+;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;; required path for sbcl :(
+(sb-posix::define-call "grantpt" int minusp (fd sb-posix:file-descriptor))
+(sb-posix::define-call "unlockpt" int minusp (fd sb-posix:file-descriptor))
+(sb-posix::define-call "ptsname" c-string null (fd sb-posix:file-descriptor))
+(sb-posix::define-call "initgroups" int minusp (user c-string) (group sb-posix::gid-t))
 
 (defun switch-to-slave-pseudo-terminal (&optional (out #P"/dev/null") (err #P"/dev/null"))
   (flet ((c-bit-or (&rest args)
@@ -114,10 +134,9 @@
                    args)))
     (let* ((fdm (sb-posix:open #P"/dev/ptmx" sb-posix:O-RDWR))
            (slavename (progn
-                        (alien-funcall (extern-alien "grantpt" (function int int)) fdm)
-                        (alien-funcall (extern-alien "unlockpt" (function int int)) fdm)
-                        (alien-funcall (extern-alien "ptsname"
-                                                     (function c-string int)) fdm)))
+                        (sb-posix:grantpt fdm)
+                        (sb-posix:unlockpt fdm)
+                        (sb-posix:ptsname fdm)))
            (fds (sb-posix:open slavename sb-posix:O-RDONLY))
            (out-fd (sb-posix:open out
                                (c-bit-or sb-posix:O-WRONLY sb-posix:O-CREAT sb-posix:O-TRUNC)
@@ -132,7 +151,6 @@
       (sb-posix:dup2 err-fd 2))))
 
 (defun change-user (name &optional group)
-
   (let ((gid)
         (uid))
     (when group
@@ -145,11 +163,10 @@
         (setf uid
               (sb-posix:passwd-uid passwd))))
     (sb-posix:setresgid gid gid gid)
-    (alien-funcall (extern-alien "initgroups" (function int c-string int)) name gid)
+    (sb-posix:initgroups name gid)
     (sb-posix:setresuid uid uid uid)))
 
-(eval-when (:load-toplevel :compile-toplevel :execute)
-  (defparameter *status* nil))
+(defvar *status* nil)
 
 (defun signal-handler (sig info context)
   (declare (ignore info context))
@@ -158,30 +175,32 @@
 (sb-sys:enable-interrupt sb-posix:sigusr1 #'signal-handler)
 (sb-sys:enable-interrupt sb-posix:sigchld #'signal-handler)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; change uid and gid
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; change uid
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; required for start hunchentoot on port 80
 (sb-posix::define-call "prctl" int minusp (option int) (arg int))
+(sb-posix:prctl +PR_SET_KEEPCAPS+ 1)
 
+(change-user *daemon-user*)
+
+;;;; required for start hunchentoot on port 80
 (load-shared-object (find-if #'probe-file
-                             '("/lib/libcap.so" "/lib/libcap.so.2")))
+                             '("/lib/libcap.so.2" "/lib/libcap.so")))
 
 (sb-posix::define-call "cap_from_text" (* char) null-alien (text c-string))
 (sb-posix::define-call "cap_set_proc" int minusp (cap_p (* char)))
 (sb-posix::define-call "cap_free" int minusp (cap_p (* char)))
-
-(sb-posix:prctl +PR_SET_KEEPCAPS+ 1)
-
-(change-user *daemon-user*)
 
 (let ((cap_p (sb-posix:cap-from-text "CAP_NET_BIND_SERVICE=ep")))
   (sb-posix:cap-set-proc cap_p)
   (sb-posix:cap-free cap_p))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 ;;;;; fork!
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (unless (= (sb-posix:fork) 0)
   (loop
      while (null *status*)
@@ -191,9 +210,9 @@
                          1)))
 
 
-
 (defparameter *ppid* (sb-posix:getppid))
 
+;;;; set global error handler 
 (defun global-error-handler (condition x)
   (declare (ignore x))
   (let ((err (with-output-to-string (out)
@@ -225,7 +244,6 @@
 
 ;;;; start new session
 (sb-posix:setsid)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; load asdf
@@ -275,12 +293,14 @@
                                                       (print-object err out))))))
                              (sb-ext:quit :unix-status 0)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; end daemon initialize
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; write pid file
 (with-open-file (out *pidfile* :direction :output :if-exists :error :if-does-not-exist :create)
   (write (sb-posix:getpid) :stream out))
 
-
-;;;; end daemon initialize
 (sb-posix:kill *ppid* sb-posix:sigusr1)
 (setf *debugger-hook* nil)
 
