@@ -101,7 +101,7 @@
 (define-wiki-render dokuwiki:header (items)
   (xtree:make-child-text (xtree:make-child-element xfactory:*node*
                                                    "h3")
-                         ( items)))
+                         (first items)))
 
 (defparameter +endl+ (string #\Newline))
 
