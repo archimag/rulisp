@@ -170,10 +170,12 @@
 
 (defun global-error-handler (condition x)
   (declare (ignore x))
-  (sb-posix:syslog sb-posix:log-err
-                   (with-output-to-string (out)
+  (let ((err (with-output-to-string (out)
                      (let ((*print-escape* nil))
-                       (print-object condition out))))
+                       (print-object condition out)))))
+    (print err *error-output*)
+    (sb-posix:syslog sb-posix:log-err
+                     err))
   (quit :unix-status 1))
 
 (setf *debugger-hook* #'global-error-handler)
