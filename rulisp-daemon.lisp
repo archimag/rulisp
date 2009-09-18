@@ -24,7 +24,7 @@
 
 (defparameter *fasldir* #P"/var/cache/rulisp/fasl/")
 (defparameter *pidfile* #P"/var/run/rulisp/rulisp.pid")
-(defparameter *swank-port* 10010)
+(defparameter *swank-port* 9999)
 (defparameter *daemon-user* "rulisp")
 
 (defmacro with-exit-on-error (&body body)
@@ -132,7 +132,7 @@
       (sb-posix:dup2 err-fd 2))))
 
 (defun change-user (name &optional group)
-  (alien-funcall (extern-alien "prctl" (function int int int)) +PR_SET_KEEPCAPS+ 1)
+
   (let ((gid)
         (uid))
     (when group
@@ -158,8 +158,30 @@
 (sb-sys:enable-interrupt sb-posix:sigusr1 #'signal-handler)
 (sb-sys:enable-interrupt sb-posix:sigchld #'signal-handler)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; change uid
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(sb-posix::define-call "prctl" int minusp (option int) (arg int))
+
+(load-shared-object (find-if #'probe-file
+                             '("/lib/libcap.so" "/lib/libcap.so.2")))
+
+(sb-posix::define-call "cap_from_text" (* char) null-alien (text c-string))
+(sb-posix::define-call "cap_set_proc" int minusp (cap_p (* char)))
+(sb-posix::define-call "cap_free" int minusp (cap_p (* char)))
+
+(sb-posix:prctl +PR_SET_KEEPCAPS+ 1)
+
 (change-user *daemon-user*)
-                        
+
+(let ((cap_p (sb-posix:cap-from-text "CAP_NET_BIND_SERVICE=ep")))
+  (sb-posix:cap-set-proc cap_p)
+  (sb-posix:cap-free cap_p))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;; fork!
 (unless (= (sb-posix:fork) 0)
   (loop
      while (null *status*)
@@ -167,6 +189,8 @@
   (quit :unix-status (if (= *status* sb-posix:sigusr1)
                          0
                          1)))
+
+
 
 (defparameter *ppid* (sb-posix:getppid))
 
@@ -226,9 +250,9 @@
 
 (setf swank:*use-dedicated-output-stream* nil)
 
-;; (swank:create-server :port *swank-port*
-;;                      :coding-system "utf-8-unix"
-;;                      :dont-close t)
+(swank:create-server :port *swank-port*
+                     :coding-system "utf-8-unix"
+                     :dont-close t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Start rulisp server
