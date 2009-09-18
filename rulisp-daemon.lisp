@@ -205,6 +205,7 @@
 (require :asdf)
 
 (push #p"/usr/share/common-lisp/systems/" asdf:*central-registry*)
+(push #P"/usr/share/rulisp/systems/" asdf:*central-registry*)
 
 (asdf:oos 'asdf:load-op :asdf-binary-locations)
 
@@ -224,7 +225,7 @@
                      :dont-close t)
 
 ;;;; Start rulisp server
-(push #P"/usr/share/rulisp/systems/" asdf:*central-registry*)
+
 (asdf:operate 'asdf:load-op :rulisp)
 (rulisp.starter:rulisp-start)
 
