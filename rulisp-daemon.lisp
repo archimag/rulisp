@@ -20,6 +20,8 @@
 
 (in-package :sbcl.daemon)
 
+(defconstant +PR_SET_KEEPCAPS+ 8)
+
 (defparameter *fasldir* #P"/var/cache/rulisp/fasl/")
 (defparameter *pidfile* #P"/var/run/rulisp/rulisp.pid")
 (defparameter *swank-port* 10010)
@@ -130,6 +132,7 @@
       (sb-posix:dup2 err-fd 2))))
 
 (defun change-user (name &optional group)
+  (alien-funcall (extern-alien "prctl" (function int int int)) +PR_SET_KEEPCAPS+ 1)
   (let ((gid)
         (uid))
     (when group
