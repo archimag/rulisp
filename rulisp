@@ -14,21 +14,22 @@ start () {
 
     export LC_ALL="ru_RU.UTF-8"
 
-    start-stop-daemon --start \
-        --pidfile /var/rulisp/rulisp.pid \
-        --startas /usr/bin/screen \
-        --chuid rulisp \
-        -- \
-        -d -m -c /dev/null -S rulisp /usr/bin/sbcl --dynamic-space-size 400 --no-userinit --load /usr/share/rulisp/rulisp-start.lisp
-#    sbcl --noinform --dynamic-space-size 400 --no-userinit --no-systeminit --load /usr/share/rulisp/rulisp-daemon.lisp start
+#     start-stop-daemon --start \
+#         --pidfile /var/rulisp/rulisp.pid \
+#         --startas /usr/bin/screen \
+#         --chuid rulisp \
+#         -- \
+#         -d -m -c /dev/null -S rulisp /usr/bin/sbcl --dynamic-space-size 400 --no-userinit --load /usr/share/rulisp/rulisp-start.lisp
+#    sbcl --dynamic-space-size 400 --noinform --no-userinit --no-systeminit --load /usr/share/rulisp/rulisp-daemon.lisp start
+    sbcl --dynamic-space-size 400 --noinform --no-userinit --no-sysinit --load /usr/share/rulisp/rulisp-daemon.lisp start
 		       
 	[ $? -eq 0 ] && echo "done." || echo "failed!"
 }
 
 stop () {
 	echo -n "Stopping rulisp server... "
-    start-stop-daemon --stop --pidfile /var/rulisp/rulisp.pid
-#    sbcl --noinform --dynamic-space-size 400 --no-userinit --no-systeminit --load /usr/share/rulisp/rulisp-daemon.lisp kill
+#    start-stop-daemon --stop --pidfile /var/rulisp/rulisp.pid
+    sbcl --noinform --no-userinit --no-sysinit --load /usr/share/rulisp/rulisp-daemon.lisp kill
     
 	[ $? -eq 0 ] && echo "done." || echo "failed!"
 }

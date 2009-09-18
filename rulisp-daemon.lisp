@@ -22,7 +22,7 @@
 
 (defparameter *fasldir* #P"/var/cache/rulisp/fasl")
 (defparameter *pidfile* #P"/var/run/rulisp/rulisp.pid")
-(defparameter *swank-port* 9999)
+(defparameter *swank-port* 10010)
 (defparameter *daemon-user* "rulisp")
 
 (defmacro with-exit-on-error (&body body)
@@ -160,8 +160,7 @@
 (unless (= (sb-posix:fork) 0)
   (loop
      while (null *status*)
-     ;;do (format t ".")
-     do (sleep 1))
+     do (sleep 0.1))
   (quit :unix-status (if (= *status* sb-posix:sigusr1)
                          0
                          1)))
@@ -194,14 +193,15 @@
   (sb-posix:ioctl fd sb-unix:tiocnotty)
   (sb-posix:close fd))
 
-;;;; rebind standrt input, output and error streams
-(switch-to-slave-pseudo-terminal #P"/tmp/log")
+;;;; rebind standart input, output and error streams
+(switch-to-slave-pseudo-terminal)
 
 ;;;; start new session
 (sb-posix:setsid)
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; load rulisp
+;;;; load asdf
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (require :asdf)
@@ -215,18 +215,21 @@
 
 (setf asdf:*default-toplevel-directory* *fasldir*)
 
-;; load swank
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; start swank server
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (asdf:oos 'asdf:load-op :swank)
 
-;; Communication will be established through a single stream.
 (setf swank:*use-dedicated-output-stream* nil)
 
-;; Fire up a fresh swank server.
 (swank:create-server :port *swank-port*
                      :coding-system "utf-8-unix"
                      :dont-close t)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Start rulisp server
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (asdf:operate 'asdf:load-op :rulisp)
 (rulisp.starter:rulisp-start)
@@ -236,21 +239,24 @@
                              (declare (ignore sig info context))
                              (handler-case
                                  (progn 
-                                   (sb-posix:syslog sb-posix:log-err "rulisp begin stop")
-                                   (rulisp.starter:rulisp-stop)
-                                   (sb-posix:syslog sb-posix:log-err "rulisp end stop"))
+                                   (sb-posix:syslog sb-posix:log-info "Stop rulisp daemon")
+                                   (rulisp.starter:rulisp-stop))
                                (error (err)
                                  (sb-posix:syslog sb-posix:log-err
                                                   (with-output-to-string (out)
                                                     (let ((*print-escape* nil))
                                                       (print-object err out))))))
                              (sb-ext:quit :unix-status 0)))
-;;;; End Start rulisp server
 
+;;; write pid file
 (with-open-file (out *pidfile* :direction :output :if-exists :error :if-does-not-exist :create)
   (write (sb-posix:getpid) :stream out))
 
+
+;;;; end daemon initialize
 (sb-posix:kill *ppid* sb-posix:sigusr1)
 (setf *debugger-hook* nil)
+
+(sb-posix:syslog sb-posix:log-info "Start rulisp daemon")
 
 
