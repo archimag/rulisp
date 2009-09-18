@@ -30,7 +30,8 @@
                                           :port (let ((port (second (split-sequence:split-sequence #\: rulisp.preferences:*host* ))))
                                                   (if port
                                                       (parse-integer port)
-                                                      80))))))
+                                                      80)))))
+  (print "rulisp started"))
 
 (defun rulisp-stop ()
   (unless *acceptor*

@@ -193,7 +193,7 @@
   (sb-posix:close fd))
 
 ;;;; rebind standrt input, output and error streams
-(switch-to-slave-pseudo-terminal)
+(switch-to-slave-pseudo-terminal #P"/tmp/log")
 
 ;;;; start new session
 (sb-posix:setsid)
