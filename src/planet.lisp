@@ -10,12 +10,6 @@
                  :self-href (format nil "http://~A/planet/atom.xml" *host*)
                  :feeds-path (merge-pathnames "planet-feeds.lisp" *rulisp-path*)))
                                       
-;; (planet:defplanet *planet* 
-;;     :name "Russian Lisp Planet"
-;;     :alternate-href (format nil "http://~A/planet/" *host*)
-;;     :self-href (format nil "http://~A/planet/atom.xml" *host*)
-;;     :feeds-path (merge-pathnames "planet-feeds.lisp" *rulisp-path*))
-
 (defparameter *planet-path* (asdf:component-pathname (asdf:find-system :planet)))
 
 
