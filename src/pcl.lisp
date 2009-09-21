@@ -215,13 +215,21 @@
 ;;     (E :pre
 ;;        (xfactory:text (write-to-string items)))))
 
+(defconstant +EN-DASH+
+  #+sbcl #\EN_DASH
+  #+ccl #\U+2013)
+
 (define-wiki-render dokuwiki:en-dash (items)
   (declare (ignore items))
-  (xfactory:text (string #\EN_DASH)))
+  (xfactory:text (string +EN-DASH+)))
+
+(defconstant +EM-DASH+
+  #+sbcl #\EM_DASH
+  #+ccl #\U+2014)
 
 (define-wiki-render dokuwiki:em-dash (items)
   (declare (ignore items))
-  (xfactory:text (string #\EM_DASH)))
+  (xfactory:text (string +EM-DASH+)))
 
 (define-wiki-render dokuwiki:external-link (items)
   (let ((delimiter (position #\| (car items))))
