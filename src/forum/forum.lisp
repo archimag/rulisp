@@ -24,6 +24,10 @@
              (ecss 'css :file "forum.css" :theme (user-theme (username))))
           (E :div
              (eid "content")
+             (E :a
+                (eclass "rss-link")
+                (ehref 'all-forums-rss)
+                "RSS")
              (iter (for (id description)
                         in (postmodern:query "SELECT pretty_forum_id, description FROM rlf_forums ORDER BY forum_id"))
                    (E :div

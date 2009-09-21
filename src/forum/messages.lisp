@@ -62,6 +62,10 @@
                (eid "content")
                (E :div
                   (eid "forum-nav-panel")
+                  (E :a
+                     (eclass "rss-link")
+                     (ehref 'topic-rss :topic-id topic-id)
+                     "RSS")
                   (E :ul
                      (E :li
                         (E :a
