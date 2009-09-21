@@ -52,20 +52,33 @@
                     (etext name))
                  (make-wiki-toc (cddr item))))))))
 
+(define-condition notoc-condition (error) ())
+
+(defun total-chapters-count (wikidoc)
+  (cond
+    ((eql wikidoc 'dokuwiki:notoc) (error 'notoc-condition))
+    ((consp wikidoc) (iter (for item in wikidoc)
+                           (sum (total-chapters-count item))))
+    ((eql wikidoc 'dokuwiki:chapter) 1)
+    (t 0)))
+
 (defun render-wiki-page (wikidoc)
   (let ((*footnotes* (xtree:make-element "div"))
         (*footnote-number* 0))
     (xfactory:with-element-factory ((E))
       (E :div
          (eclass "article")
-         (E :div
-            (eclass "toc")
-            (E :div
-               (eclass "toc-header")
-               "Содержание")
-            (E :div
-               (eclass "toc-body")
-               (make-wiki-toc wikidoc)))
+         (handler-case 
+             (when (> (total-chapters-count wikidoc) 2)
+               (E :div
+                  (eclass "toc")
+                  (E :div
+                     (eclass "toc-header")
+                     "Содержание")
+                  (E :div
+                     (eclass "toc-body")
+                     (make-wiki-toc wikidoc))))
+           (notoc-condition ()))
          (render-wiki-item wikidoc)
          (if (xtree:first-child *footnotes*)
              (progn
