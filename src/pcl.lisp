@@ -52,6 +52,7 @@
                     (etext name))
                  (make-wiki-toc (cddr item))))))))
 
+
 (defun render-wiki-page (wikidoc)
   (let ((*footnotes* (xtree:make-element "div"))
         (*footnote-number* 0))
@@ -63,9 +64,10 @@
             (E :div
                (eclass "toc-header")
                "Содержание")
-            (E :div
-               (eclass "toc-body")
-               (make-wiki-toc wikidoc)))
+            (unless (find 'dokuwiki:notoc wikidoc)
+              (E :div
+                 (eclass "toc-body")
+                 (make-wiki-toc wikidoc))))
          (render-wiki-item wikidoc)
          (if (xtree:first-child *footnotes*)
              (progn
@@ -231,18 +233,25 @@
   (declare (ignore items))
   (xfactory:text (string +EM-DASH+)))
 
-(define-wiki-render dokuwiki:external-link (items)
+(define-wiki-render dokuwiki:internal-link (items)
   (let ((delimiter (position #\| (car items))))
     (xfactory:with-element-factory ((E))
       (E :a
-         (ehref (string-trim '#(#\Space #\Tab)
-                             (if delimiter
-                                 (subseq (car items) 0 delimiter)
-                                 (car items))))
+         (ehref "~A"
+                (puri:merge-uris (string-trim '#(#\Space #\Tab)
+                                              (if delimiter
+                                                  (subseq (car items) 0 delimiter)
+                                                  (car items)))
+                                 (hunchentoot:request-uri*)))
          (xfactory:text (string-trim '#(#\Space #\Tab)
                                      (if delimiter
                                          (subseq (car items) (1+ delimiter))
                                          (car items))))))))
+
+(define-wiki-render dokuwiki:external-link (items)
+  (let ((link (xtree:make-child-element xfactory:*node* "a")))
+    (setf (xtree:attribute-value link "href") (car items))
+    (xtree:make-child-text link (car items))))
 
 (define-wiki-render dokuwiki:table (items)
   (xfactory:with-element-factory ((E))
