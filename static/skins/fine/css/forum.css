@@ -79,8 +79,11 @@
 
 #forum-nav-panel li:first-child:before {
     content: "";
-} 
+}
 
+.rss-link { background: transparent url("/image/feed-icon-14x14.png") no-repeat left center; padding-left: 16px; float: right; }
+
+#forum-nav-panel .rss-link { float: right; }
 
 /* ---------------------------------------------------------------------------------------------------- */
 /* topics */

@@ -123,9 +123,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;; required path for sbcl :(
-(sb-posix::define-call "grantpt" int minusp (fd sb-posix:file-descriptor))
-(sb-posix::define-call "unlockpt" int minusp (fd sb-posix:file-descriptor))
-(sb-posix::define-call "ptsname" c-string null (fd sb-posix:file-descriptor))
+(sb-posix::define-call "grantpt" int minusp (fd sb-posix::file-descriptor))
+(sb-posix::define-call "unlockpt" int minusp (fd sb-posix::file-descriptor))
+(sb-posix::define-call "ptsname" c-string null (fd sb-posix::file-descriptor))
 (sb-posix::define-call "initgroups" int minusp (user c-string) (group sb-posix::gid-t))
 
 (defun switch-to-slave-pseudo-terminal (&optional (out #P"/dev/null") (err #P"/dev/null"))

@@ -75,6 +75,10 @@
               (eid "content")
               (E :div
                  (eid "forum-nav-panel")
+                 (E :a
+                    (eclass "rss-link")
+                    (ehref 'forum-rss :forum-id forum-id)
+                    "RSS")
                  (E :ul
                     (E :li
                        (E :a
@@ -87,7 +91,6 @@
                  (xfactory:attributes :class "info"
                                       :align "right")
                  (topic-nav-panel forum-id start last all-topics))
-
               (E :div
                  (eclass "topic-list")
                  (iter (for (author title body date topic-id all-message last-author last-created first-author)
