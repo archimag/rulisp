@@ -26,13 +26,12 @@
   (select-reply-list* topic-id))
 
 (defun get-forum-info (topic-id)
-  (postmodern:query (format nil
-                           "SELECT pretty_forum_id, description FROM rlf_forums
-                            WHERE forum_id = (SELECT forum_id FROM rlf_topics WHERE topic_id = ~A)"
-                           topic-id)
+  (postmodern:query (:select 'pretty_forum_id 'description
+                             :from 'rlf_forums
+                             :where (:= 'forum_id (:select 'forum_id
+                                                           :from 'rlf_topics
+                                                           :where (:= 'topic_id topic-id))))
                     :row))
-
-
 
 (define-simple-route view-topic ("forum/thread/:(topic-id)"
                                  :overlay-master *master*)
@@ -158,7 +157,8 @@
                                            :login-status :logged-on)
   (if (forum-admin-p (username))
       (with-rulisp-db
-        (let ((topic-id (postmodern:query (format nil "SELECT * from rlf_delete_message(~A)" message-id) :single)))
+        (let ((topic-id (postmodern:query (:select '* :from (:rlf_delete_message message-id))
+                                           :single)))
           (if (eql topic-id :null)
               (redirect 'forum-main)
               (redirect 'view-topic :topic-id topic-id))))

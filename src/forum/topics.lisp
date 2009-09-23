@@ -189,7 +189,8 @@
                                    :login-status :logged-on)
   (if (forum-admin-p (username))
       (with-rulisp-db
-        (let ((forum-id (postmodern:query (format nil "SELECT * from rlf_delete_topic(~A)" topic-id) :single)))
+        (let ((forum-id (postmodern:query (:select '* :from (:rlf_delete_topic topic-id))
+                                          :single)))
           (if (eql topic-id :null)
               (redirect 'forum-main)
               (redirect 'view-forum-main :forum-id forum-id))))
