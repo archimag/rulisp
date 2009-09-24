@@ -16,6 +16,8 @@ h1, h2, h3, h4, h5, h6 { font-weight: normal; color: #06c; padding: 0; margin: 0
 
 p { padding: 0; margin: 0 0 0.6em 0 }
 
+.underline { text-decoration: underline; }
+
 h1 { font-size: 200% }
 h2 { font-size: 180% }
 h3 { font-size: 140% }

@@ -6,7 +6,7 @@
 (in-package :rulisp-system)
 
 (defsystem :rulisp
-    :depends-on ( #:restas #:colorize #:planet #:postmodern #:ironclad #:cl-recaptcha #:wiki-parser #:zip)
+    :depends-on ( #:restas #:colorize #:planet #:postmodern #:ironclad #:cl-recaptcha #:wiki-parser #:zip #:cl-typesetting)
     :components
     ((:file "pref")
      (:module :src
@@ -27,7 +27,8 @@
                (:module :wiki
                         :components
                         ((:file "render-html")
-                         (:file "wiki" :depends-on ("render-html")))
+                         (:file "render-pdf")
+                         (:file "wiki" :depends-on ("render-html" "render-pdf")))
                         :depends-on ("core"))
                (:file "pcl"  :depends-on (:wiki))
                (:file "format" :depends-on ("core")))
