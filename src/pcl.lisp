@@ -211,6 +211,20 @@
         hunchentoot:+HTTP-NOT-FOUND+)))
 
 
+(define-simple-route pcl-chapter-pdf ("pcl/pdf/:(chapter)"
+                                      :content-type "application/pdf")
+  (let* ((number (position chapter
+                           *pcl-files-map*
+                           :key #'first
+                           :test #'string=))
+         (path (pcl-source-path (third (aref *pcl-files-map* number)))))
+    (flexi-streams:with-output-to-sequence (out)
+      (let ((out* (flexi-streams:make-flexi-stream out)))
+        (pdf-render-wiki-page (wiki-parser:parse :dokuwiki
+                                                 path)
+                              out*))
+      out)))
+  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; load snapshot from http://pcl.catap.ru/

@@ -22,6 +22,10 @@
        (E :ul
           (E :li
              (E :a
+                (ehref 'view-wiki-page-in-pdf :page (hunchentoot:url-decode page))
+                "PDF"))
+          (E :li
+             (E :a
                 (ehref 'edit-wiki-page :page (hunchentoot:url-decode page))
                 "Править"))
           (E :li
@@ -62,6 +66,15 @@
 (define-simple-route view-wiki-page ("wiki/:(page)"
                                      :overlay-master *master*)
   (show-wiki-page page))
+
+(define-simple-route view-wiki-page-in-pdf ("wiki/:(page)/pdf"
+                                            :content-type "application/pdf")
+  (flexi-streams:with-output-to-sequence (out)
+    (let ((out* (flexi-streams:make-flexi-stream out)))
+      (pdf-render-wiki-page (wiki-parser:parse :dokuwiki
+                                               (wiki-page-pathname page))
+                            out*))
+    out))
 
 (define-simple-route edit-wiki-page ("wiki/edit/:(page)"
                                      :overlay-master *master*
