@@ -24,11 +24,12 @@
                          (:file "rss" :depends-on ("forum")))
                         :depends-on ("core"))
                (:file "apps" :depends-on ("core"))
-               (:file "pcl"  :depends-on ("core"))
                (:module :wiki
                         :components
-                        ((:file "wiki"))
-                        :depends-on ("pcl"))
+                        ((:file "render-html")
+                         (:file "wiki" :depends-on ("render-html")))
+                        :depends-on ("core"))
+               (:file "pcl"  :depends-on (:wiki))
                (:file "format" :depends-on ("core")))
               :depends-on ("pref"))
      (:file "start" :depends-on ("src"))))
