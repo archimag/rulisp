@@ -241,31 +241,31 @@
 
 (defun make-pcl-pdf (&optional (out #P"/tmp/pcl.pdf"))
   (let ((page-number 0))
-  (tt:with-document (:mode :outlines)
-    (pdf:append-child-outline (pdf:outline-root pdf:*document*) 
-                              "Practical Common Lisp"
-                              (pdf:register-reference :name "Practical Common Lisp"
-                                                      :page (pcl-first-page)))
-    (let ((*current-chapter* "Practical Common Lisp"))
-    (iter (for chapter in-vector *pcl-files-map*)
-          (for i from 1)
-          (print i)
-          (let ((wikidoc (wiki-parser:parse :dokuwiki
-                                            (pcl-source-path (third chapter)))))
-            (tt:draw-pages 
-             (tt:compile-text ()
-               (tt:with-style (:font *base-font* :font-size *font-size*)       
-                 (pdf-render-wiki-item wikidoc)))
-             :break :after
-             :margins '(30 50 30 40)
-             :finalize-fn #'(lambda (page)
-                                (pdf:draw-centered-text (/ (aref (pdf::bounds page) 2) 2)
-                                                        10
-                                                        (write-to-string (incf page-number))
-                                                        *base-font*
-                                                        10)
-                                )))
-          (pdf:write-document out))))))
+    (tt:with-document (:mode :outlines)
+      (pdf:append-child-outline (pdf:outline-root pdf:*document*) 
+                                "Practical Common Lisp"
+                                (pdf:register-reference :name "Practical Common Lisp"
+                                                        :page (pcl-first-page)))
+      (let ((*current-chapter* "Practical Common Lisp"))
+        (iter (for chapter in-vector *pcl-files-map*)
+              (for i from 1)
+              (print i)
+              (let ((wikidoc (wiki-parser:parse :dokuwiki
+                                                (pcl-source-path (third chapter)))))
+                (tt:draw-pages 
+                 (tt:compile-text ()
+                   (tt:with-style (:font *base-font* :font-size *font-size*)       
+                     (pdf-render-wiki-item wikidoc)))
+                 :break :after
+                 :margins '(30 50 30 40)
+                 :finalize-fn #'(lambda (page)
+                                  (pdf:draw-centered-text (/ (aref (pdf::bounds page) 2) 2)
+                                                          10
+                                                          (write-to-string (incf page-number))
+                                                          *base-font*
+                                                          10)
+                                  )))
+              (pdf:write-document out))))))
 
 (define-simple-route pcl-pdf ("pcl/pcl.pdf")
   (merge-pathnames "pcl.pdf"
@@ -294,7 +294,12 @@
         (setf *pcl-dir*
               (merge-pathnames "var/www/pcl.catap.ru/htdocs/data/pages/pcl/"
                                *pcl-snapshot-dir*))
-        (make-pcl-pdf (merge-pathnames "pcl.pdf"
+        
+        (make-pcl-pdf (merge-pathnames "pcl.pdf.tmp"
+                                       *pcl-snapshot-dir*))
+        (sb-posix:rename (merge-pathnames "pcl.pdf.tmp"
+                                       *pcl-snapshot-dir*)
+                         (merge-pathnames "pcl.pdf"
                                        *pcl-snapshot-dir*))
         t))))
 
