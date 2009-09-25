@@ -245,9 +245,10 @@
                                                         (subseq (car items) 0 delimiter)
                                                         (car items)))
                                        (hunchentoot:request-uri*)))
-                    (if delimiter
-                        (subseq (car items) 0 delimiter)
-                        (car items))))
+                    (string-trim '#(#\Space #\Tab)
+                                 (if delimiter
+                                     (subseq (car items) 0 delimiter)
+                                     (car items)))))
          (xfactory:text (string-trim '#(#\Space #\Tab)
                                      (if delimiter
                                          (subseq (car items) (1+ delimiter))
