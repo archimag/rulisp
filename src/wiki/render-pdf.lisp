@@ -51,17 +51,54 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defparameter *header-font-size* 18)
+
+(defvar *current-chapter* nil)
+
+(defclass chapter-header ()
+  ((title :initarg :title)
+   (parent :initarg :parent :initform nil)))
+
+(defun find-outline-by-ref (ref outline)
+  (if (eql (pdf::reference outline) ref)
+      outline
+      (iter (for item in (pdf::sub-levels outline))
+            (let ((res (find-outline-by-ref ref item)))
+              (finding res such-that res)))))
+
+(defmethod tt::stroke ((header chapter-header) x y)
+  (let ((parent-ref (slot-value header 'parent)))
+    (pdf:append-child-outline (or (and parent-ref
+                                       (find-outline-by-ref (pdf::get-named-reference parent-ref)
+                                                            (pdf:outline-root pdf:*document*)))
+                                  (pdf:outline-root pdf:*document*))
+                              (slot-value header 'title)
+                              (pdf::register-named-reference (vector pdf:*page* "/FitH" y)
+                                                             (slot-value header 'title)))))
+
 (define-wiki-pdf-render dokuwiki:chapter (items)
-;;   (pdf:with-outline-level ((second (first items))
-;;                            (pdf:register-page-reference))
-    (tt:with-style (:font *bold-font* :font-size 16)
+  (let ((name (second (first items))))
+    (tt::add-box (make-instance 'chapter-header
+                                :title name
+                                :parent *current-chapter*))
+    (tt:with-style (:font *bold-font* :font-size *header-font-size*)
       (tt:paragraph (:top-margin 10)
-        (tt:put-string (second (first items)))))
-    (pdf-render-all-wiki-items (cdr items)))
+        (tt:put-string name)))
+    (let ((*header-font-size* (- *header-font-size* 2))
+          (*current-chapter* name))
+      (pdf-render-all-wiki-items (cdr items)))))
+
+(defvar *paragraph* nil)
+
+(define-wiki-pdf-render dokuwiki:eol (items)
+  (tt:put-string "
+")
+  (pdf-render-all-wiki-items items))
 
 (define-wiki-pdf-render dokuwiki:paragraph (items)
   (tt:paragraph (:bottom-margin 5 :top-margin 5)
-    (pdf-render-all-wiki-items items)))
+    (let ((*paragraph* t))
+      (pdf-render-all-wiki-items items))))
 
 (define-wiki-pdf-render dokuwiki:footnote (items)
   (declare (ignore items)))
@@ -82,18 +119,18 @@
   (tt:with-style (:font *italic-font*)
     (pdf-render-all-wiki-items items)))
 
+(defun decoration-underline (box x y dx dy)
+  (declare (ignore box))
+  (pdf:with-saved-state
+    (pdf:set-color-stroke tt::*color*)
+    (pdf:set-line-width (* 0.06 *font-size*))
+    (pdf:move-to x (+ y (* 0.9 dy)))
+    (pdf:line-to (+ x dx) (+ y (* 0.9 dy)))
+    (pdf:stroke)))
 
 (define-wiki-pdf-render dokuwiki:underline (items)
-  (flet ((decoration-underline (box x y dx dy)
-           (declare (ignore box))
-           (pdf:with-saved-state
-             (pdf:set-gray-stroke 0)
-             (pdf:set-line-width (* 0.06 *font-size*))
-             (pdf:move-to x (+ y (* 0.9 dy)))
-             (pdf:line-to (+ x dx) (+ y (* 0.9 dy)))
-             (pdf:stroke))))
-    (tt:with-style (:post-decoration #'decoration-underline)
-      (pdf-render-all-wiki-items items))))
+  (tt:with-style (:post-decoration #'decoration-underline)
+    (pdf-render-all-wiki-items items)))
 
 (defun show-code (code)
   (let ((font-size (- *font-size* 2)))
@@ -153,3 +190,36 @@
 (define-wiki-pdf-render dokuwiki:em-dash (items)
   (declare (ignore items))
   (tt:put-string (string +EM-DASH+)))
+
+(define-wiki-pdf-render dokuwiki:external-link (items)
+  (tt:with-style (:post-decoration #'decoration-underline :color :blue)
+    (pdf-render-all-wiki-items items)))
+
+(define-wiki-pdf-render dokuwiki:internal-link (items)
+  (let ((delimiter (position #\| (car items))))
+    (tt:with-style (:post-decoration #'decoration-underline :color :blue)
+      (tt:put-string (string-trim '#(#\Space #\Tab)
+                                  (if delimiter
+                                      (subseq (car items) (1+ delimiter))
+                                      (car items)))))
+    (when delimiter
+      (tt:with-style (:font *italic-font*)
+        (tt:put-string (format nil
+                               " <~A>"
+                               (string-trim '#(#\Space #\Tab)
+                                            (subseq (car items) 0 delimiter))))))))
+
+
+(define-wiki-pdf-render dokuwiki:table (items)
+  (typeset:table (:col-widths '(500) :splittable-p nil :border 0.1 :border-color #xD0D0D0)
+    (typeset:row (:background-color #xEEEEEE )
+      (typeset:cell ()
+        (tt:paragraph ()
+          (let ((tt::*font* *bold-font*))
+            (tt:put-string "Здесь должна быть таблица, но я пока не придумал способа её отображения с корректным layout, извините."))
+          (tt:new-line)
+          (tt:put-string "archimag"))))))
+          
+
+
+    

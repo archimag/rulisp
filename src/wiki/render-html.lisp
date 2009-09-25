@@ -234,20 +234,24 @@
   (declare (ignore items))
   (xfactory:text (string +EM-DASH+)))
 
-;; (define-wiki-render dokuwiki:internal-link (items)
-;;   (let ((delimiter (position #\| (car items))))
-;;     (xfactory:with-element-factory ((E))
-;;       (E :a
-;;          (ehref "~A"
-;;                 (puri:merge-uris (string-trim '#(#\Space #\Tab)
-;;                                               (if delimiter
-;;                                                   (subseq (car items) 0 delimiter)
-;;                                                   (car items)))
-;;                                  (hunchentoot:request-uri*)))
-;;          (xfactory:text (string-trim '#(#\Space #\Tab)
-;;                                      (if delimiter
-;;                                          (subseq (car items) (1+ delimiter))
-;;                                          (car items))))))))
+(define-wiki-render dokuwiki:internal-link (items)
+  (let ((delimiter (position #\| (car items))))
+    (xfactory:with-element-factory ((E))
+      (E :a
+         (ehref "~A"
+                (or (ignore-errors
+                      (puri:merge-uris (string-trim '#(#\Space #\Tab)
+                                                    (if delimiter
+                                                        (subseq (car items) 0 delimiter)
+                                                        (car items)))
+                                       (hunchentoot:request-uri*)))
+                    (if delimiter
+                        (subseq (car items) 0 delimiter)
+                        (car items))))
+         (xfactory:text (string-trim '#(#\Space #\Tab)
+                                     (if delimiter
+                                         (subseq (car items) (1+ delimiter))
+                                         (car items))))))))
 
 (define-wiki-render dokuwiki:external-link (items)
   (let ((link (xtree:make-child-element xfactory:*node* "a")))

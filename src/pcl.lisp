@@ -224,7 +224,47 @@
                                                  path)
                               out*))
       out)))
-  
+
+
+(defun pcl-first-page ()
+  (let ((result))
+    (pdf:with-page ()
+      (setf result pdf:*page*)
+      (pdf:draw-centered-text 300 500 "Practical Common Lisp" *bold-font* 30))
+    result))
+
+
+(defun make-pcl-pdf (&optional (out #P"/tmp/pcl.pdf"))
+  (let ((page-number 0))
+  (tt:with-document (:mode :outlines)
+    (pdf:append-child-outline (pdf:outline-root pdf:*document*) 
+                              "Practical Common Lisp"
+                              (pdf:register-reference :name "Practical Common Lisp"
+                                                      :page (pcl-first-page)))
+    (let ((*current-chapter* "Practical Common Lisp"))
+    (iter (for chapter in-vector *pcl-files-map*)
+          (for i from 1)
+          (print i)
+          (let ((wikidoc (wiki-parser:parse :dokuwiki
+                                            (pcl-source-path (third chapter)))))
+            (tt:draw-pages 
+             (tt:compile-text ()
+               (tt:with-style (:font *base-font* :font-size *font-size*)       
+                 (pdf-render-wiki-item wikidoc)))
+             :break :after
+             :margins '(30 50 30 40)
+             :finalize-fn #'(lambda (page)
+                                (pdf:draw-centered-text (/ (aref (pdf::bounds page) 2) 2)
+                                                        10
+                                                        (write-to-string (incf page-number))
+                                                        *base-font*
+                                                        10)
+                                )))
+          (pdf:write-document out))))))
+
+(define-simple-route pcl-pdf ("pcl/pcl.pdf")
+  (merge-pathnames "pcl.pdf"
+                   *pcl-snapshot-dir*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; load snapshot from http://pcl.catap.ru/
