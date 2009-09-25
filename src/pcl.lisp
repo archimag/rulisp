@@ -239,7 +239,7 @@
     result))
 
 
-(defun make-pcl-pdf (&optional (out (merge-pathnames "pcl.pdf" *pcl-snapshot-dir*)))
+(defun make-pcl-pdf (&optional (out #P"/tmp/pcl.pdf"))
   (let ((page-number 0))
   (tt:with-document (:mode :outlines)
     (pdf:append-child-outline (pdf:outline-root pdf:*document*) 
@@ -294,7 +294,8 @@
         (setf *pcl-dir*
               (merge-pathnames "var/www/pcl.catap.ru/htdocs/data/pages/pcl/"
                                *pcl-snapshot-dir*))
-        (make-pcl-pdf)
+        (make-pcl-pdf (merge-pathnames "pcl.pdf"
+                                       *pcl-snapshot-dir*))
         t))))
 
 (if *pcl-load-snapshot-p*
