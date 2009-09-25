@@ -19,11 +19,7 @@
   (xfactory:with-element-factory ((E))
     (E :div
        (eclass "wiki-page-menu")
-       (E :ul
-          (E :li
-             (E :a
-                (ehref 'view-wiki-page-in-pdf :page (hunchentoot:url-decode page))
-                "PDF"))
+       (E :ul          
           (E :li
              (E :a
                 (ehref 'edit-wiki-page :page (hunchentoot:url-decode page))
@@ -31,7 +27,12 @@
           (E :li
              (E :a
                 (ehref 'history-wiki-page :page (hunchentoot:url-decode page))
-                "История"))))))
+                "История"))
+          (E :li
+             (E :a
+                (ehref 'view-wiki-page-in-pdf :page (hunchentoot:url-decode page))
+                (eclass "pdf-link")
+                "PDF"))))))
   
 
 (defun show-wiki-page (page)

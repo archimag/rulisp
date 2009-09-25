@@ -141,7 +141,7 @@
               (E :a (ehref "http://www.gigamonkeys.com/book/") "Practical Common Lisp")
               ". Основная работа над переводом ведётся "
               (E :a (ehref "http://pcl.catap.ru/") "здесь")
-              "."
+              ". "              
               (e-break-line)
               (estrong "ОСТОРОЖНО!")
               " Этот сервис основан на ещё не отлаженном коде по парсингу и отображению "
@@ -150,6 +150,11 @@
  если Вы хотите быть уверены в точности отображения содержимого - обратитесь к "
               (E :a (ehref "http://pcl.catap.ru/") "источнику")
               " перевода")
+           (E :p
+              (E :a
+                 (ehref 'pcl-pdf)
+                 (eclass "pdf-link")
+                 "PDF-версия"))
            (E :ol
               (iter (for chapter in-vector *pcl-files-map*)
                     (E :li
@@ -234,7 +239,7 @@
     result))
 
 
-(defun make-pcl-pdf (&optional (out #P"/tmp/pcl.pdf"))
+(defun make-pcl-pdf (&optional (out (merge-pathnames "pcl.pdf" *pcl-snapshot-dir*)))
   (let ((page-number 0))
   (tt:with-document (:mode :outlines)
     (pdf:append-child-outline (pdf:outline-root pdf:*document*) 
@@ -289,6 +294,7 @@
         (setf *pcl-dir*
               (merge-pathnames "var/www/pcl.catap.ru/htdocs/data/pages/pcl/"
                                *pcl-snapshot-dir*))
+        (make-pcl-pdf)
         t))))
 
 (if *pcl-load-snapshot-p*

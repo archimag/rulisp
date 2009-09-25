@@ -4,13 +4,19 @@
 
 (defparameter *wiki-pdf-render-map* (make-hash-table))
 
-(defparameter *base-font* (pdf:get-font (pdf:font-name (pdf:load-ttf-file #P"/usr/share/fonts/corefonts/verdana.ttf"))))
-(defparameter *bold-font* (pdf:get-font (pdf:font-name (pdf:load-ttf-file #P"/usr/share/fonts/corefonts/verdanab.ttf"))))
-(defparameter *italic-font* (pdf:get-font (pdf:font-name (pdf:load-ttf-file #P"/usr/share/fonts/corefonts/verdanai.ttf"))))
-(defparameter *monospace-font* (pdf:get-font (pdf:font-name (pdf:load-ttf-file #P"/usr/share/fonts/corefonts/cour.ttf"))))
+(defmacro deffont (name string-name)
+  `(defparameter ,name
+     (pdf:get-font (pdf:font-name (pdf:load-ttf-file (merge-pathnames (format nil
+                                                                              "~A.ttf"
+                                                                              ,string-name)
+                                                                      *corefonts-dir*))))))
+
+(deffont *base-font* "verdana")
+(deffont *bold-font* "verdanab")
+(deffont *italic-font* "verdanai")
+(deffont *monospace-font* "cour")
 
 (defparameter *font-size* 12)
-
 
 (defun pdf-render-wiki-item (item)
   (cond
@@ -82,7 +88,7 @@
                                 :title name
                                 :parent *current-chapter*))
     (tt:with-style (:font *bold-font* :font-size *header-font-size*)
-      (tt:paragraph (:top-margin 10)
+      (tt:paragraph (:top-margin 10 )
         (tt:put-string name)))
     (let ((*header-font-size* (- *header-font-size* 2))
           (*current-chapter* name))
@@ -96,7 +102,7 @@
   (pdf-render-all-wiki-items items))
 
 (define-wiki-pdf-render dokuwiki:paragraph (items)
-  (tt:paragraph (:bottom-margin 5 :top-margin 5)
+  (tt:paragraph (:bottom-margin 5 :top-margin 5 :h-align :justified)
     (let ((*paragraph* t))
       (pdf-render-all-wiki-items items))))
 
@@ -211,6 +217,7 @@
 
 
 (define-wiki-pdf-render dokuwiki:table (items)
+  (declare (ignore items))
   (typeset:table (:col-widths '(500) :splittable-p nil :border 0.1 :border-color #xD0D0D0)
     (typeset:row (:background-color #xEEEEEE )
       (typeset:cell ()

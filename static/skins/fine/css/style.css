@@ -329,3 +329,7 @@ textarea {
 .fn_top { font-size: 80%; vertical-align: super; margin-left: 0.1em; }
 
 .fn_bot { font-size: 90%; font-weight: bold; vertical-align: super; margin-right: 0.2em; }
+
+/* * * * * * * * * * * * *  * * ** * * */
+
+.pdf-link { background: transparent url(/image/pdf.png) no-repeat; padding-left: 17px; }
