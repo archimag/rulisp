@@ -5,7 +5,7 @@
 ;;;;
 ;;;; Usage:
 ;;;; sbcl --noinform --no-userinit --no-sysinit --load /path/to/rulisp-daemon.lisp COMMAND
-;;;; where COMMAND one of: start stop zap kill restart
+;;;; where COMMAND one of: start stop zap kill restart nodaemon
 ;;;;
 ;;;; If successful, the exit code is 0, otherwise 1
 ;;;;
@@ -66,7 +66,7 @@
 
 ;;;; quit if COMMAND is unknown
 
-(unless (find *daemon-command* '("start" "stop" "zap" "kill" "restart") :test #'string-equal)
+(unless (find *daemon-command* '("start" "stop" "zap" "kill" "restart" "nodaemon") :test #'string-equal)
   (with-exit-on-error
     (error "Bad command-line options")))
 
@@ -122,6 +122,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defparameter *as-daemon* (not (string= *daemon-command* "nodaemon")))
+
 ;;;; required path for sbcl :(
 (sb-posix::define-call "grantpt" int minusp (fd sb-posix::file-descriptor))
 (sb-posix::define-call "unlockpt" int minusp (fd sb-posix::file-descriptor))
@@ -172,8 +174,9 @@
   (declare (ignore info context))
   (setf *status* sig))
 
-(sb-sys:enable-interrupt sb-posix:sigusr1 #'signal-handler)
-(sb-sys:enable-interrupt sb-posix:sigchld #'signal-handler)
+(when *as-daemon*
+  (sb-sys:enable-interrupt sb-posix:sigusr1 #'signal-handler)
+  (sb-sys:enable-interrupt sb-posix:sigchld #'signal-handler))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; change uid and gid
@@ -201,13 +204,14 @@
 ;;;;; fork!
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(unless (= (sb-posix:fork) 0)
-  (loop
-     while (null *status*)
-     do (sleep 0.1))
-  (quit :unix-status (if (= *status* sb-posix:sigusr1)
-                         0
-                         1)))
+(when *as-daemon*
+  (unless (= (sb-posix:fork) 0)
+    (loop
+       while (null *status*)
+       do (sleep 0.1))
+    (quit :unix-status (if (= *status* sb-posix:sigusr1)
+                           0
+                           1))))
 
 
 (defparameter *ppid* (sb-posix:getppid))
@@ -223,10 +227,11 @@
                      err))
   (quit :unix-status 1))
 
-(setf *debugger-hook* #'global-error-handler)
+(when *as-daemon*
+  (setf *debugger-hook* #'global-error-handler)
 
-(sb-sys:enable-interrupt sb-posix:sigusr1 :default)
-(sb-sys:enable-interrupt sb-posix:sigchld :default)
+  (sb-sys:enable-interrupt sb-posix:sigusr1 :default)
+  (sb-sys:enable-interrupt sb-posix:sigchld :default))
 
 ;;;; change current directory
 (sb-posix:chdir #P"/")
@@ -235,15 +240,18 @@
 (sb-posix:umask 0)
 
 ;;;; detach from tty
-(let ((fd (sb-posix:open #P"/dev/tty" sb-posix:O-RDWR)))
-  (sb-posix:ioctl fd sb-unix:tiocnotty)
-  (sb-posix:close fd))
+(when *as-daemon*
+  (let ((fd (sb-posix:open #P"/dev/tty" sb-posix:O-RDWR)))
+    (sb-posix:ioctl fd sb-unix:tiocnotty)
+    (sb-posix:close fd)))
 
 ;;;; rebind standart input, output and error streams
-(switch-to-slave-pseudo-terminal)
+(when *as-daemon*
+  (switch-to-slave-pseudo-terminal))
 
 ;;;; start new session
-(sb-posix:setsid)
+(when *as-daemon*
+  (sb-posix:setsid))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; load asdf
@@ -279,31 +287,33 @@
 (asdf:operate 'asdf:load-op :rulisp)
 (rulisp.starter:rulisp-start)
 
-(sb-sys:enable-interrupt sb-posix:sigusr1
-                         #'(lambda (sig info context)                             
-                             (declare (ignore sig info context))
-                             (handler-case
-                                 (progn 
-                                   (sb-posix:syslog sb-posix:log-info "Stop rulisp daemon")
-                                   (rulisp.starter:rulisp-stop))
-                               (error (err)
-                                 (sb-posix:syslog sb-posix:log-err
-                                                  (with-output-to-string (out)
-                                                    (let ((*print-escape* nil))
-                                                      (print-object err out))))))
-                             (sb-ext:quit :unix-status 0)))
+(when *as-daemon*
+  (sb-sys:enable-interrupt sb-posix:sigusr1
+                           #'(lambda (sig info context)                             
+                               (declare (ignore sig info context))
+                               (handler-case
+                                   (progn 
+                                     (sb-posix:syslog sb-posix:log-info "Stop rulisp daemon")
+                                     (rulisp.starter:rulisp-stop))
+                                 (error (err)
+                                   (sb-posix:syslog sb-posix:log-err
+                                                    (with-output-to-string (out)
+                                                      (let ((*print-escape* nil))
+                                                        (print-object err out))))))
+                               (sb-ext:quit :unix-status 0))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; end daemon initialize
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; write pid file
-(with-open-file (out *pidfile* :direction :output :if-exists :error :if-does-not-exist :create)
-  (write (sb-posix:getpid) :stream out))
+(when *as-daemon*
+  (with-open-file (out *pidfile* :direction :output :if-exists :error :if-does-not-exist :create)
+    (write (sb-posix:getpid) :stream out))
 
-(sb-posix:kill *ppid* sb-posix:sigusr1)
-(setf *debugger-hook* nil)
+  (sb-posix:kill *ppid* sb-posix:sigusr1)
+  (setf *debugger-hook* nil)
 
-(sb-posix:syslog sb-posix:log-info "Start rulisp daemon")
+  (sb-posix:syslog sb-posix:log-info "Start rulisp daemon"))
 
 
