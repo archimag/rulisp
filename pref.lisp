@@ -18,7 +18,8 @@
            #:*pcl-snapshot-url*
            #:*pcl-snapshot-dir*
            #:*pcl-load-snapshot-p*
-           #:*corefonts-dir*))
+           #:*corefonts-dir*
+           #:*cm-fonts-dir*))
 
 (in-package :rulisp.preferences)
 
@@ -55,3 +56,4 @@
 (defparameter *wiki-dir* #P"/var/rulisp/wiki/")
 
 (defparameter *corefonts-dir* #P"/usr/share/fonts/corefonts/")
+(defparameter *cm-fonts-dir* #P"/usr/share/fonts/cm/")

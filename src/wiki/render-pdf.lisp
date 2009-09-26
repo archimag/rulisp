@@ -9,13 +9,13 @@
      (pdf:get-font (pdf:font-name (pdf:load-ttf-file (merge-pathnames (format nil
                                                                               "~A.ttf"
                                                                               ,string-name)
-                                                                      *corefonts-dir*))))))
+                                                                      *cm-fonts-dir*))))))
 
-(deffont *base-font* "georgia")
-(deffont *header-font* "verdanab")
-(deffont *bold-font* "georgiab")
-(deffont *italic-font* "georgiai")
-(deffont *monospace-font* "cour")
+(deffont *base-font* "cmunbmr")
+(deffont *header-font* "cmunbbx")
+(deffont *bold-font* "cmunobx")
+(deffont *italic-font* "cmunbi")
+(deffont *monospace-font* "cmunbmo")
 
 (defparameter *font-size* 12)
 
