@@ -155,6 +155,11 @@
                  (ehref 'pcl-pdf)
                  (eclass "pdf-link")
                  "PDF-версия"))
+           (E :img
+              (xfactory:attributes :src (restas:genurl 'image :file "pcl.jpg")
+                                   :alt "PCL"
+                                   :style "float: right"))
+              
            (E :ol
               (iter (for chapter in-vector *pcl-files-map*)
                     (E :li
@@ -235,7 +240,13 @@
   (let ((result))
     (pdf:with-page ()
       (setf result pdf:*page*)
-      (pdf:draw-centered-text 300 500 "Practical Common Lisp" *header-font* 30))
+      ;;(pdf:draw-centered-text 300 500 "Practical Common Lisp" *header-font* 30)
+      (let ((bounds (pdf::bounds pdf:*page*))
+            (image (pdf:make-image #P"/home/masha/Desktop/pcl.jpg")))
+        (pdf:add-images-to-page image)
+        (pdf:draw-image image
+                        0 0 (aref bounds 2) (aref bounds 3) 0))
+      )
     result))
 
 
