@@ -235,7 +235,7 @@
   (let ((result))
     (pdf:with-page ()
       (setf result pdf:*page*)
-      (pdf:draw-centered-text 300 500 "Practical Common Lisp" *bold-font* 30))
+      (pdf:draw-centered-text 300 500 "Practical Common Lisp" *header-font* 30))
     result))
 
 
