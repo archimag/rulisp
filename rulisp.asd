@@ -16,8 +16,8 @@
                (:file "utility" :depends-on ("packages"))
                (:file "static" :depends-on ("utility"))
                (:file "account" :depends-on ("utility"))
-               (:file "format" :depends-on ("utility"))
-               (:file "rulisp" :depends-on ("static" "account" "format"))
+               (:file "rulisp" :depends-on ("static" "account"))
+;;               (:file "format" :depends-on ("utility"))
 ;;               (:file "planet" :depends-on ("utility"))
 ;;                (:module :forum
 ;;                         :components

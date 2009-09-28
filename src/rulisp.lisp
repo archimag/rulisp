@@ -4,6 +4,8 @@
 
 (defparameter *rulisp-site* (make-instance 'restas:site))
 
+(defparameter *site-plugins* (make-hash-table))
+
 (setf (gethash "rulisp" restas:*sites*) *rulisp-site*)
 
 (defun chrome-resolver (url id ctxt)
@@ -39,6 +41,10 @@
       (let ((str (xtree:serialize res :to-string :pretty-print t)))
         str))))
 
+
+(restas::define-site-plugin rulisp-static (:rulisp.static 'rulisp-plugin-instance))
+
+
 (progn
   (setf (slot-value *rulisp-site* 'restas::plugins)
         nil)
@@ -50,13 +56,13 @@
                                                        :plugin :rulisp.account))
 
 
-  (restas:site-add-plugin *rulisp-site* (make-instance 'rulisp-plugin-instance
-                                                       :plugin :rulisp.format
-                                                       :context (let ((ctnx (restas::make-preserve-context)))
-                                                                  (restas::context-add-variable ctnx 'rulisp.format::*baseurl*)
-                                                                  (setf (restas::context-symbol-value ctnx 'rulisp.format::*baseurl*)
-                                                                        '("format"))
-                                                                  ctnx)))
+;;   (restas:site-add-plugin *rulisp-site* (make-instance 'rulisp-plugin-instance
+;;                                                        :plugin :rulisp.format
+;;                                                        :context (let ((ctnx (restas::make-preserve-context)))
+;;                                                                   (restas::context-add-variable ctnx 'rulisp.format::*baseurl*)
+;;                                                                   (setf (restas::context-symbol-value ctnx 'rulisp.format::*baseurl*)
+;;                                                                         '("format"))
+;;                                                                   ctnx)))
   (restas::reconnect-all-sites))
 
 ;; (xpath:define-xpath-function colorize (code)

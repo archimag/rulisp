@@ -24,7 +24,7 @@
 (defun rulisp-start ()
   (when *acceptor*
     (error "web server has already been started"))
-  (restas:reconnect-all-sites)
+  (restas::reconnect-all-sites)
   (setf *acceptor*
         (hunchentoot:start (make-instance 'rulisp-acceptor
                                           :port (let ((port (second (split-sequence:split-sequence #\: rulisp.preferences:*host* ))))
