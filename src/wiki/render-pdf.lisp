@@ -113,7 +113,8 @@
 (define-wiki-pdf-render dokuwiki:paragraph (items)
   (tt:paragraph (:bottom-margin 5 :top-margin 5 :h-align :justified)
     (let ((*paragraph* t))
-      (pdf-render-all-wiki-items items))))
+      (tt:with-style (:font *base-font*)
+      (pdf-render-all-wiki-items items)))))
 
 (define-wiki-pdf-render dokuwiki:footnote (items)
   (declare (ignore items)))
@@ -149,31 +150,31 @@
 
 (defun show-code (code)
   (let ((font-size (- *font-size* 2)))
-  (typeset:table (:col-widths '(500) :splittable-p nil :border 0.1 :border-color #xD0D0D0)
-    (typeset:row (:background-color #xEEEEEE )
-      (typeset:cell ()
-        (tt:paragraph (:font-size font-size)
-          (tt:vspace 4)
-          (let* ((lines (if (consp code)
-                            code
-                            (split-sequence:split-sequence #\Newline
-                                                       code
-                                                       :remove-empty-subseqs t)))
-                 (min-space-count (iter (for line in lines)
-                                        (minimizing (or (position #\Space line :test-not #'char-equal)
-                                                        0)))))
-            (let ((tt::*font* *monospace-font*))
-              (iter (for line in lines)
-                    (when (and line
-                               (not (string= line "")))
-                      (tt:hspace (+ 4
-                                    (* (pdf:get-char-size #\Space *monospace-font* font-size)
-                                       (- (or (position #\Space line :test-not #'char-equal)
-                                              0)
-                                          min-space-count))))
-                      (tt:put-string line))
-                    (tt:new-line))))
-          (tt:vspace 4)))))))
+    (typeset:table (:col-widths '(500) :splittable-p nil :border 0.1 :border-color #xD0D0D0)
+      (typeset:row (:background-color #xEEEEEE )
+        (typeset:cell (:v-align :center)
+          (tt:with-style (:font *monospace-font*)
+            (tt:paragraph (:font-size font-size :h-align :left)
+              (tt:vspace 4)
+              (let* ((lines (if (consp code)
+                                code
+                                (split-sequence:split-sequence #\Newline
+                                                               code
+                                                               :remove-empty-subseqs t)))
+                     (min-space-count (iter (for line in lines)
+                                            (minimizing (or (position #\Space line :test-not #'char-equal)
+                                                            0)))))
+                (iter (for line in lines)
+                      (when (and line
+                                 (not (string= line "")))
+                        (tt:hspace (+ 4
+                                      (* (pdf:get-char-size #\Space *monospace-font* font-size)
+                                         (- (or (position #\Space line :test-not #'char-equal)
+                                                0)
+                                            min-space-count))))
+                        (tt:put-string line))
+                      (tt:new-line))))))
+        (tt:vspace 4)))))
 
 (define-wiki-pdf-render dokuwiki:code (items)
   (show-code (first items)))

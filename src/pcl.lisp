@@ -2,14 +2,6 @@
 
 (in-package :rulisp)
 
-;; (defparameter *test-pcl-page-path*
-;;   (merge-pathnames "content/macros-standard-control-constructs.dokuwiki" *basepath*))
-
-;;(defparameter *test-pcl-page*  (wiki-parser:parse :dokuwiki *test-pcl-page-path*))
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defparameter *pcl-files-map*
   '#(("introduction-why-lisp"
