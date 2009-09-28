@@ -2,252 +2,6 @@
 
 (in-package :rulisp)
 
-(defparameter *test-pcl-page-path*
-  (merge-pathnames "content/macros-standard-control-constructs.dokuwiki" *basepath*))
-
-(defparameter *test-pcl-page*  (wiki-parser:parse :dokuwiki *test-pcl-page-path*))
-
-
-(defparameter *wiki-render-map* (make-hash-table))
-
-(defun todo-dokuwiki ()
-  (set-difference (iter (for (key value) in-hashtable dokuwiki::*symbols-category*)
-                        (collect key))
-                  (iter (for (key value) in-hashtable *wiki-render-map*)
-                        (collect key))))
-
-(defun render-wiki-item (item)
-  (cond
-    ((and (consp item)
-          (symbolp (car item))) (let ((render (gethash (car item) *wiki-render-map*)))
-                                  (if render
-                                      (funcall render (cdr item))
-                                      (render-wiki-item (cdr item)))))
-    ((consp item) (iter (for i in item)
-                        (render-wiki-item i)))
-    ((symbolp item) (let ((render (gethash item *wiki-render-map*)))
-                      (if render
-                          (funcall render nil))))
-    ((stringp item) (xfactory:text item))))
-
-(defvar *footnotes*)
-(defvar *footnote-number*)
-
-(defun render-wiki-page (wikidoc)
-  (let ((*footnotes* (xtree:make-element "div"))
-        (*footnote-number* 0))
-    (xfactory:with-element-factory ((E))
-      (E :div
-         (eclass "article")
-         (render-wiki-item wikidoc)
-         (if (xtree:first-child *footnotes*)
-             (progn
-               (setf (xtree:attribute-value *footnotes* "class") "footnotes")
-               (xtree:append-child xfactory:*node* *footnotes*))
-             (xtree:release *footnotes*))))))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun render-all-wiki-items (items)
-  (iter (for item in items)
-        (render-wiki-item item)))
-
-
-(defmacro define-wiki-render (name (items) &body body)
-  `(setf (gethash ',name
-                  *wiki-render-map*)
-         (lambda (,items)
-           ,@body)))
-
-(define-wiki-render dokuwiki:toplevel (items)
-  (render-all-wiki-items items))
-  
-(define-wiki-render dokuwiki:chapter (items)
-  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node*
-                                                   "div")))
-    (eclass "chapter")
-    (render-all-wiki-items items)))
-
-
-(define-wiki-render dokuwiki:header (items)
-  (xtree:make-child-text (xtree:make-child-element xfactory:*node*
-                                                   "h3")
-                         (car items)))
-
-(defparameter +endl+ (string #\Newline))
-
-(define-wiki-render dokuwiki:eol (items)
-  (declare (ignore items))
-  (xfactory:text +endl+))
-
-
-(define-wiki-render dokuwiki:paragraph (items)
-  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node*
-                                                   "p")))
-    (render-all-wiki-items items)))
-
-
-(define-wiki-render dokuwiki:footnote (items)
-  (incf *footnote-number*)
-  (xfactory:with-element-factory ((E))
-    (E :a
-       (eclass "fn_top")
-       (eid "fnt__~A" *footnote-number*)
-       (ehref "#fn__~A" *footnote-number*)
-       (xfactory:text "~A)" *footnote-number*)))
-  (let ((xfactory:*node* *footnotes*))
-    (xfactory:with-element-factory ((E))
-      (E :div
-         (E :a
-            (eclass "fn_bot")
-            (eid "fn__~A" *footnote-number*)
-            (ehref "#fnt__~A" *footnote-number*)
-            (xfactory:text "~A)" *footnote-number*))
-         (render-all-wiki-items items)))))
-
-(define-wiki-render dokuwiki:linebreak (items)
-  (declare (ignore items))
-  (xtree:make-child-element xfactory:*node* "br"))
-
-(define-wiki-render dokuwiki:monospace (items)
-  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "code")))
-    (render-all-wiki-items items)))
-
-(define-wiki-render dokuwiki:strong (items)
-  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "strong")))
-    (render-all-wiki-items items)))
-
-(define-wiki-render dokuwiki:emphasis (items)
-  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "em")))
-    (render-all-wiki-items items)))
-
-(define-wiki-render dokuwiki:underline (items)
-  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "u")))
-    (render-all-wiki-items items)))
-
-(define-wiki-render dokuwiki:preformatted (items)
-  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "pre")))
-    (iter (for item in items)pp
-          (render-wiki-item item)
-          (e-break-line))))
-  
-(define-wiki-render dokuwiki:code (items)
-  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "pre")))
-    (eclass "code")
-    (e-text2html (code-to-html (car items)))))
-
-(define-wiki-render dokuwiki:quoted (items)
-  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "blockquote")))
-    (render-all-wiki-items items)))
-
-(define-wiki-render dokuwiki:unformatted (items)
-  (iter (for item in (alexandria:flatten items))
-        (cond
-          ((stringp item) (xfactory:text item))
-          ((eql item 'dokuwiki:eol) (xfactory:text +endl+)))))
-
-(define-wiki-render dokuwiki:unformattedalt (items)
-  (iter (for item in (alexandria:flatten items))
-        (cond
-          ((stringp item) (xfactory:text item))
-          ((eql item 'dokuwiki:eol) (xfactory:text +endl+)))))
-
-(define-wiki-render dokuwiki:html (items)
-  (xfactory:with-element-factory ((E))
-    (E :pre
-       (iter (for item in (alexandria:flatten items))
-        (cond
-          ((stringp item) (xfactory:text item))
-          ((eql item 'dokuwiki:eol) (xfactory:text +endl+)))))))
-       
-
-;;(define-wiki-render dokuwiki:html (items)
-
-(define-wiki-render dokuwiki:hr (items)
-  (declare (ignore items))
-  (xtree:make-child-element xfactory:*node* "hr"))
-
-(define-wiki-render dokuwiki:unordered-listblock (items)
-  (xfactory:with-element-factory ((E))
-    (E :ul
-       (iter (for item in items)
-             (E :li
-                (render-wiki-item item))))))
-
-(define-wiki-render dokuwiki:ordered-listblock (items)
-  (xfactory:with-element-factory ((E))
-    (E :ol
-       (iter (for item in items)
-             (E :li
-                (render-wiki-item item))))))
-
-;; (define-wiki-render dokuwiki:table (items)
-;;   (xfactory:with-element-factory ((E))
-;;     (E :pre
-;;        (xfactory:text (write-to-string items)))))
-
-(define-wiki-render dokuwiki:en-dash (items)
-  (declare (ignore items))
-  (xfactory:text (string #\EN_DASH)))
-
-(define-wiki-render dokuwiki:em-dash (items)
-  (declare (ignore items))
-  (xfactory:text (string #\EM_DASH)))
-
-(define-wiki-render dokuwiki:external-link (items)
-  (let ((delimiter (position #\| (car items))))
-    (xfactory:with-element-factory ((E))
-      (E :a
-         (ehref (string-trim '#(#\Space #\Tab)
-                             (if delimiter
-                                 (subseq (car items) 0 delimiter)
-                                 (car items))))
-         (xfactory:text (string-trim '#(#\Space #\Tab)
-                                     (if delimiter
-                                         (subseq (car items) (1+ delimiter))
-                                         (car items))))))))
-
-(define-wiki-render dokuwiki:table (items)
-  (xfactory:with-element-factory ((E))
-    (E :table
-       (E :tbody
-          (iter (for item in items)
-                (E :tr
-                   (render-all-wiki-items (remove-if-not #'consp item))))))))
-
-(defun render-table-cell (type items)
-  (if (or items
-          (null (xtree:first-child xfactory:*node*)))
-      (let* ((xfactory:*node* (xtree:make-child-element xfactory:*node* type))
-             (first (first items))
-             (right (and (stringp first)
-                         (> (length first) 1)
-                         (string= (subseq first 0 2) "  ")))
-             (last (car (last items)))
-             (left (and (stringp last)
-                        (> (length last) 1)
-                        (string= (subseq last (- (length last) 2)) "  "))))
-        (cond
-          ((and right left) (eclass "centeralign"))
-          (left (eclass "leftalign"))
-          (right (eclass "rightalign")))
-        (render-all-wiki-items items))
-      (let* ((cell (xtree:last-child xfactory:*node*))
-             (colspan (xtree:attribute-value cell "colspan")))
-        (setf (xtree:attribute-value cell "colspan")
-              (if colspan
-                  (write-to-string (1+ (parse-integer colspan)))
-                  "2")))))
-        
-
-(define-wiki-render dokuwiki:table-header-cell (items)
-  (render-table-cell "th" items))
-
-(define-wiki-render dokuwiki:table-cell (items)
-  (render-table-cell "td" items))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defparameter *pcl-files-map*
   '#(("introduction-why-lisp"
@@ -379,7 +133,7 @@
               (E :a (ehref "http://www.gigamonkeys.com/book/") "Practical Common Lisp")
               ". Основная работа над переводом ведётся "
               (E :a (ehref "http://pcl.catap.ru/") "здесь")
-              "."
+              ". "              
               (e-break-line)
               (estrong "ОСТОРОЖНО!")
               " Этот сервис основан на ещё не отлаженном коде по парсингу и отображению "
@@ -388,6 +142,16 @@
  если Вы хотите быть уверены в точности отображения содержимого - обратитесь к "
               (E :a (ehref "http://pcl.catap.ru/") "источнику")
               " перевода")
+           (E :p
+              (E :a
+                 (ehref 'pcl-pdf)
+                 (eclass "pdf-link")
+                 "PDF-версия"))
+           (E :img
+              (xfactory:attributes :src (restas:genurl 'image :file "pcl.jpg")
+                                   :alt "PCL"
+                                   :style "float: right"))
+              
            (E :ol
               (iter (for chapter in-vector *pcl-files-map*)
                     (E :li
@@ -449,31 +213,97 @@
         hunchentoot:+HTTP-NOT-FOUND+)))
 
 
+(define-simple-route pcl-chapter-pdf ("pcl/pdf/:(chapter)"
+                                      :content-type "application/pdf")
+  (let* ((number (position chapter
+                           *pcl-files-map*
+                           :key #'first
+                           :test #'string=))
+         (path (pcl-source-path (third (aref *pcl-files-map* number)))))
+    (flexi-streams:with-output-to-sequence (out)
+      (let ((out* (flexi-streams:make-flexi-stream out)))
+        (pdf-render-wiki-page (wiki-parser:parse :dokuwiki
+                                                 path)
+                              out*))
+      out)))
+
+
+(defun pcl-first-page ()
+  (let ((result))
+    (pdf:with-page ()
+      (setf result pdf:*page*)
+      ;;(pdf:draw-centered-text 300 500 "Practical Common Lisp" *header-font* 30)
+      (let ((bounds (pdf::bounds pdf:*page*))
+            (image (pdf:make-image (staticpath "image/pcl.jpg"))))
+        (pdf:add-images-to-page image)
+        (pdf:draw-image image
+                        0 0 (aref bounds 2) (aref bounds 3) 0))
+      )
+    result))
+
+
+(defun make-pcl-pdf (&optional (out #P"/tmp/pcl.pdf"))
+  (let ((page-number 1))
+    (tt:with-document (:mode :outlines)
+      (pdf:append-child-outline (pdf:outline-root pdf:*document*) 
+                                "Practical Common Lisp"
+                                (pdf:register-reference :name "Practical Common Lisp"
+                                                        :page (pcl-first-page)))
+      (let ((*current-chapter* "Practical Common Lisp"))
+        (iter (for chapter in-vector *pcl-files-map*)
+              (for i from 1)
+              (print i)
+              (let ((wikidoc (wiki-parser:parse :dokuwiki
+                                                (pcl-source-path (third chapter)))))
+                (tt:draw-pages 
+                 (tt:compile-text ()
+                   (tt:with-style (:font *base-font* :font-size *font-size*)       
+                     (pdf-render-wiki-item wikidoc)))
+                 :break :after
+                 :margins '(30 50 30 40)
+                 :finalize-fn #'(lambda (page)
+                                  (pdf:draw-centered-text (/ (aref (pdf::bounds page) 2) 2)
+                                                          10
+                                                          (write-to-string (incf page-number))
+                                                          *base-font*
+                                                          10)
+                                  )))
+              (pdf:write-document out))))))
+
+(define-simple-route pcl-pdf ("pcl/pcl.pdf")
+  (merge-pathnames "pcl.pdf"
+                   *pcl-snapshot-dir*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; load snapshot from http://pcl.catap.ru/
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun load-pcl-snapshot ()
-  (when *pcl-load-snapshot-p*
-    (let ((snapshot-path (ensure-directories-exist (merge-pathnames (car (last (puri:uri-parsed-path *pcl-snapshot-url*)))
-                                                                    *pcl-snapshot-dir*)))
-          (snapshot (drakma:http-request *pcl-snapshot-url*
-                                         :force-binary t)))
-      (when snapshot
-        (with-open-file (out
-                         snapshot-path
-                         :direction :output
-                         :element-type '(unsigned-byte 8)
-                         :if-exists :supersede)
-          (write-sequence snapshot out))
-        (zip:unzip snapshot-path
-                   *pcl-snapshot-dir*
-                   :if-exists :supersede)
-        (setf *pcl-dir*
-              (merge-pathnames "var/www/pcl.catap.ru/htdocs/data/pages/pcl/"
-                               *pcl-snapshot-dir*))
-        t))))
+  (let ((snapshot-path (ensure-directories-exist (merge-pathnames (car (last (puri:uri-parsed-path *pcl-snapshot-url*)))
+                                                                  *pcl-snapshot-dir*)))
+        (snapshot (drakma:http-request *pcl-snapshot-url*
+                                       :force-binary t)))
+    (when snapshot
+      (with-open-file (out
+                       snapshot-path
+                       :direction :output
+                       :element-type '(unsigned-byte 8)
+                       :if-exists :supersede)
+        (write-sequence snapshot out))
+      (zip:unzip snapshot-path
+                 *pcl-snapshot-dir*
+                 :if-exists :supersede)
+      (setf *pcl-dir*
+            (merge-pathnames "var/www/pcl.catap.ru/htdocs/data/pages/pcl/"
+                             *pcl-snapshot-dir*))
+        
+      (make-pcl-pdf (merge-pathnames "pcl.pdf.tmp"
+                                     *pcl-snapshot-dir*))
+      (sb-posix:rename (merge-pathnames "pcl.pdf.tmp"
+                                        *pcl-snapshot-dir*)
+                       (merge-pathnames "pcl.pdf"
+                                        *pcl-snapshot-dir*))
+      t)))
 
 (if *pcl-load-snapshot-p*
     (clon:schedule-function 'load-pcl-snapshot

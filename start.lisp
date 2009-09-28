@@ -2,7 +2,7 @@
 
 (defpackage :rulisp.starter
   (:use :cl)
-  (:export :run))
+  (:export #:rulisp-start #:rulisp-stop))
 
 (in-package :rulisp.starter)
 
@@ -21,14 +21,26 @@
 
 (defparameter *acceptor* nil)
 
-;;(restas:reconnect-all-plugins)
-(restas::reconnect-all-sites)
+(defun rulisp-start ()
+  (when *acceptor*
+    (error "web server has already been started"))
+  (restas:reconnect-all-sites)
+  (setf *acceptor*
+        (hunchentoot:start (make-instance 'rulisp-acceptor
+                                          :port (let ((port (second (split-sequence:split-sequence #\: rulisp.preferences:*host* ))))
+                                                  (if port
+                                                      (parse-integer port)
+                                                      80)))))
+  (print "rulisp started"))
 
-(if *acceptor*
-    (error "web server has already been started")
-    (setf *acceptor*
-          (hunchentoot:start (make-instance 'rulisp-acceptor
-                                            :port (let ((port (second (split-sequence:split-sequence #\: rulisp.preferences:*host* ))))
-                                                    (if port
-                                                        (parse-integer port)
-                                                        80))))))
+(defun rulisp-stop ()
+  (unless *acceptor*
+    (error "web server not yet been started"))
+  (hunchentoot:stop *acceptor*)
+  (setf *acceptor* nil))
+
+
+
+
+
+  

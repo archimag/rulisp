@@ -34,3 +34,4 @@
 
 ;; Start rulisp server
 (asdf:operate 'asdf:load-op :rulisp)
+(rulisp.starter:rulisp-start)

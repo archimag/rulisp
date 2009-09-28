@@ -72,7 +72,7 @@
          (items (with-rulisp-db
                   (select-formats start)))
          (all (with-rulisp-db
-                (postmodern:query "SELECT count(*) FROM formats" :single))))
+                (postmodern:query (:select (:count '*) :from 'formats) :single))))
     (in-pool
      (xfactory:with-document-factory ((E))
        (E :overlay

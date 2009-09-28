@@ -19,7 +19,7 @@
   (xfactory:with-element-factory ((E))
     (E :div
        (eclass "wiki-page-menu")
-       (E :ul
+       (E :ul          
           (E :li
              (E :a
                 (ehref 'edit-wiki-page :page (hunchentoot:url-decode page))
@@ -27,7 +27,12 @@
           (E :li
              (E :a
                 (ehref 'history-wiki-page :page (hunchentoot:url-decode page))
-                "История"))))))
+                "История"))
+          (E :li
+             (E :a
+                (ehref 'view-wiki-page-in-pdf :page (hunchentoot:url-decode page))
+                (eclass "pdf-link")
+                "PDF"))))))
   
 
 (defun show-wiki-page (page)
@@ -62,6 +67,15 @@
 (define-simple-route view-wiki-page ("wiki/:(page)"
                                      :overlay-master *master*)
   (show-wiki-page page))
+
+(define-simple-route view-wiki-page-in-pdf ("wiki/:(page)/pdf"
+                                            :content-type "application/pdf")
+  (flexi-streams:with-output-to-sequence (out)
+    (let ((out* (flexi-streams:make-flexi-stream out)))
+      (pdf-render-wiki-page (wiki-parser:parse :dokuwiki
+                                               (wiki-page-pathname page))
+                            out*))
+    out))
 
 (define-simple-route edit-wiki-page ("wiki/edit/:(page)"
                                      :overlay-master *master*

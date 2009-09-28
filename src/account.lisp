@@ -260,9 +260,7 @@
 
 (defun register-mark-exist-p (mark)
   (with-rulisp-db
-    (postmodern:query (format nil
-                              "SELECT mark FROM confirmations WHERE mark = '~A'"
-                              mark)
+    (postmodern:query (:select 'mark :from 'confirmations :where (:= 'mark mark))
                       :single)))
   
 (define-simple-route registration-confirmation ("register/confirmation/:(mark)"
@@ -283,14 +281,14 @@
       (progn
         (with-rulisp-db
           (postmodern:with-transaction ()
-            (postmodern:execute (format nil
-                                        "UPDATE users
-                                             SET status = NULL
-                                             WHERE user_id = (SELECT user_id FROM confirmations WHERE mark = '~A')"
-                                        mark))
-            (postmodern:execute (format nil
-                                        "DELETE FROM confirmations WHERE mark = '~A'"
-                                        mark))))
+            (postmodern:execute (:update 'users 
+                                         :set 'status :null  
+                                         :where (:= 'user_id
+                                                    (:select 'user_id
+                                                             :from 'confirmations
+                                                             :where (:= 'mark mark)))))
+            (postmodern:execute (:delete-from 'confirmations
+                                              :where (:= 'mark mark)))))
         (tmplpath "account/success-register.xml"))
       (show-confirmation-form)))
 
@@ -310,26 +308,20 @@
                                       :login-status :not-logged-on
                                       :method :post)
   (let ((login-info (with-rulisp-db
-                      (postmodern:query (format nil
-                                                "SELECT user_id, login, email, password FROM users
-                                                    WHERE email = '~A' AND status IS NULL"
-                                                (hunchentoot:post-parameter "email"))
+                      (postmodern:query (:select 'user-id 'login 'email :from 'users
+                                                 :where (:and (:= 'email (hunchentoot:post-parameter "email"))
+                                                              (:is-null 'status)))
                                         :row))))
     (if login-info
         (let ((mark (calc-sha1-sum (write-to-string login-info))))
           (with-rulisp-db
-            (postmodern:execute (format nil
-                                        "INSERT INTO forgot (mark, user_id) VALUES('~A', ~A)"
-                                        mark
-                                        (first login-info))))
+            (postmodern:execute (:insert-into 'forgot
+                                              :set 'mark mark 'user_id (first login-info))))
           (send-noreply-mail (third login-info)
                              "Восстановление пароля"
                              (expand-file (skinpath "mail/forgot")
                                           (acons :host (hunchentoot:host)
-                                                 (acons :link (format nil
-                                                                      "http://~A~A"
-                                                                      (hunchentoot:host)
-                                                                      (genurl 'reset-password :mark mark))
+                                                 (acons :link (genurl-with-host 'reset-password :mark mark)
                                                         nil))))
           (tmplpath "account/forgot-send-email.xml"))
         (let ((badform (in-pool (xtree:parse (forgot-form)))))
@@ -345,9 +337,9 @@
 
 (defun forgot-mark-exist-p (mark)
   (with-rulisp-db
-    (postmodern:query (format nil
-                              "SELECT mark FROM forgot WHERE mark = '~A'"
-                              mark)
+    (postmodern:query (:select 'mark
+                               :from 'forgot
+                               :where (:= 'mark  mark))
                       :single)))
 
 (define-simple-route reset-password ("forgot-password/:(mark)"
@@ -355,6 +347,7 @@
   (if (forgot-mark-exist-p mark)
       (reset-password-form)
       hunchentoot:+HTTP-NOT-FOUND+))
+
       
 (define-simple-route reset-password/post ("forgot-password/:(mark)"
                                           :method :post
@@ -377,16 +370,14 @@
           (t (setf success t)))
         (if success
             (progn
-              (with-rulisp-db
-                (postmodern:with-transaction ()
-                  (postmodern:execute (format nil
-                                              "UPDATE users SET password = '~A'
-                                                WHERE user_id = (SELECT user_id FROM forgot WHERE mark = '~A')"
-                                              (calc-md5-sum password)
-                                              mark))
-                  (postmodern:execute (format nil
-                                              "DELETE FROM forgot WHERE mark = '~A'"
-                                              mark))))
+             (with-rulisp-db
+               (postmodern:with-transaction ()
+                 (postmodern:execute (:update 'users
+                                              :set 'password (calc-md5-sum password)
+                                              :where (:= 'user_id (:select 'user_id
+                                                                           :from 'forgot
+                                                                           :where (:= 'mark mark)))))
+                 (postmodern:execute (:delete-from 'forgot :where (:= 'mark mark))))) 
               (tmplpath "account/reset-password-success.xml"))
             (progn
               (fill-form reset-form (hunchentoot:post-parameters*))

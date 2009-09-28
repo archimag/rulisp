@@ -16,6 +16,8 @@ h1, h2, h3, h4, h5, h6 { font-weight: normal; color: #06c; padding: 0; margin: 0
 
 p { padding: 0; margin: 0 0 0.6em 0 }
 
+.underline { text-decoration: underline; }
+
 h1 { font-size: 200% }
 h2 { font-size: 180% }
 h3 { font-size: 140% }
@@ -268,6 +270,44 @@ textarea {
 .rightalign { text-align: right; }
 .centeralign { text-align: center; }
 
+
+.toc {
+    margin-left: 2em;
+    border: 1px solid #cccccc;
+    float: right;
+    width: 250px;
+    clear: both;
+    background-color: white;
+    
+    text-align: left;
+    line-height: 1.2em;
+}
+
+.toc-header {
+    font-size: 80%;
+    padding: 0.25em;
+    background-color: #eeeeee;
+    border-bottom: 1px solid #cccccc;
+    font-weight: bold;
+}
+
+.toc-body {
+    font-size: 90%;
+    background-color: white;
+    padding-top: 0.3em;
+    padding-bottom: 0.3em;
+    padding-right: 0.2em;
+}
+
+.toc-body ul {
+    padding: 0;
+    padding-left: 1.5em;
+    margin: 0;
+}
+
+.toc a { color: #0066cc; }
+
+
 /* * * * * * * * *  wiki * * * *  * * ** * * */
 
 .chapter {
@@ -289,3 +329,7 @@ textarea {
 .fn_top { font-size: 80%; vertical-align: super; margin-left: 0.1em; }
 
 .fn_bot { font-size: 90%; font-weight: bold; vertical-align: super; margin-right: 0.2em; }
+
+/* * * * * * * * * * * * *  * * ** * * */
+
+.pdf-link { background: transparent url(/image/pdf.png) no-repeat; padding-left: 17px; }
