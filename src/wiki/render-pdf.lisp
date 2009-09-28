@@ -11,11 +11,19 @@
                                                                               ,string-name)
                                                                       *cm-fonts-dir*))))))
 
+(defmacro defcorefont (name string-name)
+  `(defparameter ,name
+     (pdf:get-font (pdf:font-name (pdf:load-ttf-file (merge-pathnames (format nil
+                                                                              "~A.ttf"
+                                                                              ,string-name)
+                                                                      *corefonts-dir*))))))
+
+
 (deffont *base-font* "cmunbmr")
-(deffont *header-font* "cmunbbx")
-(deffont *bold-font* "cmunobx")
-(deffont *italic-font* "cmunbi")
-(deffont *monospace-font* "cmunbmo")
+(defcorefont *header-font* "verdanab")
+(deffont *bold-font* "cmunbbx")
+(deffont *italic-font* "cmunbmo")
+(defcorefont *monospace-font* "cour")
 
 (defparameter *font-size* 12)
 
@@ -146,9 +154,11 @@
       (typeset:cell ()
         (tt:paragraph (:font-size font-size)
           (tt:vspace 4)
-          (let* ((lines (split-sequence:split-sequence #\Newline
+          (let* ((lines (if (consp code)
+                            code
+                            (split-sequence:split-sequence #\Newline
                                                        code
-                                                       :remove-empty-subseqs t))
+                                                       :remove-empty-subseqs t)))
                  (min-space-count (iter (for line in lines)
                                         (minimizing (or (position #\Space line :test-not #'char-equal)
                                                         0)))))
@@ -169,7 +179,7 @@
   (show-code (first items)))
 
 (define-wiki-pdf-render dokuwiki:preformatted (items)
-  (show-code (first items)))
+  (show-code items))
 
 (define-wiki-pdf-render dokuwiki:quoted (items)
   (tt:paragraph (:left-margin 20)

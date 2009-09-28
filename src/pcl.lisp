@@ -251,7 +251,7 @@
 
 
 (defun make-pcl-pdf (&optional (out #P"/tmp/pcl.pdf"))
-  (let ((page-number 0))
+  (let ((page-number 1))
     (tt:with-document (:mode :outlines)
       (pdf:append-child-outline (pdf:outline-root pdf:*document*) 
                                 "Practical Common Lisp"
@@ -287,32 +287,31 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun load-pcl-snapshot ()
-  (when *pcl-load-snapshot-p*
-    (let ((snapshot-path (ensure-directories-exist (merge-pathnames (car (last (puri:uri-parsed-path *pcl-snapshot-url*)))
-                                                                    *pcl-snapshot-dir*)))
-          (snapshot (drakma:http-request *pcl-snapshot-url*
-                                         :force-binary t)))
-      (when snapshot
-        (with-open-file (out
-                         snapshot-path
-                         :direction :output
-                         :element-type '(unsigned-byte 8)
-                         :if-exists :supersede)
-          (write-sequence snapshot out))
-        (zip:unzip snapshot-path
-                   *pcl-snapshot-dir*
-                   :if-exists :supersede)
-        (setf *pcl-dir*
-              (merge-pathnames "var/www/pcl.catap.ru/htdocs/data/pages/pcl/"
-                               *pcl-snapshot-dir*))
+  (let ((snapshot-path (ensure-directories-exist (merge-pathnames (car (last (puri:uri-parsed-path *pcl-snapshot-url*)))
+                                                                  *pcl-snapshot-dir*)))
+        (snapshot (drakma:http-request *pcl-snapshot-url*
+                                       :force-binary t)))
+    (when snapshot
+      (with-open-file (out
+                       snapshot-path
+                       :direction :output
+                       :element-type '(unsigned-byte 8)
+                       :if-exists :supersede)
+        (write-sequence snapshot out))
+      (zip:unzip snapshot-path
+                 *pcl-snapshot-dir*
+                 :if-exists :supersede)
+      (setf *pcl-dir*
+            (merge-pathnames "var/www/pcl.catap.ru/htdocs/data/pages/pcl/"
+                             *pcl-snapshot-dir*))
         
-        (make-pcl-pdf (merge-pathnames "pcl.pdf.tmp"
-                                       *pcl-snapshot-dir*))
-        (sb-posix:rename (merge-pathnames "pcl.pdf.tmp"
-                                       *pcl-snapshot-dir*)
-                         (merge-pathnames "pcl.pdf"
-                                       *pcl-snapshot-dir*))
-        t))))
+      (make-pcl-pdf (merge-pathnames "pcl.pdf.tmp"
+                                     *pcl-snapshot-dir*))
+      (sb-posix:rename (merge-pathnames "pcl.pdf.tmp"
+                                        *pcl-snapshot-dir*)
+                       (merge-pathnames "pcl.pdf"
+                                        *pcl-snapshot-dir*))
+      t)))
 
 (if *pcl-load-snapshot-p*
     (clon:schedule-function 'load-pcl-snapshot
