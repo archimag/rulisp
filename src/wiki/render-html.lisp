@@ -164,7 +164,7 @@
 
 (define-wiki-render dokuwiki:preformatted (items)
   (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "pre")))
-    (iter (for item in items)pp
+    (iter (for item in items)
           (render-wiki-item item)
           (e-break-line))))
   
