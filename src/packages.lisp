@@ -41,3 +41,19 @@
            #:tmplpath
            #:*rulisp-path*
            ))
+
+(restas:define-plugin :rulisp.static
+  (:use :cl :iter :rulisp))
+
+
+(restas:define-plugin :rulisp.forum
+  (:use :cl :iter :rulisp :rulisp.preferences))
+
+(restas:define-plugin :rulisp.wiki
+  (:use :cl :iter :rulisp :rulisp.preferences))
+
+(restas:define-plugin :rulisp.pcl
+  (:use :cl :iter :rulisp :rulisp.preferences))
+
+(restas:define-plugin :rulisp.planet
+  (:use :cl :iter :rulisp :rulisp.preferences))

@@ -1,6 +1,6 @@
 ;;; pcl.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.pcl)
 
 
 (defparameter *pcl-files-map*
@@ -119,8 +119,7 @@
   (merge-pathnames (concatenate 'string chapter ".txt")
                    *pcl-dir*))
 
-(define-simple-route pcl-main ("pcl/"
-                               :overlay-master *master*)
+(define-simple-route pcl-main ("pcl/")
   (in-pool
    (xfactory:with-document-factory ((E))
      (E :overlay
@@ -148,7 +147,7 @@
                  (eclass "pdf-link")
                  "PDF-версия"))
            (E :img
-              (xfactory:attributes :src (restas:genurl 'image :file "pcl.jpg")
+              (xfactory:attributes :src (restas:genurl 'rulisp.static::image :file "pcl.jpg")
                                    :alt "PCL"
                                    :style "float: right"))
               
@@ -190,8 +189,7 @@
                                                   (1+ number))))
                      "Следующая"))))))))
 
-(define-simple-route pcl-chapter-view ("pcl/:(chapter)"
-                                       :overlay-master *master*)
+(define-simple-route pcl-chapter-view ("pcl/:(chapter)")
   (let* ((number (position chapter
                            *pcl-files-map*
                            :key #'first
@@ -207,7 +205,7 @@
               (E :div
                  (eid "content")
                  (pcl-navigation-bar number)
-                 (render-wiki-page (wiki-parser:parse :dokuwiki
+                 (rulisp.wiki::render-wiki-page (wiki-parser:parse :dokuwiki
                                                       path))
                  (pcl-navigation-bar number)))))
         hunchentoot:+HTTP-NOT-FOUND+)))
@@ -222,7 +220,7 @@
          (path (pcl-source-path (third (aref *pcl-files-map* number)))))
     (flexi-streams:with-output-to-sequence (out)
       (let ((out* (flexi-streams:make-flexi-stream out)))
-        (pdf-render-wiki-page (wiki-parser:parse :dokuwiki
+        (rulisp.wiki::pdf-render-wiki-page (wiki-parser:parse :dokuwiki
                                                  path)
                               out*))
       out)))
@@ -258,7 +256,7 @@
                 (tt:draw-pages 
                  (tt:compile-text ()
                    (tt:with-style (:font *base-font* :font-size *font-size*)       
-                     (pdf-render-wiki-item wikidoc)))
+                     (rulisp.wiki::pdf-render-wiki-item wikidoc)))
                  :break :after
                  :margins '(30 50 30 40)
                  :finalize-fn #'(lambda (page)

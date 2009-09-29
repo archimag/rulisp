@@ -1,6 +1,6 @@
 ;;; messages.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.forum)
 
 (postmodern:defprepared select-message*
     "SELECT t.title, t.topic_id, t.all_message, m.author, m.message as body,
@@ -33,8 +33,7 @@
                                                            :where (:= 'topic_id topic-id))))
                     :row))
 
-(define-simple-route view-topic ("forum/thread/:(topic-id)"
-                                 :overlay-master *master*)
+(define-simple-route view-topic ("forum/thread/:(topic-id)")
   (with-rulisp-db
     (bind:bind (((forum-id description) (get-forum-info topic-id))
                 ((title message-id all-message author body date) (select-message topic-id))
@@ -52,8 +51,8 @@
                                        :type "application/rss+xml"
                                        :title (format nil "Тема  '~A' - RSS-лента" title)
                                        :href (genurl 'topic-rss :topic-id topic-id)))
-               (ecss 'css :file "forum.css" :theme theme)
-               (ecss 'css :file  "jquery.wysiwyg.css" :theme theme)
+               (ecss 'rulisp.static::css :file "forum.css" :theme theme)
+               (ecss 'rulisp.static::css :file  "jquery.wysiwyg.css" :theme theme)
                (escript "/js/jquery.js")
                (escript "/js/jquery.wysiwyg.js")
                (escript "/js/forum.js"))
@@ -75,7 +74,9 @@
                            (ehref 'view-forum-main :forum-id forum-id)
                            (xfactory:text description)))
                      (E :li
-                        (estrong (substring title 64)))))
+                        (estrong (if (> (length title) 64)
+                                     (subseq title 0 64)
+                                     title)))))
 
                (E :div
                   (eclass "thread")

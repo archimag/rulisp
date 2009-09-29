@@ -1,6 +1,6 @@
 ;;; topics.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.forum)
 
 (postmodern:defprepared select-topics*
     " SELECT fm.author as author, t.title, fm.message as body,
@@ -66,8 +66,8 @@
                                       :type "application/rss+xml"
                                       :title (format nil "Форум '~A' - RSS-лента" description)
                                       :href (genurl 'forum-rss :forum-id forum-id)))
-              (ecss 'css :file "forum.css" :theme theme)
-              (ecss 'css :file  "jquery.wysiwyg.css" :theme theme)
+              (ecss 'rulisp.static::css :file "forum.css" :theme theme)
+              (ecss 'rulisp.static::css :file  "jquery.wysiwyg.css" :theme theme)
               (escript "/js/jquery.js")
               (escript "/js/jquery.wysiwyg.js")
               (escript "/js/forum.js"))           
@@ -160,8 +160,7 @@
                
                            
   
-(define-simple-route view-forum-main ("forum/:(forum-id)"
-                                      :overlay-master *master*)
+(define-simple-route view-forum-main ("forum/:(forum-id)")
   (in-pool
    (show-forum-topics forum-id
                       (let ((start (hunchentoot:get-parameter "start")))

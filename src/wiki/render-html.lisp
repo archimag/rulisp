@@ -1,6 +1,6 @@
 ;;;; render-html.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.wiki)
 
 (defparameter *wiki-render-map* (make-hash-table))
 

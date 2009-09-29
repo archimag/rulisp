@@ -1,6 +1,6 @@
 ;;;; render-pdf.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.wiki)
 
 (defparameter *wiki-pdf-render-map* (make-hash-table))
 

@@ -8,12 +8,11 @@
     padding: 0;
 }
 
-.wiki-page-menu li {
+.wiki-page-menu > ul > li {
     display: inline;
     list-style-type: none;
     list-style-position: outside;
     list-style-image: none;
-    padding-right: 1em;
+    margin-right: 0.2em;
 }
 
-/*textarea { width: 100%;  }*/

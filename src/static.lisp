@@ -1,8 +1,5 @@
 ;;;; static.lisp
 
-(restas:define-plugin :rulisp.static
-  (:use :cl :iter :rulisp))
-
 (in-package :rulisp.static)
 
 (defparameter *rulisp-ns* "chrome://rulisp/")
@@ -62,15 +59,18 @@
 (define-simple-route favicon ("favicon.ico")
   (staticpath "favicon.ico"))
 
+(define-simple-route tools-list ("apps/")
+  (in-pool (xtree:parse (tmplpath "apps.xml"))))
+
 
 
 (defparameter *mainmenu* '((main "Главная")                           
                            (articles "Статьи")
-                           (planet-main "Планета")
-                           (forum-main "Форум")                           
+                           (rulisp.planet::planet-main "Планета")
+                           (rulisp.forum::forum-main "Форум")                           
                            (tools-list "Сервисы")
-                           (pcl-main "Practical Common Lisp")
-                           (wiki-main-page "wiki")))
+                           (rulisp.pcl::pcl-main "Practical Common Lisp")
+                           (rulisp.wiki::wiki-main-page "wiki")))
 
 (define-simple-route mainmenu ("mainmenu"
                                :protocol :chrome)

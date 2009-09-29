@@ -99,7 +99,20 @@
 
 
 (define-simple-route newformat ("")
-  (in-pool (xtree:parse (tmplpath "format.xml"))))
+  (in-pool
+   (let ((doc (xtree:parse (tmplpath "format.xml"))))
+     (xtree:with-custom-resolvers ((lambda (url id ctxt)
+                                     (declare (ignore id))
+                                     (if (and (eql (puri:uri-scheme url) :chrome)
+                                              (string= (concatenate 'string
+                                                                           (puri:uri-host url)
+                                                                           (puri:uri-path url))
+                                                       "formater/topmenu"))
+                                            (xtree:with-object (menu (formater-menu))
+                                              (xtree:resolve-string  (print (xtree:serialize menu :to-string)) ctxt))
+                                         )))
+       (xtree:process-xinclude doc)
+       doc))))
 
 (postmodern:defprepared db-new-format-code "SELECT * FROM add_format_code($1, $2, $3)" :single)
   

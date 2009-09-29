@@ -1,7 +1,7 @@
 ;;; planet.lisp
 
 
-(in-package :rulisp)
+(in-package :rulisp.planet)
 
 (defparameter *planet*
   (make-instance 'planet:planet
@@ -25,14 +25,13 @@
                                   :content-type "application/atom+xml")
   (planet:planet-syndicate-feed *planet*))
 
-(define-simple-route planet-main ("planet/"
-                           :overlay-master *master*)
+(define-simple-route planet-main ("planet/")
   (in-pool
    (xfactory:with-document-factory ((xhtml))
      (xhtml "overlay"
             (xhtml :head
                    (xhtml :title "Russian Lisp Planet")
-                   (ecss 'css :file "planet.css" :theme (user-theme (username)))
+                   (ecss 'rulisp.static::css :file "planet.css" :theme (user-theme (username)))
                    (xhtml :link
                           (xfactory:attributes :rel "alternate"
                                                :href (genurl 'planet-atom)

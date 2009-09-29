@@ -1,6 +1,6 @@
 ;;; rss.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.forum)
 
 (defun make-rss-feed (description messages)
   (in-pool
