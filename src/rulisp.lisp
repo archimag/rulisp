@@ -32,17 +32,26 @@
   (rulisp.account::compute-user-login-name))
 
 (defmethod restas:adopt-route-result ((instance rulisp-plugin-instance) (doc xtree:document))
-  (xtree:with-custom-resolvers (#'chrome-resolver)
-    (xtree:with-object (res (xoverlay:apply-overlay (tmplpath "rulisp.html") doc :html t))
-      (let ((str (xtree:serialize res :to-string :pretty-print t)))
-        str))))
+  (if (string= (hunchentoot:content-type*) "text/html")
+      (xtree:with-custom-resolvers (#'chrome-resolver)
+        (xtree:with-object (res (xoverlay:apply-overlay (tmplpath "rulisp.html") doc :html t))
+          (let ((str (xtree:serialize res :to-string :pretty-print t)))
+            str)))
+      (let ((str (xtree:serialize doc :to-string :pretty-print t)))
+        str)))
 
 
 (restas::define-site-plugin rulisp-static (:rulisp.static 'rulisp-plugin-instance))
 (restas::define-site-plugin rulisp-account (:rulisp.account 'rulisp-plugin-instance))
-(restas::define-site-plugin rulisp-wiki (:rulisp.wiki 'rulisp-plugin-instance))
-(restas::define-site-plugin rulisp-pcl (:rulisp.pcl 'rulisp-plugin-instance))
-(restas::define-site-plugin rulisp-forum (:rulisp.forum 'rulisp-plugin-instance))
+
+(restas::define-site-plugin rulisp-wiki (:rulisp.wiki 'rulisp-plugin-instance)
+  (rulisp.wiki::*baseurl* ("wiki")))
+
+(restas::define-site-plugin rulisp-pcl (:rulisp.pcl 'rulisp-plugin-instance)
+  (rulisp.pcl::*baseurl* ("pcl")))
+
+(restas::define-site-plugin rulisp-forum (:rulisp.forum 'rulisp-plugin-instance)
+  (rulisp.forum::*baseurl* ("forum")))
 
 (restas::define-site-plugin rulisp-format (:rulisp.format 'rulisp-plugin-instance)
   (rulisp.format::*baseurl* ("apps" "format")))

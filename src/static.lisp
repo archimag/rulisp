@@ -22,7 +22,7 @@
 
 (defun apply-xsl (style obj)
   (let ((xpath:*lisp-xpath-functions* `((colorize "colorize" ,*rulisp-ns*)))
-        (xslt:*lisp-xslt-elements* `((text2html "text2html" ,*rulisp-ns*)))
+        (xslt:*lisp-xslt-elements* `((text2html "text2html" ,*rulisp-ns*)))r
         (path (merge-pathnames obj *rulisp-path*)))
     (if (fad:file-exists-p path)
         (in-pool (xslt:transform style

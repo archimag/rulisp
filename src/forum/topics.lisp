@@ -160,7 +160,7 @@
                
                            
   
-(define-simple-route view-forum-main ("forum/:(forum-id)")
+(define-simple-route view-forum-main (":(forum-id)")
   (in-pool
    (show-forum-topics forum-id
                       (let ((start (hunchentoot:get-parameter "start")))
@@ -172,7 +172,7 @@
 (postmodern:defprepared insert-new-topic
     "select rlf_new_topic($1, $2, $3, $4)")
 
-(define-simple-route new-forum-topic ("forum/:(forum-id)"
+(define-simple-route new-forum-topic (":(forum-id)"
                                       :method :post
                                       :login-status :logged-on)
   (let ((title (hunchentoot:post-parameter "title"))
@@ -184,7 +184,7 @@
   (redirect 'view-forum-main :forum-id forum-id))
   
 
-(define-simple-route delete-topic ("forum/thread/delete/:(topic-id)"
+(define-simple-route delete-topic ("thread/delete/:(topic-id)"
                                    :login-status :logged-on)
   (if (forum-admin-p (username))
       (with-rulisp-db
