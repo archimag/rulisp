@@ -64,23 +64,26 @@
 
 
 
-(defparameter *mainmenu* '((main "Главная")                           
-                           (articles "Статьи")
-                           (rulisp.planet::planet-main "Планета")
-                           (rulisp.forum::forum-main "Форум")                           
-                           (tools-list "Сервисы")
-                           (rulisp.pcl::pcl-main "Practical Common Lisp")
-                           (rulisp.wiki::wiki-main-page "wiki")))
+;; (defparameter *mainmenu* '((main "Главная")                           
+;;                            (articles "Статьи")
+;;                            (rulisp.planet::planet-main "Планета")
+;;                            (rulisp.forum::forum-main "Форум")                           
+;;                            (tools-list "Сервисы")
+;;                            (rulisp.pcl::pcl-main "Practical Common Lisp")
+;;                            (rulisp.wiki::wiki-main-page "wiki")))
+
+(defparameter *mainmenu* nil)
 
 (define-simple-route mainmenu ("mainmenu"
                                :protocol :chrome)
   (in-pool
    (xfactory:with-document-factory ((E))
      (E :ul
-        (iter (for (route name) in *mainmenu*)
+        (iter (for (plugin route name) in *mainmenu*)
               (E :li
                  (E :a
-                    (ehref route)
+                    (xfactory:attributes :href
+                                         (restas:site-url plugin route))
                     (xfactory:text name))))))))
 
 

@@ -58,3 +58,25 @@
 
 
 (restas::define-site-plugin rulisp-planet (:rulisp.planet 'rulisp-plugin-instance))
+
+(defun get-plugin (symbol)
+  (gethash symbol *site-plugins*))
+
+
+(defparameter rulisp.static::*mainmenu* `((,(get-plugin 'rulisp-static) rulisp.static::main "Главная")
+                                          (,(get-plugin 'rulisp-static) rulisp.static::articles "Статьи")
+                                          (,(get-plugin 'rulisp-planet) rulisp.planet::planet-main "Планета")
+                                          (,(get-plugin 'rulisp-forum) rulisp.forum::forum-main "Форум")
+                                          (,(get-plugin 'rulisp-static) rulisp.static::tools-list "Сервисы")
+                                          (,(get-plugin 'rulisp-pcl) rulisp.pcl::pcl-main "Practical Common Lisp")
+                                          (,(get-plugin 'rulisp-wiki) rulisp.wiki::wiki-main-page "wiki")))
+  
+
+
+;; (defparameter rulisp.static::*mainmenu* '((main "Главная")
+;;                                           (articles "Статьи")
+;;                                           (rulisp.planet::planet-main "Планета")
+;;                                           (rulisp.forum::forum-main "Форум")
+;;                                           (tools-list "Сервисы")
+;;                                           (rulisp.pcl::pcl-main "Practical Common Lisp")
+;;                                           (rulisp.wiki::wiki-main-page "wiki")))
