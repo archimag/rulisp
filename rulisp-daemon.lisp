@@ -241,9 +241,10 @@
 
 ;;;; detach from tty
 (when *as-daemon*
-  (let ((fd (sb-posix:open #P"/dev/tty" sb-posix:O-RDWR)))
-    (sb-posix:ioctl fd sb-unix:tiocnotty)
-    (sb-posix:close fd)))
+  (let ((fd (ignore-errors (sb-posix:open #P"/dev/tty" sb-posix:O-RDWR))))
+    (when fd
+      (sb-posix:ioctl fd sb-unix:tiocnotty)
+      (sb-posix:close fd))))
 
 ;;;; rebind standart input, output and error streams
 (when *as-daemon*
