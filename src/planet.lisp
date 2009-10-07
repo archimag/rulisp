@@ -16,22 +16,22 @@
 (defun planet-path (path)
   (merge-pathnames path *planet-path*))
 
-(define-simple-route planet-resources ("planet/:(file)")
+(define-simple-route planet-resources (":(file)")
   (declare (ignore file))
   (planet-path (restas:expand-text "resources/${file}" *bindings*)))
   
 
-(define-simple-route planet-atom ("planet/atom.xml"
+(define-simple-route planet-atom ("atom.xml"
                                   :content-type "application/atom+xml")
   (planet:planet-syndicate-feed *planet*))
 
-(define-simple-route planet-main ("planet/")
+(define-simple-route planet-main ("/")
   (in-pool
    (xfactory:with-document-factory ((xhtml))
      (xhtml "overlay"
             (xhtml :head
                    (xhtml :title "Russian Lisp Planet")
-                   (ecss 'rulisp.static::css :file "planet.css" :theme (user-theme (username)))
+                   (ecss 'rulisp::css :file "planet.css" :theme (user-theme (username)))
                    (xhtml :link
                           (xfactory:attributes :rel "alternate"
                                                :href (genurl 'planet-atom)

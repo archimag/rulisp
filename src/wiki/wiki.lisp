@@ -42,7 +42,7 @@
         (E :head
            (E :title
               (etext (hunchentoot:url-decode page)))
-           (ecss 'rulisp.static::css :file "wiki.css" :theme (user-theme (username))))
+           (ecss 'rulisp::css :file "wiki.css" :theme (user-theme (username))))
         (E :div
            (eid "content")                 
            (let ((path (wiki-page-pathname page)))
@@ -77,7 +77,7 @@
 
 (define-simple-route edit-wiki-page ("edit/:(page)"                                     
                                      :login-status :logged-on)
-  (let ((doc (in-pool (xtree:parse (expand-file (tmplpath "edit.xml")
+  (let ((doc (in-pool (xtree:parse (restas:expand-file (tmplpath "wiki/edit.xml")
                                                 `((:title . ,(hunchentoot:url-decode page))))))))
     (if (fad:file-exists-p (wiki-page-pathname page))        
         (fill-form doc (acons "page-content"
@@ -119,8 +119,8 @@
     ((hunchentoot:post-parameter "cancel") (redirect 'view-wiki-page 
                                                      :page page))    
     ((hunchentoot:post-parameter "preview") (let* ((page-content (hunchentoot:post-parameter "page-content"))
-                                                   (doc (in-pool (xtree:parse (expand-file (tmplpath "edit.xml")
-                                                                                          `((:title . ,page))))))
+                                                   (doc (in-pool (xtree:parse (restas:expand-file (tmplpath "edit.xml")
+                                                                                                  `((:title . ,page))))))
                                                    (xfactory:*node* (xpath:find-single-node doc "//*[@id='content']")))
                                               (fill-form doc (acons "page-content"
                                                                     page-content
@@ -151,7 +151,7 @@
           (E :head
              (E :title
                 (etext "История: ~A" (hunchentoot:url-decode page)))
-             (ecss 'rulisp.static::css :file "wiki.css" :theme (user-theme (username))))
+             (ecss 'rulisp::css :file "wiki.css" :theme (user-theme (username))))
           (E :div
              (eid "content")
              (E :div
@@ -185,7 +185,7 @@
         (E :head
            (E :title
               (etext (hunchentoot:url-decode page)))
-           (ecss 'rulisp.static::css :file "wiki.css" :theme (user-theme (username))))
+           (ecss 'rulisp::css :file "wiki.css" :theme (user-theme (username))))
         (E :div
            (eid "content")
            (E :div

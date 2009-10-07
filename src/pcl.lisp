@@ -147,7 +147,7 @@
                  (eclass "pdf-link")
                  "PDF-версия"))
            (E :img
-              (xfactory:attributes :src (restas:genurl 'rulisp.static::image :file "pcl.jpg")
+              (xfactory:attributes :src (restas:genurl 'image :file "pcl.jpg")
                                    :alt "PCL"
                                    :style "float: right"))
               
@@ -247,7 +247,7 @@
                                 "Practical Common Lisp"
                                 (pdf:register-reference :name "Practical Common Lisp"
                                                         :page (pcl-first-page)))
-      (let ((*current-chapter* "Practical Common Lisp"))
+      (let ((rulisp.wiki::*current-chapter* "Practical Common Lisp"))
         (iter (for chapter in-vector *pcl-files-map*)
               (for i from 1)
               (print i)
@@ -255,18 +255,17 @@
                                                 (pcl-source-path (third chapter)))))
                 (tt:draw-pages 
                  (tt:compile-text ()
-                   (tt:with-style (:font *base-font* :font-size *font-size*)       
+                   (tt:with-style (:font rulisp.wiki::*base-font* :font-size rulisp.wiki::*font-size*)
                      (rulisp.wiki::pdf-render-wiki-item wikidoc)))
-                 :break :after
-                 :margins '(30 50 30 40)
-                 :finalize-fn #'(lambda (page)
-                                  (pdf:draw-centered-text (/ (aref (pdf::bounds page) 2) 2)
-                                                          10
-                                                          (write-to-string (incf page-number))
-                                                          *base-font*
-                                                          10)
-                                  )))
-              (pdf:write-document out))))))
+                   :break :after
+                   :margins '(30 50 30 40)
+                   :finalize-fn #'(lambda (page)
+                                    (pdf:draw-centered-text (/ (aref (pdf::bounds page) 2) 2)
+                                                            10
+                                                            (write-to-string (incf page-number))
+                                                            rulisp.wiki::*base-font*
+                                                            10))))
+                (pdf:write-document out))))))
 
 (define-simple-route pcl-pdf ("pcl.pdf")
   (merge-pathnames "pcl.pdf"

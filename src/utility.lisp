@@ -96,10 +96,6 @@
   "Return name of the user if he loggen on"
   (cdr (assoc :user-login-name restas:*bindings*)))
 
-(defun expand-file (path bindings)
-  "Loads a template file and substitutes the value of the bindings"
-  (restas::expand-text (alexandria:read-file-into-string path)
-                       bindings))
 
 (defun in-pool (obj)
   (gp:object-register obj restas:*request-pool*))
@@ -256,7 +252,7 @@
                            (prepare-subject subject)
                            nil))
              (typecase body
-               (pathname (expand-file body (alexandria:plist-alist bindings)))
+               (pathname (restas:expand-file body (alexandria:plist-alist bindings)))
                (string (restas::expand-text body (alexandria:plist-alist bindings)))
                (otherwise (error "bad mail body: ~A" body)))))
 

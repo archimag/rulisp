@@ -1,10 +1,6 @@
 ;;; account.lisp
 
-(restas:define-plugin :rulisp.account
-  (:use :cl :iter :rulisp :rulisp.preferences)
-  (:export #:compute-user-login-name))
-
-(in-package :rulisp.account)
+(in-package :rulisp)
 
 
 (defparameter *cookie-auth-name* "userauth")
@@ -111,19 +107,19 @@
 (define-simple-route auth-info ("auth/info-panel"
                                 :protocol :chrome
                                 :login-status :not-logged-on)
-  (expand-file (tmplpath "account/info-panel.xml")
-               (acons :callback
-                      (hunchentoot:url-encode (format nil
-                                                      "http://~A~A"
-                                                      (hunchentoot:host)
-                                                      (hunchentoot:request-uri hunchentoot:*request*)))
-                      *bindings*)))
+  (restas:expand-file (tmplpath "account/info-panel.xml")
+                      (acons :callback
+                             (hunchentoot:url-encode (format nil
+                                                             "http://~A~A"
+                                                             (hunchentoot:host)
+                                                             (hunchentoot:request-uri hunchentoot:*request*)))
+                             *bindings*)))
 
 (define-simple-route user-panel ("auth/info-panel"
                                 :protocol :chrome
                                 :login-status :logged-on)
-  (expand-file (tmplpath "account/user-info.xml")
-               (acons :user (username) nil)))
+  (restas:expand-file (tmplpath "account/user-info.xml")
+                      (acons :user (username) nil)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -255,8 +251,8 @@
 
 (defun show-confirmation-form ()
   (in-pool
-   (xtree:parse (expand-file (tmplpath "account/confirmation.xml")
-                             (acons :recaptcha-pubkey *reCAPTCHA.publick-key* nil)))))
+   (xtree:parse (restas:expand-file (tmplpath "account/confirmation.xml")
+                                    (acons :recaptcha-pubkey *reCAPTCHA.publick-key* nil)))))
 
 (defun register-mark-exist-p (mark)
   (with-rulisp-db
@@ -319,10 +315,10 @@
                                               :set 'mark mark 'user_id (first login-info))))
           (send-noreply-mail (third login-info)
                              "Восстановление пароля"
-                             (expand-file (skinpath "mail/forgot")
-                                          (acons :host (hunchentoot:host)
-                                                 (acons :link (genurl-with-host 'reset-password :mark mark)
-                                                        nil))))
+                             (restas:expand-file (skinpath "mail/forgot")
+                                                 (acons :host (hunchentoot:host)
+                                                        (acons :link (genurl-with-host 'reset-password :mark mark)
+                                                               nil))))
           (tmplpath "account/forgot-send-email.xml"))
         (let ((badform (in-pool (xtree:parse (forgot-form)))))
           (fill-form badform (hunchentoot:post-parameters*))

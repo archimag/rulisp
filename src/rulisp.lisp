@@ -4,6 +4,29 @@
 
 (restas::defsite)
 
+(defclass rulisp-plugin-instance (restas:plugin-instance) ())
+
+
+(restas::define-site-plugin rulisp-core (:rulisp 'rulisp-plugin-instance))
+
+(restas::define-site-plugin rulisp-wiki (:rulisp.wiki 'rulisp-plugin-instance)
+  (rulisp.wiki::*baseurl* ("wiki")))
+
+(restas::define-site-plugin rulisp-pcl (:rulisp.pcl 'rulisp-plugin-instance)
+  (rulisp.pcl::*baseurl* ("pcl")))
+
+(restas::define-site-plugin rulisp-forum (:rulisp.forum 'rulisp-plugin-instance)
+  (rulisp.forum::*baseurl* ("forum")))
+
+(restas::define-site-plugin rulisp-format (:rulisp.format 'rulisp-plugin-instance)
+  (rulisp.format::*baseurl* ("apps" "format")))
+
+(restas::define-site-plugin rulisp-planet (:rulisp.planet 'rulisp-plugin-instance)
+  (rulisp.planet::*baseurl* ("planet")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun chrome-resolver (url id ctxt)
   (declare (ignore id))
   (if (eql (puri:uri-scheme url) :chrome)
@@ -26,10 +49,10 @@
                                                                                                :to-string)
                                                                               ctxt))))))))))
 
-(defclass rulisp-plugin-instance (restas:plugin-instance) ())
+
 
 (defmethod restas:calculate-user-login ((instance rulisp-plugin-instance) request)
-  (rulisp.account::compute-user-login-name))
+  (compute-user-login-name))
 
 (defmethod restas:adopt-route-result ((instance rulisp-plugin-instance) (doc xtree:document))
   (if (string= (hunchentoot:content-type*) "text/html")
@@ -40,43 +63,34 @@
       (let ((str (xtree:serialize doc :to-string :pretty-print t)))
         str)))
 
-
-(restas::define-site-plugin rulisp-static (:rulisp.static 'rulisp-plugin-instance))
-(restas::define-site-plugin rulisp-account (:rulisp.account 'rulisp-plugin-instance))
-
-(restas::define-site-plugin rulisp-wiki (:rulisp.wiki 'rulisp-plugin-instance)
-  (rulisp.wiki::*baseurl* ("wiki")))
-
-(restas::define-site-plugin rulisp-pcl (:rulisp.pcl 'rulisp-plugin-instance)
-  (rulisp.pcl::*baseurl* ("pcl")))
-
-(restas::define-site-plugin rulisp-forum (:rulisp.forum 'rulisp-plugin-instance)
-  (rulisp.forum::*baseurl* ("forum")))
-
-(restas::define-site-plugin rulisp-format (:rulisp.format 'rulisp-plugin-instance)
-  (rulisp.format::*baseurl* ("apps" "format")))
-
-
-(restas::define-site-plugin rulisp-planet (:rulisp.planet 'rulisp-plugin-instance))
-
-(defun get-plugin (symbol)
-  (gethash symbol *site-plugins*))
-
-
-(defparameter rulisp.static::*mainmenu* `((,(get-plugin 'rulisp-static) rulisp.static::main "Главная")
-                                          (,(get-plugin 'rulisp-static) rulisp.static::articles "Статьи")
-                                          (,(get-plugin 'rulisp-planet) rulisp.planet::planet-main "Планета")
-                                          (,(get-plugin 'rulisp-forum) rulisp.forum::forum-main "Форум")
-                                          (,(get-plugin 'rulisp-static) rulisp.static::tools-list "Сервисы")
-                                          (,(get-plugin 'rulisp-pcl) rulisp.pcl::pcl-main "Practical Common Lisp")
-                                          (,(get-plugin 'rulisp-wiki) rulisp.wiki::wiki-main-page "wiki")))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
+(defparameter *mainmenu* `((rulisp-core main "Главная")
+                           (rulisp-core articles "Статьи")
+                           (rulisp-planet rulisp.planet:planet-main "Планета")
+                           (rulisp-forum rulisp.forum:forum-main "Форум")
+                           (rulisp-core tools-list "Сервисы")
+                           (rulisp-pcl rulisp.pcl:pcl-main "Practical Common Lisp")
+                           (rulisp-wiki rulisp.wiki:wiki-main-page "wiki")))
+
+(define-simple-route mainmenu ("mainmenu"
+                               :protocol :chrome)
+  (in-pool
+   (xfactory:with-document-factory ((E))
+     (E :ul
+        (iter (for (plugin route name) in *mainmenu*)
+              (E :li
+                 (E :a
+                    (xfactory:attributes :href
+                                         (restas:site-url (gethash plugin *site-plugins*)
+                                                          route))
+                    (xfactory:text name))))))))
 
 
-;; (defparameter rulisp.static::*mainmenu* '((main "Главная")
-;;                                           (articles "Статьи")
-;;                                           (rulisp.planet::planet-main "Планета")
-;;                                           (rulisp.forum::forum-main "Форум")
-;;                                           (tools-list "Сервисы")
-;;                                           (rulisp.pcl::pcl-main "Practical Common Lisp")
-;;                                           (rulisp.wiki::wiki-main-page "wiki")))
+(define-simple-route theme-css-include ("theme/css/:(file)"
+                                        :protocol :chrome)
+  (format nil
+          "<link href=\"~A\" rel=\"stylesheet\" type=\"text/css\" />"
+          (genurl 'css :theme (user-theme (username)) :file file)))
+  

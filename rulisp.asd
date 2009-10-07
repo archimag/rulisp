@@ -13,11 +13,11 @@
      (:module :src
               :components
               ((:file "packages")
-               (:file "utility" :depends-on ("packages"))
-               (:file "static" :depends-on ("utility"))
+               (:file "utility" :depends-on ("packages"))               
                (:file "account" :depends-on ("utility"))
                (:file "format" :depends-on ("utility"))
                (:file "planet" :depends-on ("utility"))
+               (:file "static" :depends-on ("utility"))
                (:module :forum
                         :components
                         ((:file "forum")

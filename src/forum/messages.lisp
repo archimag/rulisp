@@ -51,8 +51,8 @@
                                        :type "application/rss+xml"
                                        :title (format nil "Тема  '~A' - RSS-лента" title)
                                        :href (genurl 'topic-rss :topic-id topic-id)))
-               (ecss 'rulisp.static::css :file "forum.css" :theme theme)
-               (ecss 'rulisp.static::css :file  "jquery.wysiwyg.css" :theme theme)
+               (ecss 'rulisp::css :file "forum.css" :theme theme)
+               (ecss 'rulisp::css :file  "jquery.wysiwyg.css" :theme theme)
                (escript "/js/jquery.js")
                (escript "/js/jquery.wysiwyg.js")
                (escript "/js/forum.js"))

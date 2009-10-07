@@ -4,7 +4,7 @@
 
 (defparameter *wiki-pdf-render-map* (make-hash-table))
 
-(defmacro deffont (name string-name)
+(defmacro deffont (name string-name)  
   `(defparameter ,name
      (pdf:get-font (pdf:font-name (pdf:load-ttf-file (merge-pathnames (format nil
                                                                               "~A.ttf"
@@ -18,14 +18,14 @@
                                                                               ,string-name)
                                                                       *corefonts-dir*))))))
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (deffont *base-font* "cmunbmr")
+  (defcorefont *header-font* "verdanab")
+  (deffont *bold-font* "cmunbbx")
+  (deffont *italic-font* "cmunbmo")
+  (defcorefont *monospace-font* "cour")
 
-(deffont *base-font* "cmunbmr")
-(defcorefont *header-font* "verdanab")
-(deffont *bold-font* "cmunbbx")
-(deffont *italic-font* "cmunbmo")
-(defcorefont *monospace-font* "cour")
-
-(defparameter *font-size* 12)
+(defparameter *font-size* 12))
 
 (defun pdf-render-wiki-item (item)
   (cond

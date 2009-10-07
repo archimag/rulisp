@@ -4,7 +4,7 @@
 ;;   (:use :cl :iter :rulisp.preferences)
 ;;   (:basepath (asdf:component-pathname (asdf:find-system :rulisp))))
 
-(defpackage :rulisp
+(restas:define-plugin :rulisp
   (:use :cl :iter :rulisp.preferences)
   (:export #:code-to-html
            #:calc-md5-sum
@@ -13,7 +13,6 @@
            #:read-gzip-file-into-string
            #:substring
            #:username
-           #:expand-file
            #:in-pool
            #:with-rulisp-db
            #:*re-email-check*
@@ -40,11 +39,9 @@
            #:skinpath
            #:tmplpath
            #:*rulisp-path*
+
+           #:image
            ))
-
-(restas:define-plugin :rulisp.static
-  (:use :cl :iter :rulisp))
-
 
 (restas:define-plugin :rulisp.forum
   (:use :cl :iter :rulisp :rulisp.preferences))

@@ -1,6 +1,6 @@
 ;;;; static.lisp
 
-(in-package :rulisp.static)
+(in-package :rulisp)
 
 (defparameter *rulisp-ns* "chrome://rulisp/")
 
@@ -22,7 +22,7 @@
 
 (defun apply-xsl (style obj)
   (let ((xpath:*lisp-xpath-functions* `((colorize "colorize" ,*rulisp-ns*)))
-        (xslt:*lisp-xslt-elements* `((text2html "text2html" ,*rulisp-ns*)))r
+        (xslt:*lisp-xslt-elements* `((text2html "text2html" ,*rulisp-ns*)))
         (path (merge-pathnames obj *rulisp-path*)))
     (if (fad:file-exists-p path)
         (in-pool (xslt:transform style
@@ -62,34 +62,3 @@
 (define-simple-route tools-list ("apps/")
   (in-pool (xtree:parse (tmplpath "apps.xml"))))
 
-
-
-;; (defparameter *mainmenu* '((main "Главная")                           
-;;                            (articles "Статьи")
-;;                            (rulisp.planet::planet-main "Планета")
-;;                            (rulisp.forum::forum-main "Форум")                           
-;;                            (tools-list "Сервисы")
-;;                            (rulisp.pcl::pcl-main "Practical Common Lisp")
-;;                            (rulisp.wiki::wiki-main-page "wiki")))
-
-(defparameter *mainmenu* nil)
-
-(define-simple-route mainmenu ("mainmenu"
-                               :protocol :chrome)
-  (in-pool
-   (xfactory:with-document-factory ((E))
-     (E :ul
-        (iter (for (plugin route name) in *mainmenu*)
-              (E :li
-                 (E :a
-                    (xfactory:attributes :href
-                                         (restas:site-url plugin route))
-                    (xfactory:text name))))))))
-
-
-(define-simple-route theme-css-include ("theme/css/:(file)"
-                                        :protocol :chrome)
-  (format nil
-          "<link href=\"~A\" rel=\"stylesheet\" type=\"text/css\" />"
-          (genurl 'css :theme (user-theme (username)) :file file)))
-  
