@@ -7,7 +7,7 @@
 
 (defsystem :rulisp
   :depends-on (#:restas #:colorize #:planet #:postmodern #:ironclad #:cl-recaptcha
-                        #:wiki-parser #:zip #:cl-libxslt :xoverlay #:cl-typesetting)
+                        #:wiki-parser #:zip #:cl-libxslt #:xoverlay #:xfactory #:cl-typesetting)
     :components
     ((:file "pref")
      (:module :src

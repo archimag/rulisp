@@ -11,7 +11,7 @@
                (RSS "title"
                     (xfactory:text description))
                (RSS "link"
-                    (xfactory:text (genurl-with-host 'forum-main)))
+                    (xfactory:text (restas:genurl-with-host 'forum-main)))
                (RSS "description"
                     (xfactory:text "~A - RSS-лента" description))
 
@@ -20,7 +20,7 @@
                           (RSS "title"
                                (xfactory:text "~A: ~A" author title))
                           (RSS "link"
-                               (xfactory:text (genurl-with-host 'view-topic :topic-id topic-id)))
+                               (xfactory:text (restas:genurl-with-host 'view-topic :topic-id topic-id)))
                           (RSS "description"
                                (xfactory:text message))
                           (RSS "pubDate"

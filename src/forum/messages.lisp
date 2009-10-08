@@ -151,7 +151,7 @@
         (insert-new-message topic-id
                             body
                             (username))))
-      (redirect 'view-topic :topic-id topic-id)))
+      (restas:redirect 'view-topic :topic-id topic-id)))
 
 
 (define-simple-route delete-topic-message ("message/delete/:(message-id)"
@@ -161,6 +161,6 @@
         (let ((topic-id (postmodern:query (:select '* :from (:rlf_delete_message message-id))
                                            :single)))
           (if (eql topic-id :null)
-              (redirect 'forum-main)
-              (redirect 'view-topic :topic-id topic-id))))
+              (restas:redirect 'forum-main)
+              (restas:redirect 'view-topic :topic-id topic-id))))
       hunchentoot:+HTTP-FORBIDDEN+))

@@ -181,7 +181,7 @@
                 (string= body ""))
       (with-rulisp-db
         (insert-new-topic forum-id title body (username)))))
-  (redirect 'view-forum-main :forum-id forum-id))
+  (restas:redirect 'view-forum-main :forum-id forum-id))
   
 
 (define-simple-route delete-topic ("thread/delete/:(topic-id)"
@@ -191,7 +191,7 @@
         (let ((forum-id (postmodern:query (:select '* :from (:rlf_delete_topic topic-id))
                                           :single)))
           (if (eql topic-id :null)
-              (redirect 'forum-main)
-              (redirect 'view-forum-main :forum-id forum-id))))
+              (restas:redirect 'forum-main)
+              (restas:redirect 'view-forum-main :forum-id forum-id))))
       hunchentoot:+HTTP-FORBIDDEN+))
 

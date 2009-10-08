@@ -152,7 +152,7 @@
                 (code (hunchentoot:post-parameter "code")))
             (if (and code
                      (not (string= code "")))
-                (redirect 'view-format-code
+                (restas:redirect 'view-format-code
                           :format-id (with-rulisp-db
                                        (db-new-format-code (username) title code)))
                 (in-pool (xtree:parse (tmplpath "format.xml")))))

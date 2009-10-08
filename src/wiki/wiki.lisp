@@ -116,8 +116,8 @@
                                           :method :post
                                           :login-status :logged-on)
   (cond
-    ((hunchentoot:post-parameter "cancel") (redirect 'view-wiki-page 
-                                                     :page page))    
+    ((hunchentoot:post-parameter "cancel") (restas:redirect 'view-wiki-page 
+                                                            :page page))    
     ((hunchentoot:post-parameter "preview") (let* ((page-content (hunchentoot:post-parameter "page-content"))
                                                    (doc (in-pool (xtree:parse (restas:expand-file (tmplpath "edit.xml")
                                                                                                   `((:title . ,page))))))
@@ -132,8 +132,8 @@
          (save-wiki-page page
                          (hunchentoot:post-parameter "page-content")
                          (username))
-         (redirect 'view-wiki-page
-                   :page page)))))
+         (restas:redirect 'view-wiki-page
+                          :page page)))))
                                      
 
 

@@ -52,7 +52,7 @@
     (if (and (> afile-length 4)
              (string= (subseq afile (- afile-length 5))
                       ".html"))
-        (redirect 'article :afile (subseq afile 0 (- afile-length 5)))
+        (restas:redirect 'article :afile (subseq afile 0 (- afile-length 5)))
         (apply-xsl *articles-xsl*
                    (format nil "content/articles/~A.xml" afile)))))
 

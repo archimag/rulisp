@@ -139,10 +139,10 @@
     (if (check-user-password name password-md5)
         (progn
           (run-login name password-md5)
-          (redirect (if done
-                        (hunchentoot:url-decode done)
-                        "/")))
-        (redirect 'login))))
+          (restas:redirect (if done
+                               (hunchentoot:url-decode done)
+                               "/")))
+        (restas:redirect 'login))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -152,7 +152,7 @@
 (define-simple-route LOGOUT ("logout"
                              :login-status :logged-on)
   (run-logout)
-  (redirect (or (hunchentoot:header-in :referer hunchentoot:*request*)
+  (restas:redirect (or (hunchentoot:header-in :referer hunchentoot:*request*)
                 'login)))
  
 
@@ -317,7 +317,7 @@
                              "Восстановление пароля"
                              (restas:expand-file (skinpath "mail/forgot")
                                                  (acons :host (hunchentoot:host)
-                                                        (acons :link (genurl-with-host 'reset-password :mark mark)
+                                                        (acons :link (restas:genurl-with-host 'reset-password :mark mark)
                                                                nil))))
           (tmplpath "account/forgot-send-email.xml"))
         (let ((badform (in-pool (xtree:parse (forgot-form)))))
@@ -418,4 +418,4 @@
                (not (string= theme "")))
       (with-rulisp-db
         (set-user-theme* (username) theme))))
-  (redirect 'user-profile))
+  (restas:redirect 'user-profile))
