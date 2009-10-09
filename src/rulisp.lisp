@@ -5,22 +5,22 @@
 (defclass rulisp-plugin-instance (restas:plugin-instance) ())
 
 
-(restas::define-site-plugin rulisp-core (:rulisp 'rulisp-plugin-instance))
+(restas:define-site-plugin rulisp-core (:rulisp 'rulisp-plugin-instance))
 
-(restas::define-site-plugin rulisp-wiki (:rulisp.wiki 'rulisp-plugin-instance)
-  (rulisp.wiki::*baseurl* ("wiki")))
+(restas:define-site-plugin rulisp-wiki (:rulisp.wiki 'rulisp-plugin-instance)
+  (rulisp.wiki:*baseurl* ("wiki")))
 
-(restas::define-site-plugin rulisp-pcl (:rulisp.pcl 'rulisp-plugin-instance)
-  (rulisp.pcl::*baseurl* ("pcl")))
+(restas:define-site-plugin rulisp-pcl (:rulisp.pcl 'rulisp-plugin-instance)
+  (rulisp.pcl:*baseurl* ("pcl")))
 
-(restas::define-site-plugin rulisp-forum (:rulisp.forum 'rulisp-plugin-instance)
-  (rulisp.forum::*baseurl* ("forum")))
+(restas:define-site-plugin rulisp-forum (:rulisp.forum 'rulisp-plugin-instance)
+  (rulisp.forum:*baseurl* ("forum")))
 
-(restas::define-site-plugin rulisp-format (:rulisp.format 'rulisp-plugin-instance)
-  (rulisp.format::*baseurl* ("apps" "format")))
+(restas:define-site-plugin rulisp-format (:rulisp.format 'rulisp-plugin-instance)
+  (rulisp.format:*baseurl* ("apps" "format")))
 
-(restas::define-site-plugin rulisp-planet (:rulisp.planet 'rulisp-plugin-instance)
-  (rulisp.planet::*baseurl* ("planet")))
+(restas:define-site-plugin rulisp-planet (:rulisp.planet 'rulisp-plugin-instance)
+  (rulisp.planet:*baseurl* ("planet")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -96,7 +96,7 @@
 ;;;; starter
 
 (defun rulisp-start ()
-  (setf restas::*default-host-redirect*
+  (setf restas:*default-host-redirect*
         rulisp.preferences:*host*)
   (let ((hostname/port (restas:parse-host rulisp.preferences:*host*)))
     (restas:start-site :rulisp

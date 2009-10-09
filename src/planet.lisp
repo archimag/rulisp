@@ -31,7 +31,7 @@
      (xhtml "overlay"
             (xhtml :head
                    (xhtml :title "Russian Lisp Planet")
-                   (ecss 'rulisp::css :file "planet.css" :theme (user-theme (username)))
+                   (ecss 'rulisp:css :file "planet.css" :theme (rulisp:user-theme (username)))
                    (xhtml :link
                           (xfactory:attributes :rel "alternate"
                                                :href (genurl 'planet-atom)
@@ -105,7 +105,7 @@
                                                          (iter (for node in-child-nodes (or (xpath:find-single-node (xtree:root doc)
                                                                                                                     "body")
                                                                                             (xtree:root doc)))
-                                                               (xtree:append-child xfactory::*node* (xtree:copy node)))))))
+                                                               (xtree:append-child xfactory:*node* (xtree:copy node)))))))
                                      ))))))))
 
 

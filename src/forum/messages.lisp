@@ -34,11 +34,11 @@
                     :row))
 
 (define-route view-topic ("thread/:(topic-id)")
-  (with-rulisp-db
+  (rulisp:with-rulisp-db
     (bind:bind (((forum-id description) (get-forum-info topic-id))
                 ((title message-id all-message author body date) (select-message topic-id))
                 (reply-list (select-reply-list topic-id))
-                (theme (user-theme (username))))
+                (theme (rulisp:user-theme (username))))
       (declare (ignore message-id))
       (in-pool
        (xfactory:with-document-factory ((E))
@@ -51,8 +51,8 @@
                                        :type "application/rss+xml"
                                        :title (format nil "Тема  '~A' - RSS-лента" title)
                                        :href (genurl 'topic-rss :topic-id topic-id)))
-               (ecss 'rulisp::css :file "forum.css" :theme theme)
-               (ecss 'rulisp::css :file  "jquery.wysiwyg.css" :theme theme)
+               (ecss 'rulisp:css :file "forum.css" :theme theme)
+               (ecss 'rulisp:css :file  "jquery.wysiwyg.css" :theme theme)
                (escript "/js/jquery.js")
                (escript "/js/jquery.wysiwyg.js")
                (escript "/js/forum.js"))
@@ -147,7 +147,7 @@
                                         :login-status :logged-on)
   (let ((body (hunchentoot:post-parameter "body")))
     (unless (string= body "")
-      (with-rulisp-db
+      (rulisp:with-rulisp-db
         (insert-new-message topic-id
                             body
                             (username))))
@@ -157,7 +157,7 @@
 (define-route delete-topic-message ("message/delete/:(message-id)"
                                            :login-status :logged-on)
   (if (forum-admin-p (username))
-      (with-rulisp-db
+      (rulisp:with-rulisp-db
         (let ((topic-id (postmodern:query (:select '* :from (:rlf_delete_message message-id))
                                            :single)))
           (if (eql topic-id :null)

@@ -232,7 +232,7 @@
       (setf result pdf:*page*)
       ;;(pdf:draw-centered-text 300 500 "Practical Common Lisp" *header-font* 30)
       (let ((bounds (pdf::bounds pdf:*page*))
-            (image (pdf:make-image (staticpath "image/pcl.jpg"))))
+            (image (pdf:make-image (rulisp:staticpath "image/pcl.jpg"))))
         (pdf:add-images-to-page image)
         (pdf:draw-image image
                         0 0 (aref bounds 2) (aref bounds 3) 0))

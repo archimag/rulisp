@@ -59,7 +59,7 @@
     (let ((result (hex-string-to-byte-array str)))
       (ironclad:decrypt-in-place *user-auth-cipher*
                                  result)
-      (user-auth-cookie-unpack (rulisp::octets-to-string result)))))
+      (user-auth-cookie-unpack (octets-to-string result)))))
 
 (defun user-auth-cookie-get ()
   (let ((cookie (hunchentoot:cookie-in *cookie-auth-name*)))

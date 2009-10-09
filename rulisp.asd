@@ -15,16 +15,16 @@
               ((:file "packages")
                (:file "utility" :depends-on ("packages"))               
                (:file "account" :depends-on ("utility"))
-               (:file "format" :depends-on ("utility"))
-               (:file "planet" :depends-on ("utility"))
                (:file "static" :depends-on ("utility"))
+               (:file "format" :depends-on ("static"))
+               (:file "planet" :depends-on ("static"))
                (:module :forum
                         :components
                         ((:file "forum")
                          (:file "topics" :depends-on ("forum"))
                          (:file "messages" :depends-on ("forum"))
                          (:file "rss" :depends-on ("forum")))
-                        :depends-on ("utility"))
+                        :depends-on ("static"))
                (:module :wiki
                         :components
                         ((:file "render-html")

@@ -42,7 +42,7 @@
         (E :head
            (E :title
               (etext (hunchentoot:url-decode page)))
-           (ecss 'rulisp::css :file "wiki.css" :theme (user-theme (username))))
+           (ecss 'rulisp:css :file "wiki.css" :theme (rulisp:user-theme (username))))
         (E :div
            (eid "content")                 
            (let ((path (wiki-page-pathname page)))
@@ -77,10 +77,10 @@
 
 (define-route edit-wiki-page ("edit/:(page)"                                     
                                      :login-status :logged-on)
-  (let ((doc (in-pool (xtree:parse (restas:expand-file (tmplpath "wiki/edit.xml")
+  (let ((doc (in-pool (xtree:parse (restas:expand-file (rulisp:tmplpath "wiki/edit.xml")
                                                 `((:title . ,(hunchentoot:url-decode page))))))))
     (if (fad:file-exists-p (wiki-page-pathname page))        
-        (fill-form doc (acons "page-content"
+        (rulisp:fill-form doc (acons "page-content"
                               (alexandria:read-file-into-string (wiki-page-pathname page))
                               nil)))
     doc))
@@ -119,10 +119,10 @@
     ((hunchentoot:post-parameter "cancel") (restas:redirect 'view-wiki-page 
                                                             :page page))    
     ((hunchentoot:post-parameter "preview") (let* ((page-content (hunchentoot:post-parameter "page-content"))
-                                                   (doc (in-pool (xtree:parse (restas:expand-file (tmplpath "edit.xml")
+                                                   (doc (in-pool (xtree:parse (restas:expand-file (rulisp:tmplpath "edit.xml")
                                                                                                   `((:title . ,page))))))
                                                    (xfactory:*node* (xpath:find-single-node doc "//*[@id='content']")))
-                                              (fill-form doc (acons "page-content"
+                                              (rulisp:fill-form doc (acons "page-content"
                                                                     page-content
                                                                     nil))                                              
                                               (render-wiki-page (wiki-parser:parse :dokuwiki
@@ -151,7 +151,7 @@
           (E :head
              (E :title
                 (etext "История: ~A" (hunchentoot:url-decode page)))
-             (ecss 'rulisp::css :file "wiki.css" :theme (user-theme (username))))
+             (ecss 'rulisp:css :file "wiki.css" :theme (rulisp:user-theme (username))))
           (E :div
              (eid "content")
              (E :div
@@ -185,7 +185,7 @@
         (E :head
            (E :title
               (etext (hunchentoot:url-decode page)))
-           (ecss 'rulisp::css :file "wiki.css" :theme (user-theme (username))))
+           (ecss 'rulisp:css :file "wiki.css" :theme (rulisp:user-theme (username))))
         (E :div
            (eid "content")
            (E :div
