@@ -25,7 +25,6 @@
                          (:file "messages" :depends-on ("forum"))
                          (:file "rss" :depends-on ("forum")))
                         :depends-on ("utility"))
-;;                (:file "apps" :depends-on ("utility"))
                (:module :wiki
                         :components
                         ((:file "render-html")
@@ -35,6 +34,5 @@
                (:file "pcl"  :depends-on ("wiki"))
                (:file "rulisp" :depends-on ("static" "account" :pcl :forum :format :planet))
                )
-              :depends-on ("pref"))
-     (:file "start" :depends-on ("src"))))
+              :depends-on ("pref"))))
 

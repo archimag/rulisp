@@ -119,7 +119,7 @@
   (merge-pathnames (concatenate 'string chapter ".txt")
                    *pcl-dir*))
 
-(define-simple-route pcl-main ("")
+(define-route pcl-main ("")
   (in-pool
    (xfactory:with-document-factory ((E))
      (E :overlay
@@ -189,7 +189,7 @@
                                                   (1+ number))))
                      "Следующая"))))))))
 
-(define-simple-route pcl-chapter-view (":(chapter)")
+(define-route pcl-chapter-view (":(chapter)")
   (let* ((number (position chapter
                            *pcl-files-map*
                            :key #'first
@@ -211,7 +211,7 @@
         hunchentoot:+HTTP-NOT-FOUND+)))
 
 
-(define-simple-route pcl-chapter-pdf ("pdf/:(chapter)"
+(define-route pcl-chapter-pdf ("pdf/:(chapter)"
                                       :content-type "application/pdf")
   (let* ((number (position chapter
                            *pcl-files-map*
@@ -267,7 +267,7 @@
                                                             10))))
                 (pdf:write-document out))))))
 
-(define-simple-route pcl-pdf ("pcl.pdf")
+(define-route pcl-pdf ("pcl.pdf")
   (merge-pathnames "pcl.pdf"
                    *pcl-snapshot-dir*))
 

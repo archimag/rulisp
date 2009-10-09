@@ -59,14 +59,14 @@
                       (ehref 'edit-wiki-page :page (hunchentoot:url-decode page))
                       "Создать")))))))))
                    
-(define-simple-route wiki-main-page ("")
+(define-route wiki-main-page ("")
   (show-wiki-page "index"))
 
 
-(define-simple-route view-wiki-page (":(page)")
+(define-route view-wiki-page (":(page)")
   (show-wiki-page page))
 
-(define-simple-route view-wiki-page-in-pdf (":(page)/pdf"
+(define-route view-wiki-page-in-pdf (":(page)/pdf"
                                             :content-type "application/pdf")
   (flexi-streams:with-output-to-sequence (out)
     (let ((out* (flexi-streams:make-flexi-stream out)))
@@ -75,7 +75,7 @@
                             out*))
     out))
 
-(define-simple-route edit-wiki-page ("edit/:(page)"                                     
+(define-route edit-wiki-page ("edit/:(page)"                                     
                                      :login-status :logged-on)
   (let ((doc (in-pool (xtree:parse (restas:expand-file (tmplpath "wiki/edit.xml")
                                                 `((:title . ,(hunchentoot:url-decode page))))))))
@@ -112,7 +112,7 @@
                                        :if-exists :supersede
                                        :if-does-not-exist :create)))
 
-(define-simple-route edit-wiki-page/post ("edit/:(page)"
+(define-route edit-wiki-page/post ("edit/:(page)"
                                           :method :post
                                           :login-status :logged-on)
   (cond
@@ -137,7 +137,7 @@
                                      
 
 
-(define-simple-route history-wiki-page ("history/:(page)"
+(define-route history-wiki-page ("history/:(page)"
                                         :login-status :logged-on)
   (let* ((change-path (wiki-page-changes-pathname page))
          (changes (nreverse (if (fad:file-exists-p change-path)
@@ -178,7 +178,7 @@
                             (estyle "color: #666")
                             (etext " ~A" (second item))))))))))))
 
-(define-simple-route view-archive-wiki-page ("history/:(page)/:(time)")
+(define-route view-archive-wiki-page ("history/:(page)/:(time)")
   (in-pool
    (xfactory:with-document-factory ((E))
      (E :overlay

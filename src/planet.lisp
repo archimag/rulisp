@@ -16,16 +16,16 @@
 (defun planet-path (path)
   (merge-pathnames path *planet-path*))
 
-(define-simple-route planet-resources (":(file)")
+(define-route planet-resources (":(file)")
   (declare (ignore file))
   (planet-path (restas:expand-text "resources/${file}" *bindings*)))
   
 
-(define-simple-route planet-atom ("atom.xml"
+(define-route planet-atom ("atom.xml"
                                   :content-type "application/atom+xml")
   (planet:planet-syndicate-feed *planet*))
 
-(define-simple-route planet-main ("/")
+(define-route planet-main ("/")
   (in-pool
    (xfactory:with-document-factory ((xhtml))
      (xhtml "overlay"

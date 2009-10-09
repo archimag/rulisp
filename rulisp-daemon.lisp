@@ -286,7 +286,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (asdf:operate 'asdf:load-op :rulisp)
-(rulisp.starter:rulisp-start)
+(rulisp:rulisp-start)
 
 (when *as-daemon*
   (sb-sys:enable-interrupt sb-posix:sigusr1
@@ -295,7 +295,8 @@
                                (handler-case
                                    (progn 
                                      (sb-posix:syslog sb-posix:log-info "Stop rulisp daemon")
-                                     (rulisp.starter:rulisp-stop))
+                                     (error "rulisp-stop")
+                                     )
                                  (error (err)
                                    (sb-posix:syslog sb-posix:log-err
                                                     (with-output-to-string (out)

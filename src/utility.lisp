@@ -34,61 +34,7 @@
                                  (subseq line min-space-count))))))
       (colorize::html-colorization :common-lisp
                                    (format nil "~{~A~%~}" lines)))))
-;;;; string<->octets
-
-(defun string-to-octets (string &key (external-format :utf-8) (start 0) end)
-  #+sbcl(sb-ext:string-to-octets string
-                                 :external-format external-format
-                                 :start start
-                                 :end end)
-  #-sbcl(babel:string-to-octets string
-                                :encoding external-format
-                                :start start
-                                :end end))
-
-(defun octets-to-string (vector &key (external-format :utf-8) (start 0) end)
-  #+sbcl(sb-ext:octets-to-string vector
-                                 :external-format external-format
-                                 :start start
-                                 :end end)
-  #-sbcl(babel:octets-to-string vector
-                                :encoding external-format
-                                :start start
-                                :end end))
                                  
-
-;;; digest
-
-(defun calc-digest-sum (val digest)
-  (ironclad:byte-array-to-hex-string (ironclad:digest-sequence digest
-                                                               (string-to-octets val))))
-
-(defun calc-md5-sum (val)
-  "Calc md5 sum of the val (string)"
-  (calc-digest-sum val :md5))
-  
-(defun calc-sha1-sum (val)
-  "Calc sha1 sum of the val (string)"
-  (calc-digest-sum val :sha1))
-
-;;;; gzip
-
-(defun write-string-into-gzip-file (string path)
-  (with-open-file (ostream
-                   path
-                   :element-type '(unsigned-byte 8)
-                   :direction :output
-                   :if-exists :supersede)
-    (salza2:with-compressor (compressor 'salza2:gzip-compressor
-                                        :callback (salza2:make-stream-output-callback ostream))
-      (salza2:compress-octet-vector (string-to-octets string)  
-                                    compressor))))
-
-(defun read-gzip-file-into-string (path)
-  (octets-to-string (with-open-file (in path :element-type '(unsigned-byte 8))
-                      (zip:skip-gzip-header in)
-                      (flex:with-output-to-sequence (out)
-                        (zip:inflate in out)))))
 
 ;;; misc
 
@@ -216,9 +162,4 @@
 
 (defun tmplpath (path)
   (skinpath (merge-pathnames path "templates/")))
-
-;; (defparameter *master*
-;;   (lambda ()
-;;     (tmplpath "rulisp.html")))
-    ;;(in-pool (xtree:parse (tmplpath "rulisp.html") :xml-parse-xinclude :xml-parse-noxincnode))))
 

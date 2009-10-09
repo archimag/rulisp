@@ -8,7 +8,7 @@
 
 ;;; main
 
-(define-simple-route forum-main ("")
+(define-route forum-main ("")
   (with-rulisp-db
     (in-pool
      (xfactory:with-document-factory ((E))

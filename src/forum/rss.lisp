@@ -27,7 +27,7 @@
                                (xfactory:text (local-time:format-http-timestring nil (local-time:universal-to-timestamp date))
                                               )))))))))
 
-(define-simple-route all-forums-rss ("rss/all.rss"
+(define-route all-forums-rss ("rss/all.rss"
                                      :content-type "application/rss+xml")
   (with-rulisp-db
     (make-rss-feed (format nil "Форумы ~A" *host*)
@@ -40,7 +40,7 @@
                                        ORDER BY created DESC
                                        LIMIT 20"))))
 
-(define-simple-route forum-rss ("rss/:(forum-id).rss"
+(define-route forum-rss ("rss/:(forum-id).rss"
                                 :content-type "application/rss+xml")
   
   (with-rulisp-db
@@ -61,7 +61,7 @@
                                              forum-id)))))
 
 
-(define-simple-route topic-rss ("rss/threads/:(topic-id).rss"
+(define-route topic-rss ("rss/threads/:(topic-id).rss"
                                 :content-type "application/rss+xml")
   (with-rulisp-db
     (make-rss-feed (postmodern:query (format nil

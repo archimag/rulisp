@@ -2,8 +2,6 @@
 
 (in-package :rulisp)
 
-(restas::defsite)
-
 (defclass rulisp-plugin-instance (restas:plugin-instance) ())
 
 
@@ -74,7 +72,7 @@
                            (rulisp-pcl rulisp.pcl:pcl-main "Practical Common Lisp")
                            (rulisp-wiki rulisp.wiki:wiki-main-page "wiki")))
 
-(define-simple-route mainmenu ("mainmenu"
+(define-route mainmenu ("mainmenu"
                                :protocol :chrome)
   (in-pool
    (xfactory:with-document-factory ((E))
@@ -88,9 +86,19 @@
                     (xfactory:text name))))))))
 
 
-(define-simple-route theme-css-include ("theme/css/:(file)"
+(define-route theme-css-include ("theme/css/:(file)"
                                         :protocol :chrome)
   (format nil
           "<link href=\"~A\" rel=\"stylesheet\" type=\"text/css\" />"
           (genurl 'css :theme (user-theme (username)) :file file)))
   
+
+;;;; starter
+
+(defun rulisp-start ()
+  (setf restas::*default-host-redirect*
+        rulisp.preferences:*host*)
+  (let ((hostname/port (restas:parse-host rulisp.preferences:*host*)))
+    (restas:start-site :rulisp
+                       :hostname (first hostname/port)
+                       :port (second hostname/port))))

@@ -33,7 +33,7 @@
                                                            :where (:= 'topic_id topic-id))))
                     :row))
 
-(define-simple-route view-topic ("thread/:(topic-id)")
+(define-route view-topic ("thread/:(topic-id)")
   (with-rulisp-db
     (bind:bind (((forum-id description) (get-forum-info topic-id))
                 ((title message-id all-message author body date) (select-message topic-id))
@@ -142,7 +142,7 @@
 (postmodern:defprepared insert-new-message
     "INSERT INTO rlf_messages (topic_id, message, author) VALUES($1, $2, $3)")
 
-(define-simple-route new-topic-message ("thread/:(topic-id)"
+(define-route new-topic-message ("thread/:(topic-id)"
                                         :method :post
                                         :login-status :logged-on)
   (let ((body (hunchentoot:post-parameter "body")))
@@ -154,7 +154,7 @@
       (restas:redirect 'view-topic :topic-id topic-id)))
 
 
-(define-simple-route delete-topic-message ("message/delete/:(message-id)"
+(define-route delete-topic-message ("message/delete/:(message-id)"
                                            :login-status :logged-on)
   (if (forum-admin-p (username))
       (with-rulisp-db

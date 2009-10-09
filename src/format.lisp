@@ -1,8 +1,5 @@
 ;;; format.lisp
 
-(restas:define-plugin :rulisp.format
-  (:use :cl :iter :rulisp))
-
 (in-package :rulisp.format)
 
 (defun formater-menu ()
@@ -19,7 +16,7 @@
                 (ehref 'newformat)
                 "Создать"))))))
 
-(define-simple-route chrome-formater-menu ("formater/topmenu"
+(define-route chrome-formater-menu ("formater/topmenu"
                                            :protocol :chrome)
   (xtree:with-object (el (formater-menu))
     (xtree:serialize el :to-string)))
@@ -64,7 +61,7 @@
   (select-formats* start limit))
 
 
-(define-simple-route format-main ("all")
+(define-route format-main ("all")
   (let* ((start* (hunchentoot:get-parameter "start"))
          (start (if start*
                     (parse-integer start*)
@@ -98,7 +95,7 @@
                        
 
 
-(define-simple-route newformat ("")
+(define-route newformat ("")
   (in-pool
    (let ((doc (xtree:parse (tmplpath "format.xml"))))
      (xtree:with-custom-resolvers ((lambda (url id ctxt)
@@ -116,7 +113,7 @@
 
 (postmodern:defprepared db-new-format-code "SELECT * FROM add_format_code($1, $2, $3)" :single)
   
-(define-simple-route newformat/post (""
+(define-route newformat/post (""
                                     :method :post)
   (if (hunchentoot:post-parameter "preview")
       (let* ((doc (in-pool (xtree:parse (tmplpath "format.xml"))))
@@ -165,7 +162,7 @@
      WHERE format_id = $1"
   :row)
 
-(define-simple-route view-format-code (":(format-id)")
+(define-route view-format-code (":(format-id)")
   (let ((row (with-rulisp-db (get-format-code format-id))))
     (if row
         (in-pool

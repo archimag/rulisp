@@ -29,25 +29,25 @@
                                          (in-pool (xtree:parse path :xml-parse-noent ))))
         hunchentoot:+HTTP-NOT-FOUND+)))
 
-(define-simple-route main ("")
+(define-route main ("")
   (apply-xsl *content-xsl* "content/index.xml"))
 
 
-(define-simple-route css ("/css/:(theme)/:(file)")
+(define-route css ("/css/:(theme)/:(file)")
   (skinpath (format nil "css/~A" file)
             theme))
 
-(define-simple-route image ("image/:(file)")
+(define-route image ("image/:(file)")
   (staticpath (format nil "image/~A" file)))
 
-(define-simple-route js ("js/:(file)")
+(define-route js ("js/:(file)")
   (staticpath (format nil "js/~A" file)))
 
-(define-simple-route articles ("articles/")
+(define-route articles ("articles/")
   (apply-xsl *content-xsl*
              "content/articles/index.xml"))
 
-(define-simple-route article ("articles/:(afile)")
+(define-route article ("articles/:(afile)")
   (let ((afile-length (length afile)))
     (if (and (> afile-length 4)
              (string= (subseq afile (- afile-length 5))
@@ -56,9 +56,9 @@
         (apply-xsl *articles-xsl*
                    (format nil "content/articles/~A.xml" afile)))))
 
-(define-simple-route favicon ("favicon.ico")
+(define-route favicon ("favicon.ico")
   (staticpath "favicon.ico"))
 
-(define-simple-route tools-list ("apps/")
+(define-route tools-list ("apps/")
   (in-pool (xtree:parse (tmplpath "apps.xml"))))
 
