@@ -91,3 +91,5 @@
           (genurl 'css :theme (user-theme (username)) :file file)))
   
 
+(define-simple-route files ("files/:(file)")
+  (merge-pathnames file (merge-pathnames "files/" *vardir*)))
