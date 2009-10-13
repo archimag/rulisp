@@ -63,5 +63,5 @@
   (in-pool (xtree:parse (tmplpath "apps.xml"))))
 
 
-(define-simple-route files ("files/:(file)")
+(define-route files ("files/:(file)")
   (merge-pathnames file (merge-pathnames "files/" *vardir*)))
