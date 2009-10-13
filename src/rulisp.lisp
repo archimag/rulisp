@@ -93,8 +93,6 @@
           (genurl 'css :theme (user-theme (username)) :file file)))
   
 
-;;;; starter
-
 (defun rulisp-start ()
   (setf restas::*default-host-redirect*
         rulisp.preferences:*host*)
