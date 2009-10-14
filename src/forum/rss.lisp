@@ -29,7 +29,7 @@
 
 (define-route all-forums-rss ("rss/all.rss"
                                      :content-type "application/rss+xml")
-  (with-rulisp-db
+  (rulisp:with-rulisp-db
     (make-rss-feed (format nil "Форумы ~A" *host*)
                    (postmodern:query "SELECT pretty_forum_id, topic_id,  m.author, m.message,
                                              created AT TIME ZONE 'GMT',
@@ -43,7 +43,7 @@
 (define-route forum-rss ("rss/:(forum-id).rss"
                                 :content-type "application/rss+xml")
   
-  (with-rulisp-db
+  (rulisp:with-rulisp-db
     (make-rss-feed (postmodern:query (format nil
                                              "SELECT description FROM rlf_forums WHERE pretty_forum_id = '~A'"
                                              forum-id)
@@ -63,7 +63,7 @@
 
 (define-route topic-rss ("rss/threads/:(topic-id).rss"
                                 :content-type "application/rss+xml")
-  (with-rulisp-db
+  (rulisp:with-rulisp-db
     (make-rss-feed (postmodern:query (format nil
                                              "SELECT title FROM rlf_topics WHERE topic_id = ~A"
                                              topic-id)

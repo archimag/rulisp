@@ -171,7 +171,7 @@
 (define-wiki-render dokuwiki:code (items)
   (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "pre")))
     (eclass "code")
-    (e-text2html (code-to-html (car items)))))
+    (e-text2html (rulisp:code-to-html (car items)))))
 
 (define-wiki-render dokuwiki:quoted (items)
   (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "blockquote")))

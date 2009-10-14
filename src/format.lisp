@@ -66,9 +66,9 @@
          (start (if start*
                     (parse-integer start*)
                     0))
-         (items (with-rulisp-db
+         (items (rulisp:with-rulisp-db
                   (select-formats start)))
-         (all (with-rulisp-db
+         (all (rulisp:with-rulisp-db
                 (postmodern:query (:select (:count '*) :from 'formats) :single))))
     (in-pool
      (xfactory:with-document-factory ((E))
@@ -97,7 +97,7 @@
 
 (define-route newformat ("")
   (in-pool
-   (let ((doc (xtree:parse (tmplpath "format.xml"))))
+   (let ((doc (xtree:parse (rulisp:tmplpath "format.xml"))))
      (xtree:with-custom-resolvers ((lambda (url id ctxt)
                                      (declare (ignore id))
                                      (if (and (eql (puri:uri-scheme url) :chrome)
@@ -116,9 +116,9 @@
 (define-route newformat/post (""
                                     :method :post)
   (if (hunchentoot:post-parameter "preview")
-      (let* ((doc (in-pool (xtree:parse (tmplpath "format.xml"))))
+      (let* ((doc (in-pool (xtree:parse (rulisp:tmplpath "format.xml"))))
              (form (xpath:find-single-node doc "//form")))
-        (fill-form doc (hunchentoot:post-parameters*))
+        (rulisp:fill-form doc (hunchentoot:post-parameters*))
         (let ((xfactory:*node* (xtree:insert-child-before (xtree:make-element "div")  form)))
           (xfactory:with-element-factory ((E))
             (E :div
@@ -127,7 +127,7 @@
                   "Предварительный просмотр")
                (E :pre
                   (eclass "code")
-                  (e-text2html (code-to-html (hunchentoot:post-parameter "code")))))))
+                  (e-text2html (rulisp:code-to-html (hunchentoot:post-parameter "code")))))))
         (when (username)
           (let ((xfactory:*node* form))
             (xfactory:with-element-factory ((E))
@@ -150,9 +150,9 @@
             (if (and code
                      (not (string= code "")))
                 (restas:redirect 'view-format-code
-                          :format-id (with-rulisp-db
+                          :format-id (rulisp:with-rulisp-db
                                        (db-new-format-code (username) title code)))
-                (in-pool (xtree:parse (tmplpath "format.xml")))))
+                (in-pool (xtree:parse (rulisp:tmplpath "format.xml")))))
           hunchentoot:+HTTP-FORBIDDEN+)))
 
 
@@ -163,7 +163,7 @@
   :row)
 
 (define-route view-format-code (":(format-id)")
-  (let ((row (with-rulisp-db (get-format-code format-id))))
+  (let ((row (rulisp:with-rulisp-db (get-format-code format-id))))
     (if row
         (in-pool
          (xfactory:with-document-factory ((E))
@@ -187,5 +187,5 @@
                     (xfactory:text " - ~A" (fourth row)))
                  (E :pre
                     (eclass "code")
-                    (e-text2html (code-to-html (third row))))))))
+                    (e-text2html (rulisp:code-to-html (third row))))))))
         hunchentoot:+HTTP-NOT-FOUND+)))

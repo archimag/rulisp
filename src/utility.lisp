@@ -99,7 +99,7 @@
                            nil))
              (typecase body
                (pathname (restas:expand-file body (alexandria:plist-alist bindings)))
-               (string (restasexpand-text body (alexandria:plist-alist bindings)))
+               (string (restas:expand-text body (alexandria:plist-alist bindings)))
                (otherwise (error "bad mail body: ~A" body)))))
 
 ;;; check html form support

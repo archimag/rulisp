@@ -22,7 +22,7 @@
   
 
 (define-route planet-atom ("atom.xml"
-                                  :content-type "application/atom+xml")
+                           :content-type "application/atom+xml")
   (planet:planet-syndicate-feed *planet*))
 
 (define-route planet-main ("/")
