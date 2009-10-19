@@ -1,4 +1,4 @@
-;;; test.lisp
+;;; rulisp.lisp
 
 (in-package :rulisp)
 
