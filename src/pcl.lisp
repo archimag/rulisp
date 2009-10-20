@@ -147,7 +147,7 @@
                  (eclass "pdf-link")
                  "PDF-версия"))
            (E :img
-              (xfactory:attributes :src (restas:genurl 'image :file "pcl.jpg")
+              (xfactory:attributes :src (restas:genurl 'rulisp:image :file "pcl.jpg")
                                    :alt "PCL"
                                    :style "float: right"))
               
