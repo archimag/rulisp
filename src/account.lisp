@@ -2,7 +2,6 @@
 
 (in-package :rulisp)
 
-
 (defparameter *cookie-auth-name* "userauth")
 
 (defparameter *user-auth-cipher* (ironclad:make-cipher :blowfish :mode :ecb :key *cookie-cipher-key*))
@@ -162,7 +161,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun register-form ()
-  (tmplpath "account/register.xml"))
+  (in-pool (xtree:parse (tmplpath "account/register.xml"))))
 
 (define-route registration ("register"
                                    :login-status :not-logged-on)
@@ -247,7 +246,7 @@
                (email (form-field-value formdata "email"))
                (password (calc-md5-sum (form-field-value formdata "password"))))
           (create-confirmation login email password)
-          (tmplpath "account/register-send-mail.xml")))))
+          (in-pool (xtree:parse (tmplpath "account/register-send-mail.xml")))))))
 
 (defun show-confirmation-form ()
   (in-pool
@@ -285,7 +284,7 @@
                                                              :where (:= 'mark mark)))))
             (postmodern:execute (:delete-from 'confirmations
                                               :where (:= 'mark mark)))))
-        (tmplpath "account/success-register.xml"))
+        (in-pool (xtree:parse (tmplpath "account/success-register.xml"))))
       (show-confirmation-form)))
 
 
@@ -319,8 +318,8 @@
                                                  (acons :host (hunchentoot:host)
                                                         (acons :link (restas:genurl-with-host 'reset-password :mark mark)
                                                                nil))))
-          (tmplpath "account/forgot-send-email.xml"))
-        (let ((badform (in-pool (xtree:parse (forgot-form)))))
+          (in-pool (xtree:parse (tmplpath "account/forgot-send-email.xml"))))
+        (let ((badform (forgot-form)))
           (fill-form badform (hunchentoot:post-parameters*))
           (form-error-message badform
                               "email"
@@ -328,7 +327,7 @@
           badform))))
 
 (defun reset-password-form ()
-  (tmplpath "account/reset-password.xml"))
+  (in-pool (xtree:parse (tmplpath "account/reset-password.xml"))))
   
 
 (defun forgot-mark-exist-p (mark)
@@ -349,7 +348,7 @@
                                           :method :post
                                           :login-status :not-logged-on)
   (if (forgot-mark-exist-p mark)
-      (let ((reset-form (in-pool (xtree:parse (reset-password-form))))
+      (let ((reset-form (reset-password-form))
             (password (hunchentoot:post-parameter "password"))
             (repassword (hunchentoot:post-parameter "confirmation"))
             (success nil))
@@ -374,7 +373,7 @@
                                                                            :from 'forgot
                                                                            :where (:= 'mark mark)))))
                  (postmodern:execute (:delete-from 'forgot :where (:= 'mark mark))))) 
-              (tmplpath "account/reset-password-success.xml"))
+             (in-pool (xtree:parse (tmplpath "account/reset-password-success.xml"))))
             (progn
               (fill-form reset-form (hunchentoot:post-parameters*))
               reset-form)))
