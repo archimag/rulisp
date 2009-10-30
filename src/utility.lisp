@@ -2,6 +2,8 @@
 
 (in-package :rulisp)
 
+(defparameter *basepath* (asdf:component-pathname (asdf:find-system :rulisp)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; xsl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -32,80 +34,9 @@
                                  (subseq line min-space-count))))))
       (colorize::html-colorization :common-lisp
                                    (format nil "~{~A~%~}" lines)))))
-;;;; string<->octets
-
-(defun string-to-octets (string &key (external-format :utf-8) (start 0) end)
-  #+sbcl(sb-ext:string-to-octets string
-                                 :external-format external-format
-                                 :start start
-                                 :end end)
-  #-sbcl(babel:string-to-octets string
-                                :encoding external-format
-                                :start start
-                                :end end))
-
-(defun octets-to-string (vector &key (external-format :utf-8) (start 0) end)
-  #+sbcl(sb-ext:octets-to-string vector
-                                 :external-format external-format
-                                 :start start
-                                 :end end)
-  #-sbcl(babel:octets-to-string vector
-                                :encoding external-format
-                                :start start
-                                :end end))
                                  
 
-;;; digest
-
-(defun calc-digest-sum (val digest)
-  (ironclad:byte-array-to-hex-string (ironclad:digest-sequence digest
-                                                               (string-to-octets val))))
-
-(defun calc-md5-sum (val)
-  "Calc md5 sum of the val (string)"
-  (calc-digest-sum val :md5))
-  
-(defun calc-sha1-sum (val)
-  "Calc sha1 sum of the val (string)"
-  (calc-digest-sum val :sha1))
-
-;;;; gzip
-
-(defun write-string-into-gzip-file (string path)
-  (with-open-file (ostream
-                   path
-                   :element-type '(unsigned-byte 8)
-                   :direction :output
-                   :if-exists :supersede)
-    (salza2:with-compressor (compressor 'salza2:gzip-compressor
-                                        :callback (salza2:make-stream-output-callback ostream))
-      (salza2:compress-octet-vector (string-to-octets string)  
-                                    compressor))))
-
-(defun read-gzip-file-into-string (path)
-  (octets-to-string (with-open-file (in path :element-type '(unsigned-byte 8))
-                      (zip:skip-gzip-header in)
-                      (flex:with-output-to-sequence (out)
-                        (zip:inflate in out)))))
-
 ;;; misc
-
-(defun substring (text end)
-  (if (> (length text) end)
-      (subseq text 0 end)
-      text))
-
-(defun username ()
-  "Return name of the user if he loggen on"
-  (cdr (assoc :user-login-name *bindings*)))
-
-(defun expand-file (path bindings)
-  "Loads a template file and substitutes the value of the bindings"
-  (restas::expand-text (alexandria:read-file-into-string path)
-                       bindings))
-
-(defun in-pool (obj)
-  (gp:object-register obj *request-pool*))
 
 
 (defmacro with-rulisp-db (&body body)
@@ -115,98 +46,6 @@
 (defparameter *re-email-check* 
   "^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")
 
-(defun apply-format-aux (format args)
-  (if (symbolp format)
-      (apply #'genurl format args)
-      (if args
-          (apply #'format nil (cons format args))
-          format)))
-
-(defun redirect (route-symbol &rest args)
-  (let* ((url (apply-format-aux route-symbol
-                                (mapcar #'(lambda (s)
-                                            (if (stringp s)
-                                                (hunchentoot:url-encode s)
-                                                s))
-                                        args)))
-         (route (car (routes:match restas::*mapper*
-                                   url
-                                   (acons :method :get nil))))
-         (required-login-status (restas::route-required-login-status route)))
-    (hunchentoot:redirect (if (or (null required-login-status)
-                                  (and (eql required-login-status :logged-on)
-                                       (username))
-                                  (and (eql required-login-status :not-logged-on)
-                                       (null (username))))
-                              (hunchentoot:url-decode url)
-                              "/"))))
-
-(defun genurl-with-host (route &rest args)
-  (format nil
-          "http://~A~A"
-          (hunchentoot:host)
-          (apply #'genurl route args)))
-
-;;; xfactory
-
-
-(defun eid (format &rest args)
-  "Make id attribute"
-  (xfactory:attributes :id
-                       (apply-format-aux format args)))
-
-(defun eclass (format &rest args)
-  "Make class attribute"
-  (xfactory:attributes :class
-                       (apply-format-aux format args)))
-
-(defun ehref (format &rest args)
-  "Make href attribute"
-  (xfactory:attributes :href
-                       (apply-format-aux format args)))
-
-(defun estyle (format &rest args)
-  "Make style attributes"
-  (xfactory:attributes :style
-                       (apply-format-aux format args)))
-
-(defun escript (src &optional (type "text/javascript"))
-  "Make script element"
-  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "script")))
-    (xfactory:attributes :src src
-                         :type type)))
-
-(defun ecss (format &rest args)
-  "Make link css element"
-  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "link")))
-    (xfactory:attributes :href (apply-format-aux format args)
-                         :rel "stylesheet"
-                         :type "text/css")))
-
-(defun e-break-line ()
-  "Make br element"
-  (xtree:make-child-element xfactory:*node* "br"))
-
-(defun estrong (format &rest args)
-  "Make strong element"
-  (xtree:make-child-text (xtree:make-child-element xfactory:*node*
-                                          "strong")
-                         (apply-format-aux format args)))
-
-(defun e-text2html (text)
-  "parse text as html and append to current element"
-  (if text
-      (html:with-parse-html (html text)
-        (when html
-          (iter (for node in (iter (for node in-child-nodes (xpath:find-single-node html "/html/body"))
-                                   (collect node)))
-                (xtree:detach node)
-                (xtree:append-child xfactory:*node* node))))))
-
-(defun etext (format &rest args)
-  (apply #'xfactory:text
-         format
-         args))
 
 ;;; mail
 
@@ -259,8 +98,8 @@
                            (prepare-subject subject)
                            nil))
              (typecase body
-               (pathname (expand-file body (alexandria:plist-alist bindings)))
-               (string (restas::expand-text body (alexandria:plist-alist bindings)))
+               (pathname (restas:expand-file body (alexandria:plist-alist bindings)))
+               (string (restas:expand-text body (alexandria:plist-alist bindings)))
                (otherwise (error "bad mail body: ~A" body)))))
 
 ;;; check html form support
@@ -323,9 +162,4 @@
 
 (defun tmplpath (path)
   (skinpath (merge-pathnames path "templates/")))
-
-(defparameter *master*
-  (lambda ()
-    (tmplpath "rulisp.html")))
-    ;;(in-pool (xtree:parse (tmplpath "rulisp.html") :xml-parse-xinclude :xml-parse-noxincnode))))
 

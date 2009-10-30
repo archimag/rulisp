@@ -1,6 +1,6 @@
 ;;; forum.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.forum)
 
 (defun forum-admin-p (name)
   (find name '("archimag" "lispnik" "turtle") :test #'string=))
@@ -8,9 +8,8 @@
 
 ;;; main
 
-(define-simple-route forum-main ("forum/"
-                                 :overlay-master *master*)
-  (with-rulisp-db
+(define-route forum-main ("")
+  (rulisp:with-rulisp-db
     (in-pool
      (xfactory:with-document-factory ((E))
        (E :overlay
@@ -21,7 +20,7 @@
                                      :type "application/rss+xml"
                                      :title (format nil "Форумs '~A' - RSS-лента" (hunchentoot:host))
                                      :href (genurl 'all-forums-rss)))
-             (ecss 'css :file "forum.css" :theme (user-theme (username))))
+             (ecss 'rulisp:css :file "forum.css" :theme (rulisp:user-theme (username))))
           (E :div
              (eid "content")
              (E :a

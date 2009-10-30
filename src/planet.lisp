@@ -1,7 +1,7 @@
 ;;; planet.lisp
 
 
-(in-package :rulisp)
+(in-package :rulisp.planet)
 
 (defparameter *planet*
   (make-instance 'planet:planet
@@ -16,23 +16,22 @@
 (defun planet-path (path)
   (merge-pathnames path *planet-path*))
 
-(define-simple-route planet-resources ("planet/:(file)")
+(define-route planet-resources (":(file)")
   (declare (ignore file))
   (planet-path (restas:expand-text "resources/${file}" *bindings*)))
   
 
-(define-simple-route planet-atom ("planet/atom.xml"
-                                  :content-type "application/atom+xml")
+(define-route planet-atom ("atom.xml"
+                           :content-type "application/atom+xml")
   (planet:planet-syndicate-feed *planet*))
 
-(define-simple-route planet-main ("planet/"
-                           :overlay-master *master*)
+(define-route planet-main ("/")
   (in-pool
    (xfactory:with-document-factory ((xhtml))
      (xhtml "overlay"
             (xhtml :head
                    (xhtml :title "Russian Lisp Planet")
-                   (ecss 'css :file "planet.css" :theme (user-theme (username)))
+                   (ecss 'rulisp:css :file "planet.css" :theme (rulisp:user-theme (username)))
                    (xhtml :link
                           (xfactory:attributes :rel "alternate"
                                                :href (genurl 'planet-atom)
@@ -106,7 +105,7 @@
                                                          (iter (for node in-child-nodes (or (xpath:find-single-node (xtree:root doc)
                                                                                                                     "body")
                                                                                             (xtree:root doc)))
-                                                               (xtree:append-child xfactory::*node* (xtree:copy node)))))))
+                                                               (xtree:append-child xfactory:*node* (xtree:copy node)))))))
                                      ))))))))
 
 

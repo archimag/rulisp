@@ -1,6 +1,6 @@
 ;;; messages.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.forum)
 
 (postmodern:defprepared select-message*
     "SELECT t.title, t.topic_id, t.all_message, m.author, m.message as body,
@@ -33,13 +33,12 @@
                                                            :where (:= 'topic_id topic-id))))
                     :row))
 
-(define-simple-route view-topic ("forum/thread/:(topic-id)"
-                                 :overlay-master *master*)
-  (with-rulisp-db
+(define-route view-topic ("thread/:(topic-id)")
+  (rulisp:with-rulisp-db
     (bind:bind (((forum-id description) (get-forum-info topic-id))
                 ((title message-id all-message author body date) (select-message topic-id))
                 (reply-list (select-reply-list topic-id))
-                (theme (user-theme (username))))
+                (theme (rulisp:user-theme (username))))
       (declare (ignore message-id))
       (in-pool
        (xfactory:with-document-factory ((E))
@@ -52,8 +51,8 @@
                                        :type "application/rss+xml"
                                        :title (format nil "Тема  '~A' - RSS-лента" title)
                                        :href (genurl 'topic-rss :topic-id topic-id)))
-               (ecss 'css :file "forum.css" :theme theme)
-               (ecss 'css :file  "jquery.wysiwyg.css" :theme theme)
+               (ecss 'rulisp:css :file "forum.css" :theme theme)
+               (ecss 'rulisp:css :file  "jquery.wysiwyg.css" :theme theme)
                (escript "/js/jquery.js")
                (escript "/js/jquery.wysiwyg.js")
                (escript "/js/forum.js"))
@@ -75,7 +74,9 @@
                            (ehref 'view-forum-main :forum-id forum-id)
                            (xfactory:text description)))
                      (E :li
-                        (estrong (substring title 64)))))
+                        (estrong (if (> (length title) 64)
+                                     (subseq title 0 64)
+                                     title)))))
 
                (E :div
                   (eclass "thread")
@@ -141,25 +142,25 @@
 (postmodern:defprepared insert-new-message
     "INSERT INTO rlf_messages (topic_id, message, author) VALUES($1, $2, $3)")
 
-(define-simple-route new-topic-message ("forum/thread/:(topic-id)"
+(define-route new-topic-message ("thread/:(topic-id)"
                                         :method :post
                                         :login-status :logged-on)
   (let ((body (hunchentoot:post-parameter "body")))
     (unless (string= body "")
-      (with-rulisp-db
+      (rulisp:with-rulisp-db
         (insert-new-message topic-id
                             body
                             (username))))
-      (redirect 'view-topic :topic-id topic-id)))
+      (restas:redirect 'view-topic :topic-id topic-id)))
 
 
-(define-simple-route delete-topic-message ("forum/message/delete/:(message-id)"
+(define-route delete-topic-message ("message/delete/:(message-id)"
                                            :login-status :logged-on)
   (if (forum-admin-p (username))
-      (with-rulisp-db
+      (rulisp:with-rulisp-db
         (let ((topic-id (postmodern:query (:select '* :from (:rlf_delete_message message-id))
                                            :single)))
           (if (eql topic-id :null)
-              (redirect 'forum-main)
-              (redirect 'view-topic :topic-id topic-id))))
+              (restas:redirect 'forum-main)
+              (restas:redirect 'view-topic :topic-id topic-id))))
       hunchentoot:+HTTP-FORBIDDEN+))

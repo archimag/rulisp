@@ -1,6 +1,6 @@
 ;;; topics.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.forum)
 
 (postmodern:defprepared select-topics*
     " SELECT fm.author as author, t.title, fm.message as body,
@@ -51,11 +51,11 @@
          " » "))))
        
 (defun show-forum-topics (forum-id &optional (start 0))
-  (with-rulisp-db 
+  (rulisp:with-rulisp-db 
     (bind:bind (((description all-topics) (car (forum-info forum-id)))
                 (last (min (+ 10 start) all-topics))
                 (topics (select-topics forum-id start))
-                (theme (user-theme (username))))
+                (theme (rulisp:user-theme (username))))
       (xfactory:with-document-factory ((E))
         (E :div
            (E :head
@@ -66,8 +66,8 @@
                                       :type "application/rss+xml"
                                       :title (format nil "Форум '~A' - RSS-лента" description)
                                       :href (genurl 'forum-rss :forum-id forum-id)))
-              (ecss 'css :file "forum.css" :theme theme)
-              (ecss 'css :file  "jquery.wysiwyg.css" :theme theme)
+              (ecss 'rulisp:css :file "forum.css" :theme theme)
+              (ecss 'rulisp:css :file  "jquery.wysiwyg.css" :theme theme)
               (escript "/js/jquery.js")
               (escript "/js/jquery.wysiwyg.js")
               (escript "/js/forum.js"))           
@@ -160,8 +160,7 @@
                
                            
   
-(define-simple-route view-forum-main ("forum/:(forum-id)"
-                                      :overlay-master *master*)
+(define-route view-forum-main (":(forum-id)")
   (in-pool
    (show-forum-topics forum-id
                       (let ((start (hunchentoot:get-parameter "start")))
@@ -173,26 +172,26 @@
 (postmodern:defprepared insert-new-topic
     "select rlf_new_topic($1, $2, $3, $4)")
 
-(define-simple-route new-forum-topic ("forum/:(forum-id)"
+(define-route new-forum-topic (":(forum-id)"
                                       :method :post
                                       :login-status :logged-on)
   (let ((title (hunchentoot:post-parameter "title"))
         (body (hunchentoot:post-parameter "body")))
     (unless (or (string= title "")
                 (string= body ""))
-      (with-rulisp-db
+      (rulisp:with-rulisp-db
         (insert-new-topic forum-id title body (username)))))
-  (redirect 'view-forum-main :forum-id forum-id))
+  (restas:redirect 'view-forum-main :forum-id forum-id))
   
 
-(define-simple-route delete-topic ("forum/thread/delete/:(topic-id)"
+(define-route delete-topic ("thread/delete/:(topic-id)"
                                    :login-status :logged-on)
   (if (forum-admin-p (username))
-      (with-rulisp-db
+      (rulisp:with-rulisp-db
         (let ((forum-id (postmodern:query (:select '* :from (:rlf_delete_topic topic-id))
                                           :single)))
           (if (eql topic-id :null)
-              (redirect 'forum-main)
-              (redirect 'view-forum-main :forum-id forum-id))))
+              (restas:redirect 'forum-main)
+              (restas:redirect 'view-forum-main :forum-id forum-id))))
       hunchentoot:+HTTP-FORBIDDEN+))
 

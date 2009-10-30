@@ -1,6 +1,6 @@
 ;;; rss.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.forum)
 
 (defun make-rss-feed (description messages)
   (in-pool
@@ -11,7 +11,7 @@
                (RSS "title"
                     (xfactory:text description))
                (RSS "link"
-                    (xfactory:text (genurl-with-host 'forum-main)))
+                    (xfactory:text (restas:genurl-with-host 'forum-main)))
                (RSS "description"
                     (xfactory:text "~A - RSS-лента" description))
 
@@ -20,16 +20,16 @@
                           (RSS "title"
                                (xfactory:text "~A: ~A" author title))
                           (RSS "link"
-                               (xfactory:text (genurl-with-host 'view-topic :topic-id topic-id)))
+                               (xfactory:text (restas:genurl-with-host 'view-topic :topic-id topic-id)))
                           (RSS "description"
                                (xfactory:text message))
                           (RSS "pubDate"
                                (xfactory:text (local-time:format-http-timestring nil (local-time:universal-to-timestamp date))
                                               )))))))))
 
-(define-simple-route all-forums-rss ("forum/rss/all.rss"
+(define-route all-forums-rss ("rss/all.rss"
                                      :content-type "application/rss+xml")
-  (with-rulisp-db
+  (rulisp:with-rulisp-db
     (make-rss-feed (format nil "Форумы ~A" *host*)
                    (postmodern:query "SELECT pretty_forum_id, topic_id,  m.author, m.message,
                                              created AT TIME ZONE 'GMT',
@@ -40,10 +40,10 @@
                                        ORDER BY created DESC
                                        LIMIT 20"))))
 
-(define-simple-route forum-rss ("forum/rss/:(forum-id).rss"
+(define-route forum-rss ("rss/:(forum-id).rss"
                                 :content-type "application/rss+xml")
   
-  (with-rulisp-db
+  (rulisp:with-rulisp-db
     (make-rss-feed (postmodern:query (format nil
                                              "SELECT description FROM rlf_forums WHERE pretty_forum_id = '~A'"
                                              forum-id)
@@ -61,9 +61,9 @@
                                              forum-id)))))
 
 
-(define-simple-route topic-rss ("forum/rss/threads/:(topic-id).rss"
+(define-route topic-rss ("rss/threads/:(topic-id).rss"
                                 :content-type "application/rss+xml")
-  (with-rulisp-db
+  (rulisp:with-rulisp-db
     (make-rss-feed (postmodern:query (format nil
                                              "SELECT title FROM rlf_topics WHERE topic_id = ~A"
                                              topic-id)

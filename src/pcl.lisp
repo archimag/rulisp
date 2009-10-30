@@ -1,6 +1,6 @@
 ;;; pcl.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.pcl)
 
 
 (defparameter *pcl-files-map*
@@ -119,8 +119,7 @@
   (merge-pathnames (concatenate 'string chapter ".txt")
                    *pcl-dir*))
 
-(define-simple-route pcl-main ("pcl/"
-                               :overlay-master *master*)
+(define-route pcl-main ("")
   (in-pool
    (xfactory:with-document-factory ((E))
      (E :overlay
@@ -148,7 +147,7 @@
                  (eclass "pdf-link")
                  "PDF-версия"))
            (E :img
-              (xfactory:attributes :src (restas:genurl 'image :file "pcl.jpg")
+              (xfactory:attributes :src (restas:genurl 'rulisp:image :file "pcl.jpg")
                                    :alt "PCL"
                                    :style "float: right"))
               
@@ -190,8 +189,7 @@
                                                   (1+ number))))
                      "Следующая"))))))))
 
-(define-simple-route pcl-chapter-view ("pcl/:(chapter)"
-                                       :overlay-master *master*)
+(define-route pcl-chapter-view (":(chapter)")
   (let* ((number (position chapter
                            *pcl-files-map*
                            :key #'first
@@ -207,13 +205,13 @@
               (E :div
                  (eid "content")
                  (pcl-navigation-bar number)
-                 (render-wiki-page (wiki-parser:parse :dokuwiki
+                 (rulisp.wiki::render-wiki-page (wiki-parser:parse :dokuwiki
                                                       path))
                  (pcl-navigation-bar number)))))
         hunchentoot:+HTTP-NOT-FOUND+)))
 
 
-(define-simple-route pcl-chapter-pdf ("pcl/pdf/:(chapter)"
+(define-route pcl-chapter-pdf ("pdf/:(chapter)"
                                       :content-type "application/pdf")
   (let* ((number (position chapter
                            *pcl-files-map*
@@ -222,7 +220,7 @@
          (path (pcl-source-path (third (aref *pcl-files-map* number)))))
     (flexi-streams:with-output-to-sequence (out)
       (let ((out* (flexi-streams:make-flexi-stream out)))
-        (pdf-render-wiki-page (wiki-parser:parse :dokuwiki
+        (rulisp.wiki::pdf-render-wiki-page (wiki-parser:parse :dokuwiki
                                                  path)
                               out*))
       out)))
@@ -234,7 +232,7 @@
       (setf result pdf:*page*)
       ;;(pdf:draw-centered-text 300 500 "Practical Common Lisp" *header-font* 30)
       (let ((bounds (pdf::bounds pdf:*page*))
-            (image (pdf:make-image (staticpath "image/pcl.jpg"))))
+            (image (pdf:make-image (rulisp:staticpath "image/pcl.jpg"))))
         (pdf:add-images-to-page image)
         (pdf:draw-image image
                         0 0 (aref bounds 2) (aref bounds 3) 0))
@@ -249,7 +247,7 @@
                                 "Practical Common Lisp"
                                 (pdf:register-reference :name "Practical Common Lisp"
                                                         :page (pcl-first-page)))
-      (let ((*current-chapter* "Practical Common Lisp"))
+      (let ((rulisp.wiki::*current-chapter* "Practical Common Lisp"))
         (iter (for chapter in-vector *pcl-files-map*)
               (for i from 1)
               (print i)
@@ -257,20 +255,19 @@
                                                 (pcl-source-path (third chapter)))))
                 (tt:draw-pages 
                  (tt:compile-text ()
-                   (tt:with-style (:font *base-font* :font-size *font-size*)       
-                     (pdf-render-wiki-item wikidoc)))
-                 :break :after
-                 :margins '(30 50 30 40)
-                 :finalize-fn #'(lambda (page)
-                                  (pdf:draw-centered-text (/ (aref (pdf::bounds page) 2) 2)
-                                                          10
-                                                          (write-to-string (incf page-number))
-                                                          *base-font*
-                                                          10)
-                                  )))
-              (pdf:write-document out))))))
+                   (tt:with-style (:font rulisp.wiki::*base-font* :font-size rulisp.wiki::*font-size*)
+                     (rulisp.wiki::pdf-render-wiki-item wikidoc)))
+                   :break :after
+                   :margins '(30 50 30 40)
+                   :finalize-fn #'(lambda (page)
+                                    (pdf:draw-centered-text (/ (aref (pdf::bounds page) 2) 2)
+                                                            10
+                                                            (write-to-string (incf page-number))
+                                                            rulisp.wiki::*base-font*
+                                                            10))))
+                (pdf:write-document out))))))
 
-(define-simple-route pcl-pdf ("pcl/pcl.pdf")
+(define-route pcl-pdf ("pcl.pdf")
   (merge-pathnames "pcl.pdf"
                    *pcl-snapshot-dir*))
 

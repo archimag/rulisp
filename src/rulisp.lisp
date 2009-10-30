@@ -1,95 +1,101 @@
-;;; test.lisp
+;;; rulisp.lisp
 
 (in-package :rulisp)
 
-(defparameter *rulisp-ns* "chrome://rulisp/")
+(defclass rulisp-plugin-instance (restas:plugin-instance) ())
 
-(xpath:define-xpath-function colorize (code)
-  (code-to-html code))
+(restas:define-site-plugin rulisp-core (:rulisp rulisp-plugin-instance))
 
-(xslt:define-xslt-element text2html (self input output)
-  (let ((text (xpath:find-string input
-                                 (xtree:attribute-value self "select"))))
-    (if text
-        (html:with-parse-html (doc text)
-          (let ((root (or (xpath:find-single-node (xtree:root doc) "body")
-                                             (xtree:root doc))))
-          (iter (for node in-child-nodes root)
-                (xtree:append-child output (xtree:copy node))))))))
+(restas:define-site-plugin rulisp-wiki (:rulisp.wiki rulisp-plugin-instance)
+  (rulisp.wiki:*baseurl* ("wiki")))
 
-(xslt:defxsl *content-xsl* (merge-pathnames "src/xsl/content.xsl" *rulisp-path*))
-(xslt:defxsl *articles-xsl* (merge-pathnames "src/xsl/articles.xsl" *rulisp-path*))
+(restas:define-site-plugin rulisp-pcl (:rulisp.pcl rulisp-plugin-instance)
+  (rulisp.pcl:*baseurl* ("pcl")))
 
-(defun apply-xsl (style obj)
-  (let ((xpath:*lisp-xpath-functions* `((colorize "colorize" ,*rulisp-ns*)))
-        (xslt:*lisp-xslt-elements* `((text2html "text2html" ,*rulisp-ns*)))
-        (path (merge-pathnames obj *basepath*)))
-    (if (fad:file-exists-p path)
-        (in-pool (xslt:transform style
-                                 (in-pool (xtree:parse path :xml-parse-noent ))))
-        hunchentoot:+HTTP-NOT-FOUND+)))
+(restas:define-site-plugin rulisp-forum (:rulisp.forum rulisp-plugin-instance)
+  (rulisp.forum:*baseurl* ("forum")))
 
-(define-simple-route main (""
-                           :overlay-master *master*)
-  (apply-xsl *content-xsl* "content/index.xml"))
+(restas:define-site-plugin rulisp-format (:rulisp.format rulisp-plugin-instance)
+  (rulisp.format:*baseurl* ("apps" "format")))
 
+(restas:define-site-plugin rulisp-planet (:rulisp.planet rulisp-plugin-instance)
+  (rulisp.planet:*baseurl* ("planet")))
 
-(define-simple-route css ("/css/:(theme)/:(file)")
-  (skinpath (format nil "css/~A" file)
-            theme))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-simple-route image ("image/:(file)")
-  (staticpath (format nil "image/~A" file)))
-
-(define-simple-route js ("js/:(file)")
-  (staticpath (format nil "js/~A" file)))
-
-(define-simple-route articles ("articles/"
-                              :overlay-master *master*)
-  (apply-xsl *content-xsl*
-             "content/articles/index.xml"))
-
-(define-simple-route article ("articles/:(afile)"
-                              :overlay-master *master*)
-  (let ((afile-length (length afile)))
-    (if (and (> afile-length 4)
-             (string= (subseq afile (- afile-length 5))
-                      ".html"))
-        (redirect 'article :afile (subseq afile 0 (- afile-length 5)))
-        (apply-xsl *articles-xsl*
-                   (format nil "content/articles/~A.xml" afile)))))
-
-(define-simple-route favicon ("favicon.ico")
-  (staticpath "favicon.ico"))
+(defun chrome-resolver (url id ctxt)
+  (declare (ignore id))
+  (if (eql (puri:uri-scheme url) :chrome)
+      (let* ((match-result (routes:match restas:*chrome-mapper*
+                                         (concatenate 'string
+                                                      (puri:uri-host url)
+                                                      (puri:uri-path url))
+                                         (acons :method :get (if (boundp 'restas:*bindings*)
+                                                                 restas:*bindings*
+                                                                 (restas:restas-request-bindings hunchentoot:*request*))))))
+        (if match-result
+            (gp:with-garbage-pool (restas:*request-pool*)
+              (let ((restas:*bindings* (concatenate 'list (cdr match-result) restas:*bindings*)))
+                (let ((result (restas:process-route (car match-result)
+                                             (cdr match-result))))
+                  (typecase result
+                    (string (xtree:resolve-string result ctxt))
+                    (pathname (xtree:resolve-file/url (namestring result) ctxt ))
+                    (xtree::libxml2-cffi-object-wrapper (xtree:resolve-string (xtree:serialize result
+                                                                                               :to-string)
+                                                                              ctxt))))))))))
 
 
 
-(defparameter *mainmenu* '((main "Главная")                           
-                           (articles "Статьи")
-                           (planet-main "Планета")
-                           (forum-main "Форум")                           
-                           (tools-list "Сервисы")
-                           (pcl-main "Practical Common Lisp")
-                           (wiki-main-page "wiki")))
+(defmethod restas:calculate-user-login ((instance rulisp-plugin-instance) request)
+  (compute-user-login-name))
 
-(define-simple-route mainmenu ("mainmenu"
+(defmethod restas:adopt-route-result ((instance rulisp-plugin-instance) (doc xtree:document))
+  (if (string= (hunchentoot:content-type*) "text/html")
+      (xtree:with-custom-resolvers (#'chrome-resolver)
+        (xtree:with-object (res (xoverlay:apply-overlay (tmplpath "rulisp.html") doc :html t))
+          (let ((str (xtree:serialize res :to-string :pretty-print t)))
+            str)))
+      (let ((str (xtree:serialize doc :to-string :pretty-print t)))
+        str)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
+(defparameter *mainmenu* `((rulisp-core main "Главная")
+                           (rulisp-core articles "Статьи")
+                           (rulisp-planet rulisp.planet:planet-main "Планета")
+                           (rulisp-forum rulisp.forum:forum-main "Форум")
+                           (rulisp-core tools-list "Сервисы")
+                           (rulisp-pcl rulisp.pcl:pcl-main "Practical Common Lisp")
+                           (rulisp-wiki rulisp.wiki:wiki-main-page "wiki")))
+
+(define-route mainmenu ("mainmenu"
                                :protocol :chrome)
   (in-pool
    (xfactory:with-document-factory ((E))
      (E :ul
-        (iter (for (route name) in *mainmenu*)
+        (iter (for (plugin route name) in *mainmenu*)
               (E :li
                  (E :a
-                    (ehref route)
+                    (xfactory:attributes :href
+                                         (restas:site-url (gethash plugin *site-plugins*)
+                                                          route))
                     (xfactory:text name))))))))
 
 
-(define-simple-route theme-css-include ("theme/css/:(file)"
+(define-route theme-css-include ("theme/css/:(file)"
                                         :protocol :chrome)
   (format nil
           "<link href=\"~A\" rel=\"stylesheet\" type=\"text/css\" />"
           (genurl 'css :theme (user-theme (username)) :file file)))
   
 
-(define-simple-route files ("files/:(file)")
-  (merge-pathnames file (merge-pathnames "files/" *vardir*)))
+(defun rulisp-start ()
+  (setf restas:*default-host-redirect*
+        rulisp.preferences:*host*)
+  (let ((hostname/port (restas:parse-host rulisp.preferences:*host*)))
+    (restas:start-site :rulisp
+                       :hostname (first hostname/port)
+                       :port (second hostname/port))))

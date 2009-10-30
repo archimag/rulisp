@@ -1,6 +1,6 @@
 ;;; wiki.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.wiki)
 
 (defun wiki-page-pathname (page)
   (merge-pathnames (format nil "pages/~A" (hunchentoot:url-encode  page))
@@ -42,7 +42,7 @@
         (E :head
            (E :title
               (etext (hunchentoot:url-decode page)))
-           (ecss 'css :file "wiki.css" :theme (user-theme (username))))
+           (ecss 'rulisp:css :file "wiki.css" :theme (rulisp:user-theme (username))))
         (E :div
            (eid "content")                 
            (let ((path (wiki-page-pathname page)))
@@ -59,16 +59,14 @@
                       (ehref 'edit-wiki-page :page (hunchentoot:url-decode page))
                       "Создать")))))))))
                    
-(define-simple-route wiki-main-page ("wiki/"
-                                     :overlay-master *master*)
+(define-route wiki-main-page ("")
   (show-wiki-page "index"))
 
 
-(define-simple-route view-wiki-page ("wiki/:(page)"
-                                     :overlay-master *master*)
+(define-route view-wiki-page (":(page)")
   (show-wiki-page page))
 
-(define-simple-route view-wiki-page-in-pdf ("wiki/:(page)/pdf"
+(define-route view-wiki-page-in-pdf (":(page)/pdf"
                                             :content-type "application/pdf")
   (flexi-streams:with-output-to-sequence (out)
     (let ((out* (flexi-streams:make-flexi-stream out)))
@@ -77,13 +75,12 @@
                             out*))
     out))
 
-(define-simple-route edit-wiki-page ("wiki/edit/:(page)"
-                                     :overlay-master *master*
+(define-route edit-wiki-page ("edit/:(page)"                                     
                                      :login-status :logged-on)
-  (let ((doc (in-pool (xtree:parse (expand-file (tmplpath "wiki/edit.xml")
+  (let ((doc (in-pool (xtree:parse (restas:expand-file (rulisp:tmplpath "wiki/edit.xml")
                                                 `((:title . ,(hunchentoot:url-decode page))))))))
     (if (fad:file-exists-p (wiki-page-pathname page))        
-        (fill-form doc (acons "page-content"
+        (rulisp:fill-form doc (acons "page-content"
                               (alexandria:read-file-into-string (wiki-page-pathname page))
                               nil)))
     doc))
@@ -115,18 +112,17 @@
                                        :if-exists :supersede
                                        :if-does-not-exist :create)))
 
-(define-simple-route edit-wiki-page/post ("wiki/edit/:(page)"
-                                     :overlay-master *master*
-                                     :method :post
-                                     :login-status :logged-on)
+(define-route edit-wiki-page/post ("edit/:(page)"
+                                          :method :post
+                                          :login-status :logged-on)
   (cond
-    ((hunchentoot:post-parameter "cancel") (redirect 'view-wiki-page 
-                                                     :page page))    
+    ((hunchentoot:post-parameter "cancel") (restas:redirect 'view-wiki-page 
+                                                            :page page))    
     ((hunchentoot:post-parameter "preview") (let* ((page-content (hunchentoot:post-parameter "page-content"))
-                                                   (doc (in-pool (xtree:parse (expand-file (tmplpath "wiki/edit.xml")
-                                                                                          `((:title . ,page))))))
+                                                   (doc (in-pool (xtree:parse (restas:expand-file (rulisp:tmplpath "edit.xml")
+                                                                                                  `((:title . ,page))))))
                                                    (xfactory:*node* (xpath:find-single-node doc "//*[@id='content']")))
-                                              (fill-form doc (acons "page-content"
+                                              (rulisp:fill-form doc (acons "page-content"
                                                                     page-content
                                                                     nil))                                              
                                               (render-wiki-page (wiki-parser:parse :dokuwiki
@@ -136,13 +132,12 @@
          (save-wiki-page page
                          (hunchentoot:post-parameter "page-content")
                          (username))
-         (redirect 'view-wiki-page
-                   :page page)))))
+         (restas:redirect 'view-wiki-page
+                          :page page)))))
                                      
 
 
-(define-simple-route history-wiki-page ("wiki/history/:(page)"
-                                        :overlay-master *master*
+(define-route history-wiki-page ("history/:(page)"
                                         :login-status :logged-on)
   (let* ((change-path (wiki-page-changes-pathname page))
          (changes (nreverse (if (fad:file-exists-p change-path)
@@ -156,7 +151,7 @@
           (E :head
              (E :title
                 (etext "История: ~A" (hunchentoot:url-decode page)))
-             (ecss 'css :file "wiki.css" :theme (user-theme (username))))
+             (ecss 'rulisp:css :file "wiki.css" :theme (rulisp:user-theme (username))))
           (E :div
              (eid "content")
              (E :div
@@ -183,15 +178,14 @@
                             (estyle "color: #666")
                             (etext " ~A" (second item))))))))))))
 
-(define-simple-route view-archive-wiki-page ("wiki/history/:(page)/:(time)"
-                                             :overlay-master *master*)
+(define-route view-archive-wiki-page ("history/:(page)/:(time)")
   (in-pool
    (xfactory:with-document-factory ((E))
      (E :overlay
         (E :head
            (E :title
               (etext (hunchentoot:url-decode page)))
-           (ecss 'css :file "wiki.css" :theme (user-theme (username))))
+           (ecss 'rulisp:css :file "wiki.css" :theme (rulisp:user-theme (username))))
         (E :div
            (eid "content")
            (E :div

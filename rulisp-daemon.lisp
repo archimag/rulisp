@@ -241,9 +241,10 @@
 
 ;;;; detach from tty
 (when *as-daemon*
-  (let ((fd (sb-posix:open #P"/dev/tty" sb-posix:O-RDWR)))
-    (sb-posix:ioctl fd sb-unix:tiocnotty)
-    (sb-posix:close fd)))
+  (let ((fd (ignore-errors (sb-posix:open #P"/dev/tty" sb-posix:O-RDWR))))
+    (when fd
+      (sb-posix:ioctl fd sb-unix:tiocnotty)
+      (sb-posix:close fd))))
 
 ;;;; rebind standart input, output and error streams
 (when *as-daemon*
@@ -285,7 +286,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (asdf:operate 'asdf:load-op :rulisp)
-(rulisp.starter:rulisp-start)
+(rulisp:rulisp-start)
 
 (when *as-daemon*
   (sb-sys:enable-interrupt sb-posix:sigusr1
@@ -294,7 +295,8 @@
                                (handler-case
                                    (progn 
                                      (sb-posix:syslog sb-posix:log-info "Stop rulisp daemon")
-                                     (rulisp.starter:rulisp-stop))
+                                     (error "rulisp-stop")
+                                     )
                                  (error (err)
                                    (sb-posix:syslog sb-posix:log-err
                                                     (with-output-to-string (out)

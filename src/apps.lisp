@@ -2,7 +2,7 @@
 
 (in-package :rulisp)
 
-(define-simple-route tools-list ("apps/"
+(define-route tools-list ("apps/"
                                  :overlay-master *master*)
   (tmplpath "apps.xml"))
                                  

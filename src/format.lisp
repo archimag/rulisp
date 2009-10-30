@@ -1,6 +1,6 @@
 ;;; format.lisp
 
-(in-package :rulisp)
+(in-package :rulisp.format)
 
 (defun formater-menu ()
   (xfactory:with-element-factory ((E))
@@ -16,7 +16,7 @@
                 (ehref 'newformat)
                 "Создать"))))))
 
-(define-simple-route chrome-formater-menu ("formater/topmenu"
+(define-route chrome-formater-menu ("formater/topmenu"
                                            :protocol :chrome)
   (xtree:with-object (el (formater-menu))
     (xtree:serialize el :to-string)))
@@ -60,15 +60,15 @@
 (defun select-formats (start &optional (limit 10))
   (select-formats* start limit))
 
-(define-simple-route format-main ("apps/format/all"
-                                  :overlay-master *master*)
+
+(define-route format-main ("all")
   (let* ((start* (hunchentoot:get-parameter "start"))
          (start (if start*
                     (parse-integer start*)
                     0))
-         (items (with-rulisp-db
+         (items (rulisp:with-rulisp-db
                   (select-formats start)))
-         (all (with-rulisp-db
+         (all (rulisp:with-rulisp-db
                 (postmodern:query (:select (:count '*) :from 'formats) :single))))
     (in-pool
      (xfactory:with-document-factory ((E))
@@ -95,19 +95,30 @@
                        
 
 
-(define-simple-route newformat ("apps/format/"
-                               :overlay-master *master*)
-  (tmplpath "format.xml"))
+(define-route newformat ("")
+  (in-pool
+   (let ((doc (xtree:parse (rulisp:tmplpath "format.xml"))))
+     (xtree:with-custom-resolvers ((lambda (url id ctxt)
+                                     (declare (ignore id))
+                                     (if (and (eql (puri:uri-scheme url) :chrome)
+                                              (string= (concatenate 'string
+                                                                           (puri:uri-host url)
+                                                                           (puri:uri-path url))
+                                                       "formater/topmenu"))
+                                            (xtree:with-object (menu (formater-menu))
+                                              (xtree:resolve-string  (print (xtree:serialize menu :to-string)) ctxt))
+                                         )))
+       (xtree:process-xinclude doc)
+       doc))))
 
 (postmodern:defprepared db-new-format-code "SELECT * FROM add_format_code($1, $2, $3)" :single)
   
-(define-simple-route newformat/post ("apps/format/"
-                                    :method :post
-                                    :overlay-master *master*)
+(define-route newformat/post (""
+                                    :method :post)
   (if (hunchentoot:post-parameter "preview")
-      (let* ((doc (in-pool (xtree:parse (tmplpath "format.xml"))))
+      (let* ((doc (in-pool (xtree:parse (rulisp:tmplpath "format.xml"))))
              (form (xpath:find-single-node doc "//form")))
-        (fill-form doc (hunchentoot:post-parameters*))
+        (rulisp:fill-form doc (hunchentoot:post-parameters*))
         (let ((xfactory:*node* (xtree:insert-child-before (xtree:make-element "div")  form)))
           (xfactory:with-element-factory ((E))
             (E :div
@@ -116,7 +127,7 @@
                   "Предварительный просмотр")
                (E :pre
                   (eclass "code")
-                  (e-text2html (code-to-html (hunchentoot:post-parameter "code")))))))
+                  (e-text2html (rulisp:code-to-html (hunchentoot:post-parameter "code")))))))
         (when (username)
           (let ((xfactory:*node* form))
             (xfactory:with-element-factory ((E))
@@ -138,10 +149,10 @@
                 (code (hunchentoot:post-parameter "code")))
             (if (and code
                      (not (string= code "")))
-                (redirect 'view-format-code
-                          :format-id (with-rulisp-db
+                (restas:redirect 'view-format-code
+                          :format-id (rulisp:with-rulisp-db
                                        (db-new-format-code (username) title code)))
-                (tmplpath "format.xml")))
+                (in-pool (xtree:parse (rulisp:tmplpath "format.xml")))))
           hunchentoot:+HTTP-FORBIDDEN+)))
 
 
@@ -151,9 +162,8 @@
      WHERE format_id = $1"
   :row)
 
-(define-simple-route view-format-code ("apps/format/:(format-id)"
-                                       :overlay-master *master*)
-  (let ((row (with-rulisp-db (get-format-code format-id))))
+(define-route view-format-code (":(format-id)")
+  (let ((row (rulisp:with-rulisp-db (get-format-code format-id))))
     (if row
         (in-pool
          (xfactory:with-document-factory ((E))
@@ -177,5 +187,5 @@
                     (xfactory:text " - ~A" (fourth row)))
                  (E :pre
                     (eclass "code")
-                    (e-text2html (code-to-html (third row))))))))
+                    (e-text2html (rulisp:code-to-html (third row))))))))
         hunchentoot:+HTTP-NOT-FOUND+)))
