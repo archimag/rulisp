@@ -12,7 +12,7 @@
             <table >
                 <tbody>
                     <tr>
-                        <td>Адресс электронной почты</td>
+                        <td>Адрес электронной почты</td>
                         <td><input name="email" /></td>
                     </tr>
 
