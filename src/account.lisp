@@ -176,8 +176,7 @@
     (flet ((form ()
              (or badform
                  (fill-form (setf badform
-                                  (gp:object-register (xtree:parse (register-form))
-                                                      *request-pool*))
+                                  (register-form))
                             formdata))))
       (with-rulisp-db
         (if (form-field-empty-p formdata "name")
@@ -236,8 +235,8 @@
 
 
 (define-route registration/post ("register"
-                                        :login-status :not-logged-on
-                                        :method :post)
+                                 :login-status :not-logged-on
+                                 :method :post)
   (let* ((formdata (hunchentoot:post-parameters hunchentoot:*request*))
          (check-form (check-register-form formdata)))
     (if check-form
