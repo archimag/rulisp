@@ -7,19 +7,19 @@
 (restas:define-site-plugin rulisp-core (:rulisp rulisp-plugin-instance))
 
 (restas:define-site-plugin rulisp-wiki (:rulisp.wiki rulisp-plugin-instance)
-  (rulisp.wiki:*baseurl* ("wiki")))
+  (rulisp.wiki:*baseurl* '("wiki")))
 
 (restas:define-site-plugin rulisp-pcl (:rulisp.pcl rulisp-plugin-instance)
-  (rulisp.pcl:*baseurl* ("pcl")))
+  (rulisp.pcl:*baseurl* '("pcl")))
 
 (restas:define-site-plugin rulisp-forum (:rulisp.forum rulisp-plugin-instance)
-  (rulisp.forum:*baseurl* ("forum")))
+  (rulisp.forum:*baseurl* '("forum")))
 
 (restas:define-site-plugin rulisp-format (:rulisp.format rulisp-plugin-instance)
-  (rulisp.format:*baseurl* ("apps" "format")))
+  (rulisp.format:*baseurl* '("apps" "format")))
 
 (restas:define-site-plugin rulisp-planet (:rulisp.planet rulisp-plugin-instance)
-  (rulisp.planet:*baseurl* ("planet")))
+  (rulisp.planet:*baseurl* '("planet")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
