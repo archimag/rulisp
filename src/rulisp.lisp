@@ -2,24 +2,71 @@
 
 (in-package :rulisp)
 
+(defparameter *mainmenu* `((rulisp-core main "Главная")
+                           (rulisp-core articles "Статьи")
+                           (rulisp-planet restas.planet:planet-main "Планета")
+                           (rulisp-forum rulisp.forum:forum-main "Форум")
+                           (rulisp-core tools-list "Сервисы")
+                           (rulisp-pcl rulisp.pcl:pcl-main "Practical Common Lisp")
+                           (rulisp-wiki rulisp.wiki:wiki-main-page "wiki")))
+
+(defun css-files-data (files)
+  (iter (for item in files)
+        (collect (genurl 'css :theme (user-theme (username)) :file item))))
+  
+(defun main-menu-data ()
+  (iter (for item in *mainmenu*)
+        (collect (list :href (restas:site-url (gethash (first item) *site-plugins*)
+                                              (second item))
+                       :name (third item)))))
+
+
+
 (defclass rulisp-plugin-instance (restas:plugin-instance) ())
 
+;;;; core
+
 (restas:define-site-plugin rulisp-core (:rulisp rulisp-plugin-instance))
+
+;;;; wiki
 
 (restas:define-site-plugin rulisp-wiki (:rulisp.wiki rulisp-plugin-instance)
   (rulisp.wiki:*baseurl* '("wiki")))
 
+;;;; pcl
+
 (restas:define-site-plugin rulisp-pcl (:rulisp.pcl rulisp-plugin-instance)
   (rulisp.pcl:*baseurl* '("pcl")))
+
+;;;; forum
 
 (restas:define-site-plugin rulisp-forum (:rulisp.forum rulisp-plugin-instance)
   (rulisp.forum:*baseurl* '("forum")))
 
+;;;; format
+
 (restas:define-site-plugin rulisp-format (:rulisp.format rulisp-plugin-instance)
   (rulisp.format:*baseurl* '("apps" "format")))
 
-(restas:define-site-plugin rulisp-planet (:rulisp.planet rulisp-plugin-instance)
-  (rulisp.planet:*baseurl* '("planet")))
+;;;; Russian Lisp Planet
+
+(defclass rulisp-planet-plugin-instance (rulisp-plugin-instance) ())
+
+(defmethod restas:adopt-route-result ((instance rulisp-planet-plugin-instance) (content string))
+  (if (string= (hunchentoot:content-type*) "text/html")
+      (rulisp.view.fine:main-frame (list :css (css-files-data '("style.css" "planet.css"))
+                                         :user (username)
+                                         :main-menu (main-menu-data)
+                                         :content content))
+      content))
+                                                                      
+(restas:define-site-plugin rulisp-planet (#:restas.planet rulisp-planet-plugin-instance)
+  (restas.planet:*baseurl* '("planet"))
+  (restas.planet:*suggest-mail* "archimag@lisper.ru")
+  (restas.planet:*feeds* (merge-pathnames "planet-feeds.lisp" *rulisp-path*))
+  (restas.planet:*name* "Russian Lisp Planet")
+  (restas.planet:*template* 'restas.planet.view:feed-html-body)
+  (restas.planet:*cache-dir* (merge-pathnames "planet/" *cachedir*)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -63,13 +110,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
-(defparameter *mainmenu* `((rulisp-core main "Главная")
-                           (rulisp-core articles "Статьи")
-                           (rulisp-planet rulisp.planet:planet-main "Планета")
-                           (rulisp-forum rulisp.forum:forum-main "Форум")
-                           (rulisp-core tools-list "Сервисы")
-                           (rulisp-pcl rulisp.pcl:pcl-main "Practical Common Lisp")
-                           (rulisp-wiki rulisp.wiki:wiki-main-page "wiki")))
 
 (define-route mainmenu ("mainmenu"
                                :protocol :chrome)

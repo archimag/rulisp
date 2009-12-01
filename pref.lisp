@@ -10,6 +10,7 @@
            #:*cookie-cipher-key*
            #:*noreply-mail-account*
            #:*vardir*
+           #:*cachedir*
            #:*reCAPTCHA.publick-key*
            #:*reCAPTCHA.privake-key*
            #:*default-skin*
@@ -24,6 +25,8 @@
 (in-package :rulisp.preferences)
 
 (defparameter *vardir* #P"/var/rulisp/")
+
+(defparameter *cachedir* #P"/var/cache/rulisp/")
 
 (defparameter *rulisp-path* (asdf:component-pathname (asdf:find-system  :rulisp)))
 

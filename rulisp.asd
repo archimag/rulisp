@@ -6,8 +6,9 @@
 (in-package :rulisp-system)
 
 (defsystem :rulisp
-  :depends-on (#:restas #:colorize #:planet #:postmodern #:ironclad #:cl-recaptcha
-                        #:wiki-parser #:zip #:cl-libxslt #:xoverlay #:xfactory #:cl-typesetting)
+  :depends-on (#:restas #:colorize #:restas-planet #:postmodern #:ironclad #:cl-recaptcha
+                        #:wiki-parser #:zip #:cl-libxslt #:xoverlay #:xfactory #:cl-typesetting
+                        #:closure-template)
   :components
   ((:file "pref")
    (:module :src
@@ -17,7 +18,7 @@
              (:file "account" :depends-on ("utility"))
              (:file "static" :depends-on ("utility"))
              (:file "format" :depends-on ("static"))
-             (:file "planet" :depends-on ("static"))
+             ;;(:file "planet" :depends-on ("static"))
              (:module :forum
                       :components
                       ((:file "forum")
@@ -32,7 +33,7 @@
                        (:file "wiki" :depends-on ("render-html" "render-pdf")))
                       :depends-on ("utility"))
              (:file "pcl"  :depends-on ("wiki"))
-             (:file "rulisp" :depends-on ("static" "account" :pcl :forum :format :planet))
+             (:file "rulisp" :depends-on ("static" "account" :pcl :forum :format ))
              )
             :depends-on ("pref"))))
 

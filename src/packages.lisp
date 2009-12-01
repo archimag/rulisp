@@ -42,3 +42,8 @@
 
 (restas:define-plugin :rulisp.format
   (:use :cl :iter #:restas.optional))
+
+
+(closure-template:compile-template :common-lisp-backend
+                                   (merge-pathnames "static/skins/fine/templates/rulisp.tmpl"
+                                                    (asdf:component-pathname (asdf:find-system '#:rulisp))))
