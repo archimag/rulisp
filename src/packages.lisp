@@ -31,8 +31,8 @@
 (restas:define-plugin #:rulisp.forum
   (:use #:cl #:iter #:restas.optional #:rulisp.preferences))
 
-(restas:define-plugin #:rulisp.wiki
-  (:use #:cl #:iter #:restas.optional #:rulisp.preferences))
+;; (restas:define-plugin #:rulisp.wiki
+;;   (:use #:cl #:iter #:restas.optional #:rulisp.preferences))
 
 (restas:define-plugin :rulisp.pcl
   (:use #:cl #:iter #:restas.optional #:rulisp.preferences))

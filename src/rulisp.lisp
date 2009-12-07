@@ -8,7 +8,8 @@
                            (rulisp-forum rulisp.forum:forum-main "Форум")
                            (rulisp-core tools-list "Сервисы")
                            (rulisp-pcl rulisp.pcl:pcl-main "Practical Common Lisp")
-                           (rulisp-wiki rulisp.wiki:wiki-main-page "wiki")))
+                           (rulisp-wiki restas.wiki:wiki-main-page "wiki")
+                           ))
 
 (defun css-files-data (files)
   (iter (for item in files)
@@ -28,11 +29,6 @@
 
 (restas:define-site-plugin rulisp-core (:rulisp rulisp-plugin-instance))
 
-;;;; wiki
-
-(restas:define-site-plugin rulisp-wiki (:rulisp.wiki rulisp-plugin-instance)
-  (rulisp.wiki:*baseurl* '("wiki")))
-
 ;;;; pcl
 
 (restas:define-site-plugin rulisp-pcl (:rulisp.pcl rulisp-plugin-instance)
@@ -48,16 +44,32 @@
 (restas:define-site-plugin rulisp-format (:rulisp.format rulisp-plugin-instance)
   (rulisp.format:*baseurl* '("apps" "format")))
 
+;;;; wiki
+
+(restas:define-site-plugin rulisp-wiki (#:restas.wiki)
+  (restas.wiki:*baseurl* '("wiki"))
+  (restas.wiki:*wiki-dir* *wiki-dir*)
+  (restas.wiki:*wiki-user-function* #'compute-user-login-name)
+  (restas.wiki:*finalize-page* #'(lambda (content)
+                                   (rulisp.view.fine:main-frame (list :title (getf content :title)
+                                                                      :css (css-files-data '("style.css" "wiki.css"))
+                                                                      :user (compute-user-login-name)
+                                                                      :main-menu (main-menu-data)
+                                                                      :content (getf content :content)
+                                                                      :callback (hunchentoot:request-uri*))))))
+
 ;;;; Russian Lisp Planet
 
 (defclass rulisp-planet-plugin-instance (rulisp-plugin-instance) ())
 
 (defmethod restas:adopt-route-result ((instance rulisp-planet-plugin-instance) (content string))
   (if (string= (hunchentoot:content-type*) "text/html")
-      (rulisp.view.fine:main-frame (list :css (css-files-data '("style.css" "planet.css"))
+      (rulisp.view.fine:main-frame (list :title "Russian Lisp Planet"
+                                         :css (css-files-data '("style.css" "planet.css"))
                                          :user (username)
                                          :main-menu (main-menu-data)
-                                         :content content))
+                                         :content content
+                                         :callback (hunchentoot:request-uri*)))
       content))
                                                                       
 (restas:define-site-plugin rulisp-planet (#:restas.planet rulisp-planet-plugin-instance)

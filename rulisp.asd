@@ -6,9 +6,10 @@
 (in-package :rulisp-system)
 
 (defsystem :rulisp
-  :depends-on (#:restas #:colorize #:restas-planet #:postmodern #:ironclad #:cl-recaptcha
+  :depends-on (#:restas #:colorize  #:postmodern #:ironclad #:cl-recaptcha
                         #:wiki-parser #:zip #:cl-libxslt #:xoverlay #:xfactory #:cl-typesetting
-                        #:closure-template)
+                        #:closure-template
+                        #:restas-planet #:restas-wiki)
   :components
   ((:file "pref")
    (:module :src
@@ -26,13 +27,13 @@
                        (:file "messages" :depends-on ("forum"))
                        (:file "rss" :depends-on ("forum")))
                       :depends-on ("static"))
-             (:module :wiki
-                      :components
-                      ((:file "render-html")
-                       (:file "render-pdf")
-                       (:file "wiki" :depends-on ("render-html" "render-pdf")))
-                      :depends-on ("utility"))
-             (:file "pcl"  :depends-on ("wiki"))
+             ;; (:module :wiki
+             ;;          :components
+             ;;          ((:file "render-html")
+             ;;           (:file "render-pdf")
+             ;;           (:file "wiki" :depends-on ("render-html" "render-pdf")))
+             ;;          :depends-on ("utility"))
+             (:file "pcl"  :depends-on ("utility"))
              (:file "rulisp" :depends-on ("static" "account" :pcl :forum :format ))
              )
             :depends-on ("pref"))))
