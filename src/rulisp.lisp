@@ -1,12 +1,13 @@
 ;;; rulisp.lisp
 
-(in-package :rulisp)
+(in-package #:rulisp)
 
 (defparameter *mainmenu* `((rulisp-core main "Главная")
                            (rulisp-core articles "Статьи")
                            (rulisp-planet restas.planet:planet-main "Планета")
                            (rulisp-forum rulisp.forum:forum-main "Форум")
                            (rulisp-core tools-list "Сервисы")
+                           ;;(rulisp-format restas.colorize:all "Формат")
                            (rulisp-pcl rulisp.pcl:pcl-main "Practical Common Lisp")
                            (rulisp-wiki restas.wiki:wiki-main-page "wiki")
                            ))
@@ -41,8 +42,18 @@
 
 ;;;; format
 
-(restas:define-site-plugin rulisp-format (:rulisp.format rulisp-plugin-instance)
-  (rulisp.format:*baseurl* '("apps" "format")))
+(restas:define-site-plugin rulisp-format (#:restas.colorize)
+  (restas.colorize:*baseurl* '("apps" "format"))
+  (restas.colorize:*max-on-page* 15)
+  (restas.colorize:*storage* *rulisp-db-storage*)
+  (restas.colorize:*colorize-user-function* #'compute-user-login-name)  
+  (restas.colorize:*finalize-page* (lambda (content)
+                                     (rulisp.view.fine:main-frame (list :title (getf content :title)
+                                                                        :css (css-files-data '("style.css" "colorize.css"))
+                                                                        :user (compute-user-login-name)
+                                                                        :main-menu (main-menu-data)
+                                                                        :content (getf content :content)
+                                                                        :callback (hunchentoot:request-uri*))))))
 
 ;;;; wiki
 
@@ -60,25 +71,19 @@
 
 ;;;; Russian Lisp Planet
 
-(defclass rulisp-planet-plugin-instance (rulisp-plugin-instance) ())
-
-(defmethod restas:adopt-route-result ((instance rulisp-planet-plugin-instance) (content string))
-  (if (string= (hunchentoot:content-type*) "text/html")
-      (rulisp.view.fine:main-frame (list :title "Russian Lisp Planet"
-                                         :css (css-files-data '("style.css" "planet.css"))
-                                         :user (username)
-                                         :main-menu (main-menu-data)
-                                         :content content
-                                         :callback (hunchentoot:request-uri*)))
-      content))
-                                                                      
-(restas:define-site-plugin rulisp-planet (#:restas.planet rulisp-planet-plugin-instance)
+(restas:define-site-plugin rulisp-planet (#:restas.planet)
   (restas.planet:*baseurl* '("planet"))
   (restas.planet:*suggest-mail* "archimag@lisper.ru")
   (restas.planet:*feeds* (merge-pathnames "planet-feeds.lisp" *rulisp-path*))
-  (restas.planet:*name* "Russian Lisp Planet")
-  (restas.planet:*template* 'restas.planet.view:feed-html-body)
-  (restas.planet:*cache-dir* (merge-pathnames "planet/" *cachedir*)))
+  (restas.planet:*name* "Russian Lisp Planet")  
+  (restas.planet:*cache-dir* (merge-pathnames "planet/" *cachedir*))
+  (restas.planet:*template* (lambda (data)
+                              (rulisp.view.fine:main-frame (list :title "Russian Lisp Planet"
+                                                                 :css (css-files-data '("style.css" "planet.css"))
+                                                                 :user (compute-user-login-name)
+                                                                 :main-menu (main-menu-data)
+                                                                 :content (restas.planet.view:feed-html-body data)
+                                                                 :callback (hunchentoot:request-uri*))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

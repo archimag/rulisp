@@ -23,3 +23,60 @@ span.paren4:hover { color : inherit; background-color : #CACAFF; }
 span.paren5:hover { color : inherit; background-color : #CAFFCA; }
 span.paren6:hover { color : inherit; background-color : #FFBAFF; }
 */
+
+/* .colorize-top-menu { padding-left: 0; padding-bottom: 0.2em; margin: 0;  border-bottom: 1px solid gray;} */
+
+/* .colorize-top-menu li {display: inline; list-style-type: none; margin-right: 0.3em;} */
+
+/*.colorize-list-nav {text-align: right; padding: 0.2em; margin-bottom: 0.2em; border-bottom: 1px solid gray; } */
+
+/*
+.paste { margin: 0.5em;}
+.info { font-size: 90%; color: gray; }
+*/
+
+.colorize-top-menu {
+    padding: 3px;
+    border-bottom: 1px solid #b9b2ca;
+    margin-bottom: 5px;
+}
+
+.colorize-top-menu ul {
+    margin: 0;
+    padding: 0;
+}
+
+.colorize-top-menu li {
+    display: inline;
+    list-style-type: none;
+    margin-right: 0.5em;
+}
+
+.colorize-top-menu a {
+    color: #6A5EAB;
+}
+
+.colorize-list-nav {
+    text-align: right;
+    color: gray;
+    font-size: 80%;
+    padding: 0.2em;
+    margin-bottom: 0.2em;
+    border-bottom: 1px solid #b9b2ca;
+ }
+
+.paste {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.paste > a {
+    font-size: 110%;
+    color: #6A5EAB;
+}
+
+.paste .info {
+    font-size: 90%;
+}
+
+.paste-detail { margin-top: 0.5em; }

@@ -1,6 +1,6 @@
 ;;; packages.lisp
 
-(restas:defsite :rulisp
+(restas:defsite #:rulisp
   (:use #:cl #:iter #:restas.optional #:rulisp.preferences)
   (:export #:code-to-html           
            #:substring
@@ -34,14 +34,14 @@
 ;; (restas:define-plugin #:rulisp.wiki
 ;;   (:use #:cl #:iter #:restas.optional #:rulisp.preferences))
 
-(restas:define-plugin :rulisp.pcl
+(restas:define-plugin #:rulisp.pcl
   (:use #:cl #:iter #:restas.optional #:rulisp.preferences))
 
-(restas:define-plugin :rulisp.planet
+(restas:define-plugin #:rulisp.planet
   (:use #:cl #:iter #:restas.optional #:rulisp.preferences))
 
-(restas:define-plugin :rulisp.format
-  (:use :cl :iter #:restas.optional))
+(restas:define-plugin #:rulisp.format
+  (:use #:cl #:iter #:restas.optional))
 
 
 (closure-template:compile-template :common-lisp-backend
