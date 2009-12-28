@@ -85,6 +85,21 @@
                                                                  :content (restas.planet.view:feed-html-body data)
                                                                  :callback (hunchentoot:request-uri*))))))
 
+;;;; Files
+
+(restas:define-site-plugin rulisp-files (#:restas.directory-publisher)
+  (restas.directory-publisher:*baseurl* '("files"))
+  (restas.directory-publisher:*directory* (merge-pathnames "files/" *vardir*))
+  (restas.directory-publisher:*autoindex-template*
+   (lambda (data)
+     (rulisp.view.fine:main-frame (list :title (getf data :title)
+                                        :css (css-files-data '("style.css" "autoindex.css"))
+                                        :user (compute-user-login-name)
+                                        :main-menu (main-menu-data)
+                                        :content (restas.directory-publisher.view:autoindex-content data)
+                                        :callback (hunchentoot:request-uri*))))))
+                                                                                        
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

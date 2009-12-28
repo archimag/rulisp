@@ -9,7 +9,7 @@
   :depends-on (#:restas #:postmodern #:ironclad 
                         #:cl-recaptcha
                         #:zip #:cl-libxslt #:xoverlay #:xfactory
-                        #:restas-planet #:restas-wiki #:restas-colorize)
+                        #:restas-planet #:restas-wiki #:restas-colorize #:restas-directory-publisher)
   :components ((:file "pref")
                (:module :src
                         :components ((:file "packages")
