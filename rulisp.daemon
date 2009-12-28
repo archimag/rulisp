@@ -1,0 +1,21 @@
+;;;; -*- mode: lisp -*-
+
+(defparameter *name* "rulisp")
+
+(defparameter *user* "archimag")
+
+(defparameter *group* nil)
+
+(defparameter *fasldir* #P"/var/cache/rulisp/fasl/")
+
+(defparameter *pidfile* #P"/var/run/rulisp/rulisp.pid")
+
+(defparameter *swankport* 30010)
+
+(defparameter *default-host-redirect* nil)
+
+(defparameter *asdf-central-registry* '(#P"/usr/share/common-lisp/systems/" #P"/home/archimag/development/common-lisp/systems/"))
+  
+(defparameter *asdf-load-systems* '(#:rulisp))
+
+(defparameter *sites* '((#:rulisp nil 8080)))
