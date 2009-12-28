@@ -63,11 +63,29 @@
   (restas.wiki:*wiki-user-function* #'compute-user-login-name)
   (restas.wiki:*finalize-page* #'(lambda (content)
                                    (rulisp.view.fine:main-frame (list :title (getf content :title)
-                                                                      :css (css-files-data '("style.css" "wiki.css"))
+                                                                      :css (css-files-data '("style.css" "wiki.css" "colorize.css"))
                                                                       :user (compute-user-login-name)
                                                                       :main-menu (main-menu-data)
                                                                       :content (getf content :content)
                                                                       :callback (hunchentoot:request-uri*))))))
+;;;; articles
+
+(restas:define-site-plugin rulisp-articles (#:restas.wiki)
+  (restas.wiki:*baseurl* '("articles2"))
+  (restas.wiki:*wiki-dir* #P"/var/rulisp/articles/")
+  (restas.wiki:*wiki-user-function* #'(lambda ()
+                                        (find (compute-user-login-name)
+                                              '("archimag")
+                                              :test #'string=)))
+  (restas.wiki:*finalize-page* #'(lambda (content)
+                                   (rulisp.view.fine:main-frame (list :title (getf content :title)
+                                                                      :css (css-files-data '("style.css" "wiki.css" "colorize.css"))
+                                                                      :user (compute-user-login-name)
+                                                                      :main-menu (main-menu-data)
+                                                                      :content (getf content :content)
+                                                                      :callback (hunchentoot:request-uri*))))))
+  
+
 
 ;;;; Russian Lisp Planet
 

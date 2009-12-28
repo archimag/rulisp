@@ -310,16 +310,17 @@ textarea {
 
 /* * * * * * * * *  wiki * * * *  * * ** * * */
 
-.chapter {
+.chapter > .chapter {
     padding-left: 20px;
 }
+
 .chapter > h3 {
     border-bottom: 1px solid #cccccc;
 }
 
-.chapter:first-child {
-    padding-left: 0;
-}
+/* .chapter:first-child { */
+/*     padding-left: 0; */
+/* } */
 
 .footnotes { border-top: 1px solid #cccccc; margin-top: 1em; padding-top: 0.5em; }
 
