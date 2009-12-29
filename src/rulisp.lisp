@@ -2,25 +2,31 @@
 
 (in-package #:rulisp)
 
-(defparameter *mainmenu* `((rulisp-core main "Главная")
-                           (rulisp-core articles "Статьи")
-                           (rulisp-planet restas.planet:planet-main "Планета")
-                           (rulisp-forum rulisp.forum:forum-main "Форум")
-                           (rulisp-core tools-list "Сервисы")
-                           ;;(rulisp-format restas.colorize:all "Формат")
-                           (rulisp-pcl rulisp.pcl:pcl-main "Practical Common Lisp")
-                           (rulisp-wiki restas.wiki:wiki-main-page "wiki")
+(defparameter *mainmenu* `(("Главная" rulisp-core main)
+                           ("Статьи" rulisp-core articles)
+                           ("Планета" rulisp-planet restas.planet:planet-main)
+                           ("Форум" rulisp-forum rulisp.forum:forum-main)
+                           ("Сервисы" rulisp-core tools-list)
+                           ("Practical Common Lisp" rulisp-pcl rulisp.pcl:pcl-main)
+                           ("Wiki" rulisp-wiki restas.wiki:wiki-main-page)
+                           ("Файлы" rulisp-files restas.directory-publisher:route :path "")
                            ))
 
 (defun css-files-data (files)
   (iter (for item in files)
         (collect (genurl 'css :theme (user-theme (username)) :file item))))
+
+(defun toplevel-link-href (item)
+  (apply  #'restas:site-url
+          (gethash (second item) *site-plugins*)
+          (if (cdddr item)
+              (cddr item)
+              (last item))))
   
 (defun main-menu-data ()
   (iter (for item in *mainmenu*)
-        (collect (list :href (restas:site-url (gethash (first item) *site-plugins*)
-                                              (second item))
-                       :name (third item)))))
+        (collect (list :href (toplevel-link-href item)
+                       :name (first item)))))
 
 
 
@@ -166,13 +172,11 @@
   (in-pool
    (xfactory:with-document-factory ((E))
      (E :ul
-        (iter (for (plugin route name) in *mainmenu*)
+        (iter (for item in *mainmenu*)
               (E :li
                  (E :a
-                    (xfactory:attributes :href
-                                         (restas:site-url (gethash plugin *site-plugins*)
-                                                          route))
-                    (xfactory:text name))))))))
+                    (xfactory:attributes :href (toplevel-link-href item))
+                    (xfactory:text (first item)))))))))
 
 
 (define-route theme-css-include ("theme/css/:(file)"
