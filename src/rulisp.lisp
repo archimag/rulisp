@@ -2,6 +2,9 @@
 
 (in-package #:rulisp)
 
+(defun compute-user-login-name ()
+  (restas.simple-auth::compute-user-login-name))
+
 (defparameter *mainmenu* `((rulisp-core main "Главная")
                            (rulisp-core articles "Статьи")
                            (rulisp-planet restas.planet:planet-main "Планета")
@@ -39,6 +42,12 @@
 
 (restas:define-site-plugin rulisp-forum (:rulisp.forum rulisp-plugin-instance)
   (rulisp.forum:*baseurl* '("forum")))
+
+;;;; auth
+
+(restas:define-site-plugin rulisp-auth (#:restas.simple-auth)
+  (restas.simple-auth:*storage* *rulisp-db-storage*)
+  (restas.simple-auth:*cookie-cipher-key* *cookie-cipher-key*))
 
 ;;;; format
 
