@@ -2,28 +2,36 @@
 
 (in-package #:rulisp)
 
-(defun compute-user-login-name ()
-  (restas.simple-auth::compute-user-login-name))
 
-(defparameter *mainmenu* `((rulisp-core main "Главная")
-                           (rulisp-core articles "Статьи")
-                           (rulisp-planet restas.planet:planet-main "Планета")
-                           (rulisp-forum rulisp.forum:forum-main "Форум")
-                           (rulisp-core tools-list "Сервисы")
-                           ;;(rulisp-format restas.colorize:all "Формат")
-                           (rulisp-pcl rulisp.pcl:pcl-main "Practical Common Lisp")
-                           (rulisp-wiki restas.wiki:wiki-main-page "wiki")
+(defun compute-user-login-name ()
+  (restas:with-plugin-context (gethash 'rulisp-auth *site-plugins*)
+    (restas.simple-auth::compute-user-login-name)))
+
+(defparameter *mainmenu* `(("Главная" rulisp-core main)
+                           ("Статьи" rulisp-core articles)
+                           ("Планета" rulisp-planet restas.planet:planet-main)
+                           ("Форум" rulisp-forum rulisp.forum:forum-main)
+                           ("Сервисы" rulisp-core tools-list)
+                           ("Practical Common Lisp" rulisp-pcl rulisp.pcl:pcl-main)
+                           ("Wiki" rulisp-wiki restas.wiki:wiki-main-page)
+                           ("Файлы" rulisp-files restas.directory-publisher:route :path "")
                            ))
 
 (defun css-files-data (files)
   (iter (for item in files)
         (collect (genurl 'css :theme (user-theme (username)) :file item))))
+
+(defun toplevel-link-href (item)
+  (apply  #'restas:site-url
+          (gethash (second item) *site-plugins*)
+          (if (cdddr item)
+              (cddr item)
+              (last item))))
   
 (defun main-menu-data ()
   (iter (for item in *mainmenu*)
-        (collect (list :href (restas:site-url (gethash (first item) *site-plugins*)
-                                              (second item))
-                       :name (third item)))))
+        (collect (list :href (toplevel-link-href item)
+                       :name (first item)))))
 
 
 
@@ -43,11 +51,18 @@
 (restas:define-site-plugin rulisp-forum (:rulisp.forum rulisp-plugin-instance)
   (rulisp.forum:*baseurl* '("forum")))
 
-;;;; auth
+;; ;;;; auth
 
 (restas:define-site-plugin rulisp-auth (#:restas.simple-auth)
   (restas.simple-auth:*storage* *rulisp-db-storage*)
-  (restas.simple-auth:*cookie-cipher-key* *cookie-cipher-key*))
+  (restas.simple-auth:*cookie-cipher-key* *cookie-cipher-key*)
+  (restas.simple-auth:*finalize-page* (lambda (content)
+                                     (rulisp.view.fine:main-frame (list :title (getf content :title)
+                                                                        :css (css-files-data '("style.css"))
+                                                                        :user (compute-user-login-name)
+                                                                        :main-menu (main-menu-data)
+                                                                        :content (getf content :body)
+                                                                        :callback (hunchentoot:request-uri*))))))
 
 ;;;; format
 
@@ -72,11 +87,29 @@
   (restas.wiki:*wiki-user-function* #'compute-user-login-name)
   (restas.wiki:*finalize-page* #'(lambda (content)
                                    (rulisp.view.fine:main-frame (list :title (getf content :title)
-                                                                      :css (css-files-data '("style.css" "wiki.css"))
+                                                                      :css (css-files-data '("style.css" "wiki.css" "colorize.css"))
                                                                       :user (compute-user-login-name)
                                                                       :main-menu (main-menu-data)
                                                                       :content (getf content :content)
                                                                       :callback (hunchentoot:request-uri*))))))
+;;;; articles
+
+(restas:define-site-plugin rulisp-articles (#:restas.wiki)
+  (restas.wiki:*baseurl* '("articles2"))
+  (restas.wiki:*wiki-dir* #P"/var/rulisp/articles/")
+  (restas.wiki:*wiki-user-function* #'(lambda ()
+                                        (find (compute-user-login-name)
+                                              '("archimag")
+                                              :test #'string=)))
+  (restas.wiki:*finalize-page* #'(lambda (content)
+                                   (rulisp.view.fine:main-frame (list :title (getf content :title)
+                                                                      :css (css-files-data '("style.css" "wiki.css" "colorize.css"))
+                                                                      :user (compute-user-login-name)
+                                                                      :main-menu (main-menu-data)
+                                                                      :content (getf content :content)
+                                                                      :callback (hunchentoot:request-uri*))))))
+  
+
 
 ;;;; Russian Lisp Planet
 
@@ -157,13 +190,11 @@
   (in-pool
    (xfactory:with-document-factory ((E))
      (E :ul
-        (iter (for (plugin route name) in *mainmenu*)
+        (iter (for item in *mainmenu*)
               (E :li
                  (E :a
-                    (xfactory:attributes :href
-                                         (restas:site-url (gethash plugin *site-plugins*)
-                                                          route))
-                    (xfactory:text name))))))))
+                    (xfactory:attributes :href (toplevel-link-href item))
+                    (xfactory:text (first item)))))))))
 
 
 (define-route theme-css-include ("theme/css/:(file)"
