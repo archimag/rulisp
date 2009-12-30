@@ -8,7 +8,7 @@
     (restas.simple-auth::compute-user-login-name)))
 
 (defparameter *mainmenu* `(("Главная" rulisp-core main)
-                           ("Статьи" rulisp-core articles)
+                           ("Статьи" rulisp-articles restas.wiki:wiki-main-page)
                            ("Планета" rulisp-planet restas.planet:planet-main)
                            ("Форум" rulisp-forum rulisp.forum:forum-main)
                            ("Сервисы" rulisp-core tools-list)
@@ -83,7 +83,7 @@
 
 (restas:define-site-plugin rulisp-wiki (#:restas.wiki)
   (restas.wiki:*baseurl* '("wiki"))
-  (restas.wiki:*wiki-dir* *wiki-dir*)
+  (restas.wiki:*wiki-dir* *wiki-dir*)  
   (restas.wiki:*wiki-user-function* #'compute-user-login-name)
   (restas.wiki:*finalize-page* #'(lambda (content)
                                    (rulisp.view.fine:main-frame (list :title (getf content :title)
@@ -95,7 +95,8 @@
 ;;;; articles
 
 (restas:define-site-plugin rulisp-articles (#:restas.wiki)
-  (restas.wiki:*baseurl* '("articles2"))
+  (restas.wiki:*baseurl* '("articles"))
+  (restas.wiki:*index-page-title* "Статьи")
   (restas.wiki:*wiki-dir* #P"/var/rulisp/articles/")
   (restas.wiki:*wiki-user-function* #'(lambda ()
                                         (find (compute-user-login-name)
@@ -186,7 +187,7 @@
   
 
 (define-route mainmenu ("mainmenu"
-                               :protocol :chrome)
+                        :protocol :chrome)
   (in-pool
    (xfactory:with-document-factory ((E))
      (E :ul
