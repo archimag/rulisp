@@ -1,9 +1,13 @@
-;;; packages.lisp
+;;;; packages.lisp
+;;;;
+;;;; This file is part of the rulisp application, released under GNU Affero General Public License, Version 3.0
+;;;; See file COPYING for details.
+;;;;
+;;;; Author: Moskvitin Andrey <archimag@gmail.com>
 
 (restas:defsite #:rulisp
   (:use #:cl #:iter #:restas.optional #:rulisp.preferences)
-  (:export #:code-to-html           
-           #:substring
+  (:export #:substring
            #:username
 
            #:with-rulisp-db

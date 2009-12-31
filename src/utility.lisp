@@ -1,43 +1,15 @@
-;;; core.lisp
+;;;; core.lisp
+;;;;
+;;;; This file is part of the rulisp application, released under GNU Affero General Public License, Version 3.0
+;;;; See file COPYING for details.
+;;;;
+;;;; Author: Moskvitin Andrey <archimag@gmail.com>
 
 (in-package :rulisp)
 
 (defparameter *basepath* (asdf:component-pathname (asdf:find-system :rulisp)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; xsl
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun code-to-html (code)
-  (flet ((empty-line-p (line)
-           (string= (string-trim #(#\Space #\Tab) line) "")))
-    (let ((lines (split-sequence:split-sequence #\Newline code)))
-      (iter
-        (while lines)
-        (for isempty = (empty-line-p (first lines)))
-        (if isempty
-            (setf lines (cdr lines)))
-        (while isempty))
-      (iter
-        (while lines)
-        (for isempty = (empty-line-p (car (last lines))))
-        (if isempty
-            (setf lines
-                  (remove (car (last lines)) lines)))
-        (while isempty))
-      (let ((min-space-count (iter (for line in (remove-if #'empty-line-p lines))
-                                   (minimize (or (position #\Space line :test-not #'char-equal) 0)))))
-        (setf lines
-              (iter (for line in lines)
-                    (collect (if (empty-line-p line)
-                                 ""
-                                 (subseq line min-space-count))))))
-      (colorize::html-colorization :common-lisp
-                                   (format nil "~{~A~%~}" lines)))))
-                                 
-
 ;;; misc
-
 
 (defmacro with-rulisp-db (&body body)
   `(postmodern:with-connection *rulisp-db*

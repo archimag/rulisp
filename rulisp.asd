@@ -1,4 +1,10 @@
-;;; rulisp.asd
+;;;; rulisp.asd
+;;;;
+;;;; This file is part of the rulisp application, released under GNU Affero General Public License, Version 3.0
+;;;; See file COPYING for details.
+;;;;
+;;;; Author: Moskvitin Andrey <archimag@gmail.com>
+
 
 (defpackage :rulisp-system
   (:use :cl :asdf))
