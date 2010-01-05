@@ -1,4 +1,9 @@
 ;;;; storage.lisp
+;;;;
+;;;; This file is part of the rulisp application, released under GNU Affero General Public License, Version 3.0
+;;;; See file COPYING for details.
+;;;;
+;;;; Author: Moskvitin Andrey <archimag@gmail.com>
 
 (in-package #:rulisp)
 
@@ -12,6 +17,37 @@
 (defmacro with-db-storage (storage &body body)
   `(postmodern:with-connection (slot-value ,storage 'dbspec)
      ,@body))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; auth
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(postmodern:defprepared check-user-password*
+    "SELECT (count(*) > 0) FROM users WHERE login = $1 AND password = $2 AND status IS NULL"
+  :single)
+
+
+(defmethod restas.simple-auth:check-user-password ((storage rulisp-db-storage) login password)
+  (with-db-storage storage
+    (if (check-user-password* login password)
+        login)))
+
+(postmodern:defprepared check-email-exist*
+    "select email from users where email = $1"
+  :single)
+    
+(defmethod restas.simple-auth:check-email-exist ((storage rulisp-db-storage) email)
+    (with-db-storage storage
+      (check-email-exist* email)))
+
+(postmodern:defprepared check-login-exist*
+    "select login from users where login = $1"
+  :single)
+
+(defmethod restas.simple-auth:check-user-exist ((storage rulisp-db-storage) login)
+  (with-db-storage storage
+    (check-login-exist* login)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; pastes 

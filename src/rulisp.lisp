@@ -1,6 +1,16 @@
-;;; rulisp.lisp
+;;;; rulisp.lisp
+;;;;
+;;;; This file is part of the rulisp application, released under GNU Affero General Public License, Version 3.0
+;;;; See file COPYING for details.
+;;;;
+;;;; Author: Moskvitin Andrey <archimag@gmail.com>
 
 (in-package #:rulisp)
+
+
+(defun compute-user-login-name ()
+  (restas:with-plugin-context (gethash 'rulisp-auth *site-plugins*)
+    (restas.simple-auth::compute-user-login-name)))
 
 (defparameter *mainmenu* `(("Главная" rulisp-core main)
                            ("Статьи" rulisp-articles restas.wiki:wiki-main-page)
@@ -45,6 +55,19 @@
 
 (restas:define-site-plugin rulisp-forum (:rulisp.forum rulisp-plugin-instance)
   (rulisp.forum:*baseurl* '("forum")))
+
+;; ;;;; auth
+
+(restas:define-site-plugin rulisp-auth (#:restas.simple-auth)
+  (restas.simple-auth:*storage* *rulisp-db-storage*)
+  (restas.simple-auth:*cookie-cipher-key* *cookie-cipher-key*)
+  (restas.simple-auth:*finalize-page* (lambda (content)
+                                     (rulisp.view.fine:main-frame (list :title (getf content :title)
+                                                                        :css (css-files-data '("style.css"))
+                                                                        :user (compute-user-login-name)
+                                                                        :main-menu (main-menu-data)
+                                                                        :content (getf content :body)
+                                                                        :callback (hunchentoot:request-uri*))))))
 
 ;;;; format
 

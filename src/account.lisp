@@ -212,7 +212,7 @@
         (unless (string= (form-field-value formdata "password")
                          (form-field-value formdata "re-password"))
           (form-error-message (form)
-                              "re-password"
+                              "bad-re-password"
                               "Пароли не совпадают"))
         badform))))
 
