@@ -2,8 +2,6 @@
 
 (in-package :rulisp)
 
-(defparameter *rulisp-ns* "chrome://rulisp/")
-
 (define-route main ("")
   (rulisp.view.fine:main-frame (list :title "Русскоязычное сообщество Common Lisp разработчиков"
                                      :css (css-files-data '("style.css"))
