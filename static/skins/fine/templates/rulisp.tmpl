@@ -62,3 +62,65 @@
         </body>
     </html>
 {/template}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * PCL
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+{template pcl-main}
+    <p>
+        Это перевод на русский язык замечательной книги
+        <a href="http://www.gigamonkeys.com/book/">Practical Common Lisp</a>.
+        Основная работа над переводом ведётся <a href="http://pcl.catap.ru/">здесь</a>.
+        <br />
+        <strong>ОСТОРОЖНО!</strong>
+        Этот сервис основан на ещё не отлаженном коде по парсингу и отображению
+        <a href="http://www.dokuwiki.org/ru:dokuwiki">dokuwiki</a>-страниц,
+        если Вы хотите быть уверены в точности отображения содержимого -
+        обратитесь к <a href="http://pcl.catap.ru/">источнику</a> перевода
+    </p>
+
+    <p>
+        <a href="{$pdfHref}" class="pdf-link">PDF-версия</a>
+    </p>
+
+    <img src="{$jpgHref}" alt="PCL" style="float: right" />
+
+    <ol>
+        {foreach $chapter in $chapters}
+            <li>
+                <a href="{$chapter.href}">{$chapter.title}</a>
+            </li>
+        {/foreach}
+    </ol>
+{/template}
+
+{template pcl-navigation-bar}
+    <table width="100%">
+        <tbody>
+            <tr>
+                <td width="20%" align="left">
+                    {if $prev}
+                        <a href="{$prev}">Предыдущая</a>
+                    {/if}
+                </td>
+
+                <td width="60%" align="center">
+                    <a href="{$menu}">Оглавление</a>
+                </td>
+
+                <td width="20%" align="right">
+                    {if $next}
+                        <a href="{$next}">Следующая</a>
+                    {/if}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+{/template}
+
+{template pcl-chapter-view}
+    {call pcl-navigation-bar data="all" /}
+    {$content |noAutoescape}
+    {call pcl-navigation-bar data="all" /}
+{/template}

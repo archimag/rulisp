@@ -5,13 +5,7 @@
 ;;;;
 ;;;; Author: Moskvitin Andrey <archimag@gmail.com>
 
-
-(defpackage :rulisp-system
-  (:use :cl :asdf))
-
-(in-package :rulisp-system)
-
-(defsystem :rulisp
+(defsystem rulisp
   :depends-on (#:restas #:postmodern #:ironclad 
                         #:cl-recaptcha
                         #:zip

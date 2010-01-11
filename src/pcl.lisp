@@ -125,75 +125,29 @@
   (merge-pathnames (concatenate 'string chapter ".txt")
                    *pcl-dir*))
 
-(define-route pcl-main ("")
-  (in-pool
-   (xfactory:with-document-factory ((E))
-     (E :overlay
-        (E :head
-           (E :title "Перевод Practical Common Lisp"))
-        (E :div
-           (eid "content")
-           (E :p
-              "Это перевод на русский язык замечательной книги "
-              (E :a (ehref "http://www.gigamonkeys.com/book/") "Practical Common Lisp")
-              ". Основная работа над переводом ведётся "
-              (E :a (ehref "http://pcl.catap.ru/") "здесь")
-              ". "              
-              (e-break-line)
-              (estrong "ОСТОРОЖНО!")
-              " Этот сервис основан на ещё не отлаженном коде по парсингу и отображению "
-              (E :a (ehref "http://www.dokuwiki.org/ru:dokuwiki") "dokuwiki")
-              "-страниц,
- если Вы хотите быть уверены в точности отображения содержимого - обратитесь к "
-              (E :a (ehref "http://pcl.catap.ru/") "источнику")
-              " перевода")
-           (E :p
-              (E :a
-                 (ehref 'pcl-pdf)
-                 (eclass "pdf-link")
-                 "PDF-версия"))
-           (E :img
-              (xfactory:attributes :src (restas:genurl 'rulisp:image :file "pcl.jpg")
-                                   :alt "PCL"
-                                   :style "float: right"))
-              
-           (E :ol
-              (iter (for chapter in-vector *pcl-files-map*)
-                    (E :li
-                       (E :a
-                          (ehref 'pcl-chapter-view :chapter (first chapter))
-                          (xfactory:text (second chapter)))))))))))
+(defun finalize-page (content title)
+  (rulisp.view.fine:main-frame (list :title title
+                                     :css (rulisp::css-files-data '("style.css"))
+                                     :user (rulisp::compute-user-login-name)
+                                     :main-menu (rulisp::main-menu-data)
+                                     :content content)))
 
-(defun pcl-navigation-bar (number)
-  (xfactory:with-element-factory ((E))
-    (E :table
-       (xfactory:attributes :width "100%")
-       (E :tbody
-          (E :tr
-             (E :td
-                (xfactory:attributes :width "20%"
-                                     :align "left")
-                (when (> number 0)
-                  (E :a
-                     (ehref 'pcl-chapter-view
-                            :chapter (first (aref *pcl-files-map*
-                                                  (1- number))))
-                     "Предыдущая")))
-             (E :td 
-                (xfactory:attributes :width "60%"
-                                     :align "center")
-                (E :a
-                   (ehref 'pcl-main)
-                   "Оглавление"))
-             (E :td
-                (xfactory:attributes :width "20%"
-                                     :align "right")
-                (when (< number (1- (length *pcl-files-map*)))
-                  (E :a
-                     (ehref 'pcl-chapter-view
-                            :chapter (first (aref *pcl-files-map*
-                                                  (1+ number))))
-                     "Следующая"))))))))
+(define-route pcl-main ("")
+  (finalize-page (rulisp.view.fine:pcl-main (list :pdf-href (restas:genurl 'pcl-pdf)
+                                                  :jpg-href (restas:genurl 'rulisp:image :file "pcl.jpg")
+                                                  :chapters (iter (for chapter in-vector *pcl-files-map*)
+                                                                  (collect (list :href (genurl 'pcl-chapter-view
+                                                                                               :chapter (first chapter))
+                                                                                 :title (second chapter))))))
+                 "Перевод Practical Common Lisp"))
+  
+
+(defun chapter-url (number)
+  (if (and (> number -1)
+           (< number (1- (length *pcl-files-map*))))
+      (genurl 'pcl-chapter-view
+              :chapter (first (aref *pcl-files-map*
+                                    number)))))
 
 (define-route pcl-chapter-view (":(chapter)")
   (let* ((number (position chapter
@@ -202,18 +156,13 @@
                            :test #'string=))
          (path (pcl-source-path (third (aref *pcl-files-map* number)))))
     (if (fad:file-exists-p path)
-        (in-pool
-         (xfactory:with-document-factory ((E))
-           (E :overlay
-              (E :head
-                 (E :title
-                    (xfactory:text "~A" (second (aref *pcl-files-map* number)))))
-              (E :div
-                 (eid "content")
-                 (pcl-navigation-bar number)
-                 (restas.wiki::render-wiki-page (wiki-parser:parse :dokuwiki
-                                                      path))
-                 (pcl-navigation-bar number)))))
+        (finalize-page (rulisp.view.fine:pcl-chapter-view (list :prev (chapter-url (1- number))
+                                                                :menu (genurl 'pcl-main)
+                                                                :next (chapter-url (1+ number))
+                                                                :content (xtree:with-object (el (restas.wiki::render-wiki-page
+                                                                                                 (wiki-parser:parse :dokuwiki path)))
+                                                                           (xtree:serialize el :to-string))))
+                       (second (aref *pcl-files-map* number)))
         hunchentoot:+HTTP-NOT-FOUND+)))
 
 
