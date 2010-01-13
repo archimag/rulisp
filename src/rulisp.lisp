@@ -12,11 +12,11 @@
   (restas:with-plugin-context (gethash 'rulisp-auth *site-plugins*)
     (restas.simple-auth::compute-user-login-name)))
 
-(defparameter *mainmenu* `(("Главная" rulisp-core main)
+(defparameter *mainmenu* `(("Главная" nil main)
                            ("Статьи" rulisp-articles restas.wiki:wiki-main-page)
                            ("Планета" rulisp-planet restas.planet:planet-main)
                            ("Форум" rulisp-forum rulisp.forum:forum-main)
-                           ("Сервисы" rulisp-core tools-list)
+                           ("Сервисы" nil tools-list)
                            ("Practical Common Lisp" rulisp-pcl rulisp.pcl:pcl-main)
                            ("Wiki" rulisp-wiki restas.wiki:wiki-main-page)
                            ("Файлы" rulisp-files restas.directory-publisher:route :path "")
@@ -42,18 +42,14 @@
 
 (defclass rulisp-plugin-instance (restas:plugin-instance) ())
 
-;;;; core
-
-(restas:define-site-plugin rulisp-core (:rulisp rulisp-plugin-instance))
-
 ;;;; pcl
 
-(restas:define-site-plugin rulisp-pcl (:rulisp.pcl rulisp-plugin-instance)
+(restas:define-site-plugin rulisp-pcl (#:rulisp.pcl rulisp-plugin-instance)
   (rulisp.pcl:*baseurl* '("pcl")))
 
 ;;;; forum
 
-(restas:define-site-plugin rulisp-forum (:rulisp.forum rulisp-plugin-instance)
+(restas:define-site-plugin rulisp-forum (#:rulisp.forum rulisp-plugin-instance)
   (rulisp.forum:*baseurl* '("forum")))
 
 ;; ;;;; auth
