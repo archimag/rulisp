@@ -56,6 +56,7 @@
 
 (restas:define-site-plugin rulisp-auth (#:restas.simple-auth)
   (restas.simple-auth:*storage* *rulisp-db-storage*)
+  (restas.simple-auth:*noreply-email* *noreply-mail-account*)
   (restas.simple-auth:*cookie-cipher-key* *cookie-cipher-key*)
   (restas.simple-auth:*finalize-page* (lambda (content)
                                      (rulisp.view.fine:main-frame (list :title (getf content :title)

@@ -27,7 +27,7 @@
   :single)
 
 
-(defmethod restas.simple-auth:check-user-password ((storage rulisp-db-storage) login password)
+(defmethod restas.simple-auth:storage-check-user-password ((storage rulisp-db-storage) login password)
   (with-db-storage storage
     (if (check-user-password* login password)
         login)))
@@ -36,7 +36,7 @@
     "select email from users where email = $1"
   :single)
     
-(defmethod restas.simple-auth:check-email-exist ((storage rulisp-db-storage) email)
+(defmethod restas.simple-auth:storage-email-exist-p ((storage rulisp-db-storage) email)
     (with-db-storage storage
       (check-email-exist* email)))
 
@@ -44,9 +44,69 @@
     "select login from users where login = $1"
   :single)
 
-(defmethod restas.simple-auth:check-user-exist ((storage rulisp-db-storage) login)
+(defmethod restas.simple-auth:storage-user-exist-p ((storage rulisp-db-storage) login)
   (with-db-storage storage
     (check-login-exist* login)))
+
+(postmodern:defprepared db-add-new-user "SELECT add_new_user($1, $2, $3, $4)" :single)
+
+(defmethod restas.simple-auth:storage-create-invite ((storage rulisp-db-storage) login email password)
+  (let ((invite (calc-sha1-sum (format nil "~A~A~A" login email password))))
+    (with-db-storage storage
+      (db-add-new-user login email password invite))
+    invite))
+
+(defmethod restas.simple-auth:storage-invite-exist-p ((storage rulisp-db-storage) invite)
+  (with-db-storage storage
+    (postmodern:query (:select 'mark :from 'confirmations :where (:= 'mark invite))
+                      :single)))
+
+
+(defmethod restas.simple-auth:storage-create-account ((storage rulisp-db-storage) invite)
+  (with-db-storage storage
+    (postmodern:with-transaction ()
+      (postmodern:execute (:update 'users 
+                                   :set 'status :null  
+                                   :where (:= 'user_id
+                                              (:select 'user_id
+                                                       :from 'confirmations
+                                                       :where (:= 'mark invite)))))
+      (postmodern:execute (:delete-from 'confirmations
+                                        :where (:= 'mark invite))))))
+
+(defmethod restas.simple-auth:storage-create-forgot-mark ((storage rulisp-db-storage)  login-or-email)
+  (with-db-storage storage
+    (let ((login-info (postmodern:query (:select 'user-id 'login 'email :from 'users
+                                                 :where (:and (:or (:= 'email login-or-email)
+                                                                   (:= 'login login-or-email))
+                                                              (:is-null 'status)))
+                                        :row)))
+      (if login-info
+          (let ((mark (calc-sha1-sum (write-to-string login-info))))
+            (postmodern:execute (:insert-into 'forgot
+                                              :set 'mark mark 'user_id (first login-info)))
+            (values mark
+                    (second login-info)
+                    (third login-info)))))))
+  )
+
+(defmethod restas.simple-auth:storage-forgot-mark-exist-p ((storage rulisp-db-storage) mark)
+  (with-db-storage storage
+    (postmodern:query (:select 'mark
+                               :from 'forgot
+                               :where (:= 'mark  mark))
+                      :single)))
+  )
+
+(defmethod restas.simple-auth:storage-change-password ((storage rulisp-db-storage) mark password)
+  (with-db-storage storage
+    (postmodern:with-transaction ()
+      (postmodern:execute (:update 'users
+                                   :set 'password password
+                                   :where (:= 'user_id (:select 'user_id
+                                                                :from 'forgot
+                                                                :where (:= 'mark mark)))))
+      (postmodern:execute (:delete-from 'forgot :where (:= 'mark mark))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
