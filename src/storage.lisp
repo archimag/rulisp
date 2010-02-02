@@ -64,15 +64,18 @@
 
 (defmethod restas.simple-auth:storage-create-account ((storage rulisp-db-storage) invite)
   (with-db-storage storage
-    (postmodern:with-transaction ()
-      (postmodern:execute (:update 'users 
-                                   :set 'status :null  
-                                   :where (:= 'user_id
-                                              (:select 'user_id
-                                                       :from 'confirmations
-                                                       :where (:= 'mark invite)))))
-      (postmodern:execute (:delete-from 'confirmations
-                                        :where (:= 'mark invite))))))
+    (let* ((account (postmodern:query (:select 'users.user_id 'login 'email 'password
+                                               :from 'users
+                                               :left-join 'confirmations :on (:= 'users.user_id 'confirmations.user_id)
+                                               :where (:= 'mark invite))
+                                      :row)))
+      (postmodern:with-transaction ()
+        (postmodern:execute (:update 'users 
+                                     :set 'status :null  
+                                     :where (:= 'user_id (first account))))
+        (postmodern:execute (:delete-from 'confirmations
+                                          :where (:= 'mark invite))))
+      (cdr account))))
 
 (defmethod restas.simple-auth:storage-create-forgot-mark ((storage rulisp-db-storage)  login-or-email)
   (with-db-storage storage
@@ -88,7 +91,6 @@
             (values mark
                     (second login-info)
                     (third login-info)))))))
-  )
 
 (defmethod restas.simple-auth:storage-forgot-mark-exist-p ((storage rulisp-db-storage) mark)
   (with-db-storage storage
@@ -96,7 +98,6 @@
                                :from 'forgot
                                :where (:= 'mark  mark))
                       :single)))
-  )
 
 (defmethod restas.simple-auth:storage-change-password ((storage rulisp-db-storage) mark password)
   (with-db-storage storage
@@ -107,7 +108,6 @@
                                                                 :from 'forgot
                                                                 :where (:= 'mark mark)))))
       (postmodern:execute (:delete-from 'forgot :where (:= 'mark mark))))))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; pastes 
