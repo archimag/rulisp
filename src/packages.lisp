@@ -32,21 +32,8 @@
            #:rulisp-start
            ))
 
-(restas:define-plugin #:rulisp.forum
+(restas:define-module #:rulisp.pcl
   (:use #:cl #:iter #:restas.optional #:rulisp.preferences))
-
-;; (restas:define-plugin #:rulisp.wiki
-;;   (:use #:cl #:iter #:restas.optional #:rulisp.preferences))
-
-(restas:define-plugin #:rulisp.pcl
-  (:use #:cl #:iter #:restas.optional #:rulisp.preferences))
-
-(restas:define-plugin #:rulisp.planet
-  (:use #:cl #:iter #:restas.optional #:rulisp.preferences))
-
-(restas:define-plugin #:rulisp.format
-  (:use #:cl #:iter #:restas.optional))
-
 
 (closure-template:compile-template :common-lisp-backend
                                    (merge-pathnames "static/skins/fine/templates/rulisp.tmpl"

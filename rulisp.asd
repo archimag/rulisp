@@ -16,17 +16,9 @@
                (:module :src
                         :components ((:file "packages")
                                      (:file "utility" :depends-on ("packages"))               
-                                     ;;(:file "account" :depends-on ("utility"))
                                      (:file "static" :depends-on ("utility"))
                                      (:file "storage" :depends-on ("packages"))
-                                     (:module :forum
-                                              :components
-                                              ((:file "forum")
-                                               (:file "topics" :depends-on ("forum"))
-                                               (:file "messages" :depends-on ("forum"))
-                                               (:file "rss" :depends-on ("forum")))
-                                              :depends-on ("static"))
                                      (:file "pcl"  :depends-on ("utility"))
-                                     (:file "rulisp" :depends-on ("static" "storage" :pcl :forum)))
+                                     (:file "rulisp" :depends-on ("static" "storage" :pcl)))
                         :depends-on ("pref"))))
 
