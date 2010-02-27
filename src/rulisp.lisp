@@ -9,8 +9,9 @@
 
 
 (defun compute-user-login-name ()
-  (restas:with-plugin-context (gethash 'rulisp-auth *site-plugins*)
+  (restas:with-submodule-context (gethash 'rulisp-auth *submodules*)
     (restas.simple-auth::compute-user-login-name)))
+
 
 (defparameter *mainmenu* `(("Главная" nil main)
                            ("Статьи" rulisp-articles restas.wiki:wiki-main-page)
@@ -29,7 +30,7 @@
 
 (defun toplevel-link-href (item)
   (apply  #'restas:site-url
-          (gethash (second item) *site-plugins*)
+          (gethash (second item) *submodules*)
           (if (cdddr item)
               (cddr item)
               (last item))))
@@ -41,11 +42,11 @@
 
 
 
-(defclass rulisp-plugin-instance (restas:plugin-instance) ())
+;;(defclass rulisp-plugin-instance (restas:plugin-instance) ())
 
 ;;;; pcl
 
-(restas:define-site-plugin rulisp-pcl (#:rulisp.pcl)
+(restas:define-submodule rulisp-pcl (#:rulisp.pcl)
   (rulisp.pcl:*baseurl* '("pcl")))
 
 ;;;; forum
@@ -55,7 +56,7 @@
 
 ;; ;;;; auth
 
-(restas:define-site-plugin rulisp-auth (#:restas.simple-auth)
+(restas:define-submodule rulisp-auth (#:restas.simple-auth)
   (restas.simple-auth:*storage* *rulisp-db-storage*)
   (restas.simple-auth:*noreply-email* *noreply-mail-account*)
   (restas.simple-auth:*cookie-cipher-key* *cookie-cipher-key*)
@@ -69,7 +70,7 @@
 
 ;;;; format
 
-(restas:define-site-plugin rulisp-format (#:restas.colorize)
+(restas:define-submodule rulisp-format (#:restas.colorize)
   (restas.colorize:*baseurl* '("apps" "format"))
   (restas.colorize:*max-on-page* 15)
   (restas.colorize:*storage* *rulisp-db-storage*)
@@ -84,7 +85,7 @@
 
 ;;;; wiki
 
-(restas:define-site-plugin rulisp-wiki (#:restas.wiki)
+(restas:define-submodule rulisp-wiki (#:restas.wiki)
   (restas.wiki:*baseurl* '("wiki"))
   (restas.wiki:*wiki-dir* *wiki-dir*)  
   (restas.wiki:*wiki-user-function* #'compute-user-login-name)
@@ -97,7 +98,7 @@
                                                                       :callback (hunchentoot:request-uri*))))))
 ;;;; articles
 
-(restas:define-site-plugin rulisp-articles (#:restas.wiki)
+(restas:define-submodule rulisp-articles (#:restas.wiki)
   (restas.wiki:*baseurl* '("articles"))
   (restas.wiki:*index-page-title* "Статьи")
   (restas.wiki:*wiki-dir* #P"/var/rulisp/articles/")
@@ -117,7 +118,7 @@
 
 ;;;; Russian Lisp Planet
 
-(restas:define-site-plugin rulisp-planet (#:restas.planet)
+(restas:define-submodule rulisp-planet (#:restas.planet)
   (restas.planet:*baseurl* '("planet"))
   (restas.planet:*suggest-mail* "archimag@lisper.ru")
   (restas.planet:*feeds* (merge-pathnames "planet-feeds.lisp" *rulisp-path*))
@@ -133,7 +134,7 @@
 
 ;;;; Files
 
-(restas:define-site-plugin rulisp-files (#:restas.directory-publisher)
+(restas:define-submodule rulisp-files (#:restas.directory-publisher)
   (restas.directory-publisher:*baseurl* '("files"))
   (restas.directory-publisher:*directory* (merge-pathnames "files/" *vardir*))
   (restas.directory-publisher:*autoindex-template*

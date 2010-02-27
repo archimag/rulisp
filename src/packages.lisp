@@ -5,7 +5,7 @@
 ;;;;
 ;;;; Author: Moskvitin Andrey <archimag@gmail.com>
 
-(restas:defsite #:rulisp
+(restas:defhost #:rulisp
   (:use #:cl #:iter #:restas.optional #:rulisp.preferences)
   (:export #:substring
            #:username
