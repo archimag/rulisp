@@ -12,6 +12,7 @@
                                      :css (css-files-data '("style.css"))
                                      :user (compute-user-login-name)
                                      :main-menu (main-menu-data)
+                                     :gecko-png (gecko-png)
                                      :content (alexandria:read-file-into-string (merge-pathnames "content/index.xml"
                                                                                                  *rulisp-path*))
                                      :callback (hunchentoot:request-uri*))))
@@ -36,5 +37,6 @@
                                      :user (compute-user-login-name)
                                      :main-menu (main-menu-data)
                                      :content (alexandria:read-file-into-string (tmplpath "apps.xml"))
+                                     :gecko-png (gecko-png)
                                      :callback (hunchentoot:request-uri*))))
 

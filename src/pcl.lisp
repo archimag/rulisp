@@ -130,11 +130,12 @@
                                      :css (rulisp::css-files-data '("style.css"))
                                      :user (rulisp::compute-user-login-name)
                                      :main-menu (rulisp::main-menu-data)
+                                     :gecko-png (rulisp::gecko-png)
                                      :content content)))
 
 (define-route pcl-main ("")
   (finalize-page (rulisp.view.fine:pcl-main (list :pdf-href (restas:genurl 'pcl-pdf)
-                                                  :jpg-href (restas:genurl 'rulisp:image :file "pcl.jpg")
+                                                  :jpg-href (restas:genurl-toplevel nil 'rulisp:image :file "pcl.jpg")
                                                   :chapters (iter (for chapter in-vector *pcl-files-map*)
                                                                   (collect (list :href (genurl 'pcl-chapter-view
                                                                                                :chapter (first chapter))

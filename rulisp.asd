@@ -6,12 +6,12 @@
 ;;;; Author: Moskvitin Andrey <archimag@gmail.com>
 
 (defsystem rulisp
-  :depends-on (#:restas #:postmodern #:ironclad 
-                        #:cl-recaptcha
-                        #:zip
-                        #:cl-libxslt #:xoverlay #:xfactory
-                        #:restas-simple-auth #:restas-planet #:restas-wiki
-                        #:restas-colorize #:restas-directory-publisher)
+  :depends-on (#:restas 
+               #:postmodern
+               #:cl-recaptcha
+               #:zip
+               #:restas-simple-auth #:restas-planet #:restas-wiki
+               #:restas-colorize #:restas-directory-publisher)
   :components ((:file "pref")
                (:module :src
                         :components ((:file "packages")
