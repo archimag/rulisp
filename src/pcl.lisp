@@ -8,7 +8,6 @@
 
 (in-package :rulisp.pcl)
 
-
 (defparameter *pcl-files-map*
   '#(("introduction-why-lisp"
       "Введение: почему Lisp?" 
@@ -126,12 +125,13 @@
                    *pcl-dir*))
 
 (defun finalize-page (content title)
-  (rulisp.view.fine:main-frame (list :title title
-                                     :css (rulisp::css-files-data '("style.css"))
-                                     :user (rulisp::compute-user-login-name)
-                                     :main-menu (rulisp::main-menu-data)
-                                     :gecko-png (rulisp::gecko-png)
-                                     :content content)))
+  (rulisp::rulisp-finalize-page :title title
+                                :css '("style.css" "colorize.css")
+                                :content content))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; contents
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-route pcl-main ("")
   (finalize-page (rulisp.view.fine:pcl-main (list :pdf-href (restas:genurl 'pcl-pdf)
@@ -141,6 +141,10 @@
                                                                                                :chapter (first chapter))
                                                                                  :title (second chapter))))))
                  "Перевод Practical Common Lisp"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; chapter
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
 
 (defun chapter-url (number)
@@ -195,6 +199,9 @@
       )
     result))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; pdf
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun make-pcl-pdf (&optional (out #P"/tmp/pcl.pdf"))
   (let ((page-number 1))

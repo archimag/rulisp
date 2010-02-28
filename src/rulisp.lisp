@@ -47,19 +47,19 @@
         (collect (list :href (toplevel-link-href item)
                        :name (first item)))))
 
-
-
-;;(defclass rulisp-plugin-instance (restas:plugin-instance) ())
+(defun rulisp-finalize-page (&key title css content)
+  (rulisp.view.fine:main-frame (list :title title
+                                     :css (css-files-data css)
+                                     :gecko-png (restas:genurl-toplevel nil 'image :file "gecko.png")
+                                     :user (compute-user-login-name)
+                                     :main-menu (main-menu-data)
+                                     :content content
+                                     :callback (hunchentoot:request-uri*))))
 
 ;;;; pcl
 
 (restas:define-submodule rulisp-pcl (#:rulisp.pcl)
   (rulisp.pcl:*baseurl* '("pcl")))
-
-;;;; forum
-
-;; (restas:define-site-plugin rulisp-forum (#:rulisp.forum rulisp-plugin-instance)
-;;   (rulisp.forum:*baseurl* '("forum")))
 
 ;; ;;;; auth
 
@@ -68,13 +68,9 @@
   (restas.simple-auth:*noreply-email* *noreply-mail-account*)
   (restas.simple-auth:*cookie-cipher-key* *cookie-cipher-key*)
   (restas.simple-auth:*finalize-page* (lambda (content)
-                                        (rulisp.view.fine:main-frame (list :title (getf content :title)
-                                                                           :css (css-files-data '("style.css"))
-                                                                           :gecko-png (gecko-png)
-                                                                           :user (compute-user-login-name)
-                                                                           :main-menu (main-menu-data)
-                                                                           :content (getf content :body)
-                                                                           :callback (hunchentoot:request-uri*))))))
+                                        (rulisp-finalize-page :title (getf content :title)
+                                                              :css '("style.css")
+                                                              :content (getf content :body)))))
 
 ;;;; format
 
@@ -84,13 +80,9 @@
   (restas.colorize:*storage* *rulisp-db-storage*)
   (restas.colorize:*colorize-user-function* #'compute-user-login-name)  
   (restas.colorize:*finalize-page* (lambda (content)
-                                     (rulisp.view.fine:main-frame (list :title (getf content :title)
-                                                                        :css (css-files-data '("style.css" "colorize.css"))
-                                                                        :user (compute-user-login-name)
-                                                                        :main-menu (main-menu-data)
-                                                                        :gecko-png (gecko-png)
-                                                                        :content (getf content :content)
-                                                                        :callback (hunchentoot:request-uri*))))))
+                                     (rulisp-finalize-page :title (getf content :title)
+                                                           :css '("style.css" "colorize.css")
+                                                           :content (getf content :content)))))
 
 ;;;; wiki
 
@@ -99,13 +91,9 @@
   (restas.wiki:*wiki-dir* *wiki-dir*)  
   (restas.wiki:*wiki-user-function* #'compute-user-login-name)
   (restas.wiki:*finalize-page* #'(lambda (content)
-                                   (rulisp.view.fine:main-frame (list :title (getf content :title)
-                                                                      :css (css-files-data '("style.css" "wiki.css" "colorize.css"))
-                                                                      :user (compute-user-login-name)
-                                                                      :gecko-png (gecko-png)
-                                                                      :main-menu (main-menu-data)
-                                                                      :content (getf content :content)
-                                                                      :callback (hunchentoot:request-uri*))))))
+                                   (rulisp-finalize-page :title (getf content :title)
+                                                         :css '("style.css" "wiki.css" "colorize.css")
+                                                         :content (getf content :content)))))
 ;;;; articles
 
 (restas:define-submodule rulisp-articles (#:restas.wiki)
@@ -117,13 +105,9 @@
                                               '("archimag")
                                               :test #'string=)))
   (restas.wiki:*finalize-page* #'(lambda (content)
-                                   (rulisp.view.fine:main-frame (list :title (getf content :title)
-                                                                      :css (css-files-data '("style.css" "wiki.css" "colorize.css"))
-                                                                      :user (compute-user-login-name)
-                                                                      :gecko-png (gecko-png)
-                                                                      :main-menu (main-menu-data)
-                                                                      :content (getf content :content)
-                                                                      :callback (hunchentoot:request-uri*))))))
+                                   (rulisp-finalize-page :title (getf content :title)
+                                                         :css '("style.css" "wiki.css" "colorize.css")
+                                                         :content (getf content :content)))))
   
 
 
@@ -136,14 +120,9 @@
   (restas.planet:*name* "Russian Lisp Planet")  
   (restas.planet:*cache-dir* (merge-pathnames "planet/" *cachedir*))
   (restas.planet:*template* (lambda (data)
-                              (rulisp.view.fine:main-frame (list :title "Russian Lisp Planet"
-                                                                 :css (css-files-data '("style.css" "planet.css"))
-                                                                 :gecko-png (gecko-png)
-                                                                 :user (compute-user-login-name)
-                                                                 :main-menu (main-menu-data)
-                                                                 :content (restas.planet.view:feed-html-body data)
-                                                                 :callback (hunchentoot:request-uri*))))))
-
+                              (rulisp-finalize-page :title "Russian Lisp Planet"
+                                                    :css '("style.css" "planet.css")
+                                                    :content (restas.planet.view:feed-html-body data)))))
 ;;;; Files
 
 (restas:define-submodule rulisp-files (#:restas.directory-publisher)
@@ -151,12 +130,8 @@
   (restas.directory-publisher:*directory* (merge-pathnames "files/" *vardir*))
   (restas.directory-publisher:*autoindex-template*
    (lambda (data)
-     (rulisp.view.fine:main-frame (list :title (getf data :title)
-                                        :css (css-files-data '("style.css" "autoindex.css"))
-                                        :user (compute-user-login-name)
-                                        :gecko-png (gecko-png)
-                                        :main-menu (main-menu-data)
-                                        :content (restas.directory-publisher.view:autoindex-content data)
-                                        :callback (hunchentoot:request-uri*))))))
+     (rulisp-finalize-page :title (getf data :title)
+                           :css '("style.css" "autoindex.css")
+                           :content (restas.directory-publisher.view:autoindex-content data)))))
                                                                                         
 
