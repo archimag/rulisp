@@ -7,11 +7,26 @@
 
 (in-package #:rulisp)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; compute login
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun compute-user-login-name ()
   (restas:with-submodule-context (gethash 'rulisp-auth *submodules*)
     (restas.simple-auth::compute-user-login-name)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; rulisp templates
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *resources-dir*
+    (merge-pathnames "resources/"
+                     (asdf:component-pathname (asdf:find-system '#:rulisp))))
+
+  (closure-template:compile-template :common-lisp-backend
+                                     (merge-pathnames "rulisp.tmpl"
+                                                      *resources-dir*)))
 
 (defparameter *mainmenu* `(("Главная" nil main)
                            ("Статьи" rulisp-articles restas.wiki:wiki-main-page)
@@ -21,40 +36,54 @@
                            ("Сервисы" nil tools-list)
                            ("Practical Common Lisp" rulisp-pcl rulisp.pcl:pcl-main)
                            ("Wiki" rulisp-wiki restas.wiki:wiki-main-page)
-                           ("Файлы" rulisp-files restas.directory-publisher:route :path "")
-                           ))
+                           ("Файлы" rulisp-files restas.directory-publisher:route :path "")))
 
-(defun css-files-data (files)
-  (iter (for item in files)
-        (collect (restas:genurl-toplevel nil
-                                         'css
-                                         :theme (user-theme (username))
-                                         :file item))))
-
-
-(defun gecko-png ()
-  (restas:genurl-toplevel nil 'image :file "gecko.png"))
-
-(defun toplevel-link-href (item)
-  (apply  #'restas:genurl-toplevel
-          (gethash (second item) *submodules*)
-          (if (cdddr item)
-              (cddr item)
-              (last item))))
-  
 (defun main-menu-data ()
   (iter (for item in *mainmenu*)
-        (collect (list :href (toplevel-link-href item)
+        (collect (list :href (apply  #'restas:genurl-toplevel
+                                     (gethash (second item) *submodules*)
+                                     (if (cdddr item)
+                                         (cddr item)
+                                         (last item)))
                        :name (first item)))))
 
+(defun css-urls (items)
+  (iter (for item in items)
+        (collect (format nil "/css/~A" item))))
+
 (defun rulisp-finalize-page (&key title css content)
-  (rulisp.view.fine:main-frame (list :title title
-                                     :css (css-files-data css)
-                                     :gecko-png (restas:genurl-toplevel nil 'image :file "gecko.png")
+  (rulisp.view:main-frame (list :title title
+                                     :css (css-urls css)
+                                     :gecko-png  "/image/gecko.png"
                                      :user (compute-user-login-name)
                                      :main-menu (main-menu-data)
                                      :content content
                                      :callback (hunchentoot:request-uri*))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; routes
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-route main ("")
+  (rulisp-finalize-page :title "Русскоязычное сообщество Common Lisp разработчиков"
+                        :css '("style.css")
+                        :content (alexandria:read-file-into-string (merge-pathnames "index.html"
+                                                                                    *resources-dir*))))
+
+(define-route tools-list ("apps/")
+  (rulisp-finalize-page :title "Инструменты"
+                        :css '("style.css")
+                        :content (rulisp.view:tools)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; submodules
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;; static files
+
+(restas:define-submodule rulisp-static (#:restas.directory-publisher)
+  (restas.directory-publisher:*directory* (merge-pathnames "static/" *resources-dir*))
+  (restas.directory-publisher:*autoindex* t))
 
 ;;;; pcl
 

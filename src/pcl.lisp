@@ -129,13 +129,17 @@
                                 :css '("style.css" "colorize.css")
                                 :content content))
 
+(defun pcl-cover ()
+  (merge-pathnames "static/image/pcl.jpg"
+                   rulisp::*resources-dir*))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; contents
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-route pcl-main ("")
-  (finalize-page (rulisp.view.fine:pcl-main (list :pdf-href (restas:genurl 'pcl-pdf)
-                                                  :jpg-href (restas:genurl-toplevel nil 'rulisp:image :file "pcl.jpg")
+  (finalize-page (rulisp.view:pcl-main (list :pdf-href (restas:genurl 'pcl-pdf)
+                                                  :jpg-href "/image/pcl.jpg"
                                                   :chapters (iter (for chapter in-vector *pcl-files-map*)
                                                                   (collect (list :href (genurl 'pcl-chapter-view
                                                                                                :chapter (first chapter))
@@ -161,7 +165,7 @@
                            :test #'string=))
          (path (pcl-source-path (third (aref *pcl-files-map* number)))))
     (if (fad:file-exists-p path)
-        (finalize-page (rulisp.view.fine:pcl-chapter-view (list :prev (chapter-url (1- number))
+        (finalize-page (rulisp.view:pcl-chapter-view (list :prev (chapter-url (1- number))
                                                                 :menu (genurl 'pcl-main)
                                                                 :next (chapter-url (1+ number))
                                                                 :content (xtree:with-object (el (restas.wiki::render-wiki-page
@@ -172,7 +176,7 @@
 
 
 (define-route pcl-chapter-pdf ("pdf/:(chapter)"
-                                      :content-type "application/pdf")
+                               :content-type "application/pdf")
   (let* ((number (position chapter
                            *pcl-files-map*
                            :key #'first
@@ -192,7 +196,8 @@
       (setf result pdf:*page*)
       ;;(pdf:draw-centered-text 300 500 "Practical Common Lisp" *header-font* 30)
       (let ((bounds (pdf::bounds pdf:*page*))
-            (image (pdf:make-image (rulisp:staticpath "image/pcl.jpg"))))
+            (image (pdf:make-image (merge-pathnames "static/image/pcl.jpg"
+                                                    rulisp::*resources-dir*))))
         (pdf:add-images-to-page image)
         (pdf:draw-image image
                         0 0 (aref bounds 2) (aref bounds 3) 0))

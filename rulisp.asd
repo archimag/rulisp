@@ -15,10 +15,8 @@
   :components ((:file "pref")
                (:module :src
                         :components ((:file "packages")
-                                     (:file "utility" :depends-on ("packages"))               
-                                     (:file "static" :depends-on ("utility"))
                                      (:file "storage" :depends-on ("packages"))
-                                     (:file "pcl"  :depends-on ("utility"))
-                                     (:file "rulisp" :depends-on ("static" "storage" :pcl)))
+                                     (:file "pcl"  :depends-on ("rulisp"))
+                                     (:file "rulisp" :depends-on ("storage")))
                         :depends-on ("pref"))))
 
