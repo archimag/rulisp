@@ -31,8 +31,7 @@
 (defparameter *mainmenu* `(("Главная" nil main)
                            ("Статьи" rulisp-articles restas.wiki:wiki-main-page)
                            ("Планета" rulisp-planet restas.planet:planet-main)
-                           ;;("Форум" rulisp-forum rulisp.forum:forum-main)
-                           ("Форум" nil main)
+                           ("Форум" rulisp-forum restas.forum:main)
                            ("Сервисы" nil tools-list)
                            ("Practical Common Lisp" rulisp-pcl rulisp.pcl:pcl-main)
                            ("Wiki" rulisp-wiki restas.wiki:wiki-main-page)
@@ -100,6 +99,17 @@
                                         (rulisp-finalize-page :title (getf content :title)
                                                               :css '("style.css")
                                                               :content (getf content :body)))))
+
+;;;; forum
+
+(restas:define-submodule rulisp-forum (#:restas.forum)
+  (restas.forum:*baseurl* '("forum"))
+  (restas.forum:*storage* *rulisp-db-storage*)
+  (restas.forum:*finalize-page*
+   (lambda (content)
+     (rulisp-finalize-page :title (getf content :title)
+                           :css '("style.css" "forum.css")
+                           :content (getf  content :content)))))
 
 ;;;; format
 

@@ -11,7 +11,7 @@
                #:cl-recaptcha
                #:zip
                #:restas-simple-auth #:restas-planet #:restas-wiki
-               #:restas-colorize #:restas-directory-publisher)
+               #:restas-colorize #:restas-directory-publisher #:restas-forum)
   :components ((:file "pref")
                (:module :src
                         :components ((:file "packages")
