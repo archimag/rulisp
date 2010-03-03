@@ -83,7 +83,7 @@
 
 (restas:define-submodule rulisp-static (#:restas.directory-publisher)
   (restas.directory-publisher:*directory* (merge-pathnames "static/" *resources-dir*))
-  (restas.directory-publisher:*autoindex* t))
+  (restas.directory-publisher:*autoindex* nil))
 
 ;;;; pcl
 
