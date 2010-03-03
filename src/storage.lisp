@@ -113,10 +113,47 @@
 ;;; forum
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod restas.forum:list-forums ((storage rulisp-db-storage))
+(defmethod restas.forum:storage-list-forums ((storage rulisp-db-storage))
   (with-db-storage storage
     (postmodern:query "SELECT pretty_forum_id, description FROM rlf_forums ORDER BY forum_id")))
 
+(postmodern:defprepared select-topics*
+    " SELECT fm.author as author, t.title, fm.message as body,
+             to_char(fm.created, 'DD.MM.YYYY HH24:MI') as date,
+             t.topic_id, t.all_message,
+             m.author AS last_author,
+             to_char(m.created, 'DD.MM.YYYY HH24:MI') AS last_created,
+             fm.message_id AS first_author
+        FROM rlf_topics AS t
+        LEFT JOIN rlf_messages  AS m ON t.last_message = m.message_id
+        LEFT JOIN rlf_messages AS fm ON t.first_message = fm.message_id
+        LEFT JOIN rlf_forums AS f ON t.forum_id = f.forum_id
+        WHERE f.pretty_forum_id = $1
+        ORDER BY COALESCE(m.created, fm.created) DESC
+        LIMIT $3 OFFSET $2")
+
+(defmethod restas.forum:storage-list-topics ((storage rulisp-db-storage) forum limit offset)
+  (with-db-storage storage
+    (iter (for (author title body created id message-count last-author last-date first-author) in (select-topics* forum offset limit))
+          (collect (list :author author
+                         :title title
+                         :body body
+                         :create-date created
+                         :id id
+                         :message-count message-count
+                         :last-author last-author
+                         :last-date last-author)))))
+                         
+                         
+            
+
+(postmodern:defprepared forum-info* "SELECT description, all_topics FROM rlf_forums WHERE pretty_forum_id = $1" :row)
+
+(defmethod restas.forum:storage-forum-info ((storage rulisp-db-storage) forum)
+  (with-db-storage storage
+    (bind:bind (((title total-count) (forum-info* forum)))
+      (list :title title
+            :total-count total-count))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; pastes 
