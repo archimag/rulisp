@@ -143,23 +143,57 @@
                          :message-count message-count
                          :last-author last-author
                          :last-date last-author)))))
-                         
-                         
-            
 
 (postmodern:defprepared forum-info* "SELECT description, all_topics FROM rlf_forums WHERE pretty_forum_id = $1" :row)
 
 (defmethod restas.forum:storage-forum-info ((storage rulisp-db-storage) forum)
   (with-db-storage storage
-    (bind:bind (((title total-count) (forum-info* forum)))
+    (forum-info* forum)))
+
+(postmodern:defprepared select-message*
+    "SELECT t.title, t.topic_id, t.all_message, m.author, m.message as body,
+            to_char(m.created, 'DD.MM.YYYY HH24:MI') as date
+       FROM rlf_topics AS t
+       LEFT JOIN rlf_messages AS m ON t.first_message = m.message_id
+       WHERE t.topic_id = $1"
+  :row)
+
+
+(defmethod restas.forum:storage-topic-message ((storage rulisp-db-storage) topic-id)
+  (with-db-storage storage
+    (bind:bind (((title id all-message author body created) (select-message* topic-id)))
       (list :title title
-            :total-count total-count))))
+            :id id
+            :count-replies all-message
+            :author author
+            :created created
+            :body body
+            :forum (postmodern:query 
+                    (:select 'pretty_forum_id 'description
+                             :from 'rlf_forums
+                             :where (:= 'forum_id (:select 'forum_id
+                                                           :from 'rlf_topics
+                                                           :where (:= 'topic_id topic-id))))
+                    :row)))))
+
+(postmodern:defprepared select-reply-list*
+    "SELECT message_id as id , message as body ,author ,to_char(created, 'DD.MM.YYYY HH24:MI') as date
+            FROM rlf_messages 
+            WHERE topic_id = $1
+            ORDER BY created ASC
+            LIMIT $3 OFFSET $2"
+  :alists)
+
+(defmethod restas.forum:storage-topic-replies ((storage rulisp-db-storage) topic limit offset)
+  (iter (for reply in (with-db-storage storage
+                        (select-reply-list* topic (1+ offset) limit)))
+        (collect (alexandria:alist-plist reply))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; pastes 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod restas.colorize:count-all-pastes ((storage rulisp-db-storage))
+(defmethod restas.colorize:storage-count-pastes ((storage rulisp-db-storage))
   (with-db-storage storage
     (postmodern:query (:select (:count '*) :from 'formats)
                       :single)))
@@ -170,7 +204,7 @@
     ORDER BY f.created DESC
     LIMIT $2 OFFSET $1")
 
-(defmethod restas.colorize:list-pastes ((storage rulisp-db-storage) offset limit)
+(defmethod restas.colorize:storage-list-pastes ((storage rulisp-db-storage) offset limit)
   (with-db-storage storage
     (iter (for item in (select-formats* offset limit))
           (collect (make-instance 'restas.colorize:paste
@@ -185,7 +219,7 @@
      WHERE format_id = $1"
   :row)
 
-(defmethod restas.colorize:get-paste ((storage rulisp-db-storage) id)
+(defmethod restas.colorize:storage-get-paste ((storage rulisp-db-storage) id)
   (with-db-storage storage
     (let ((raw (get-paste* id)))
       (make-instance 'restas.colorize:paste
@@ -196,7 +230,7 @@
                      :date (local-time:universal-to-timestamp (fourth raw))
                      :lang (fifth raw)))))
 
-(defmethod restas.colorize:add-paste ((storage rulisp-db-storage) paste)
+(defmethod restas.colorize:storage-add-paste ((storage rulisp-db-storage) paste)
   (with-db-storage storage
     (let ((id (postmodern:query (:select (:nextval "formats_format_id_seq"))
                                 :single))

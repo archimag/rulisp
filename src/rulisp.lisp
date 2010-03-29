@@ -31,7 +31,7 @@
 (defparameter *mainmenu* `(("Главная" nil main)
                            ("Статьи" rulisp-articles restas.wiki:wiki-main-page)
                            ("Планета" rulisp-planet restas.planet:planet-main)
-                           ("Форум" rulisp-forum restas.forum:main)
+                           ("Форум" rulisp-forum restas.forum:list-forums)
                            ("Сервисы" nil tools-list)
                            ("Practical Common Lisp" rulisp-pcl rulisp.pcl:pcl-main)
                            ("Wiki" rulisp-wiki restas.wiki:wiki-main-page)
@@ -105,11 +105,13 @@
 (restas:define-submodule rulisp-forum (#:restas.forum)
   (restas.forum:*baseurl* '("forum"))
   (restas.forum:*storage* *rulisp-db-storage*)
-  (restas.forum:*finalize-page*
-   (lambda (content)
-     (rulisp-finalize-page :title (getf content :title)
-                           :css '("style.css" "forum.css")
-                           :content (getf  content :content)))))
+  (restas.forum:*user-name-function* #'compute-user-login-name)
+  (restas.forum:*default-render-method*
+   (lambda (obj)
+     (rulisp-finalize-page :title (getf obj :title)
+                           :content (restas:render-object (find-package '#:restas.forum.view) 
+                                                          obj)
+                           :css '("style.css" "forum.css")))))
 
 ;;;; format
 
@@ -117,11 +119,16 @@
   (restas.colorize:*baseurl* '("apps" "format"))
   (restas.colorize:*max-on-page* 15)
   (restas.colorize:*storage* *rulisp-db-storage*)
-  (restas.colorize:*colorize-user-function* #'compute-user-login-name)  
-  (restas.colorize:*finalize-page* (lambda (content)
-                                     (rulisp-finalize-page :title (getf content :title)
-                                                           :css '("style.css" "colorize.css")
-                                                           :content (getf content :content)))))
+  (restas.colorize:*colorize-user-function* #'compute-user-login-name)
+  (restas.colorize:*default-render-method*
+   (lambda (obj)
+     (rulisp-finalize-page :title (getf obj :title)
+                           :css '("style.css" "colorize.css")
+                           :content (restas.colorize.view:with-main-menu
+                                        (list :href-all (restas:genurl 'restas.colorize:list-pastes)
+                                              :href-create (restas:genurl 'restas.colorize:create-paste)
+                                              :body (restas:render-object (find-package '#:restas.colorize.view)
+                                                                          obj)))))))
 
 ;;;; wiki
 
