@@ -50,14 +50,15 @@
   (iter (for item in items)
         (collect (format nil "/css/~A" item))))
 
-(defun rulisp-finalize-page (&key title css content)
+(defun rulisp-finalize-page (&key title css js content)
   (rulisp.view:main-frame (list :title title
-                                     :css (css-urls css)
-                                     :gecko-png  "/image/gecko.png"
-                                     :user (compute-user-login-name)
-                                     :main-menu (main-menu-data)
-                                     :content content
-                                     :callback (hunchentoot:request-uri*))))
+                                :css (css-urls css)
+                                :js js
+                                :gecko-png  "/image/gecko.png"
+                                :user (compute-user-login-name)
+                                :main-menu (main-menu-data)
+                                :content content
+                                :callback (hunchentoot:request-uri*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; routes
@@ -111,7 +112,8 @@
      (rulisp-finalize-page :title (getf obj :title)
                            :content (restas:render-object (find-package '#:restas.forum.view) 
                                                           obj)
-                           :css '("style.css" "forum.css")))))
+                           :css '("style.css" "forum.css")
+                           :js (getf obj :js)))))
 
 ;;;; format
 

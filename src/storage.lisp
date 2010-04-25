@@ -118,7 +118,7 @@
     (postmodern:query "SELECT pretty_forum_id, description FROM rlf_forums ORDER BY forum_id")))
 
 (postmodern:defprepared select-topics*
-    " SELECT fm.author as author, t.title, fm.message as body,
+    " SELECT fm.author as author, t.title, 
              to_char(fm.created, 'DD.MM.YYYY HH24:MI') as date,
              t.topic_id, t.all_message,
              m.author AS last_author,
@@ -134,15 +134,14 @@
 
 (defmethod restas.forum:storage-list-topics ((storage rulisp-db-storage) forum limit offset)
   (with-db-storage storage
-    (iter (for (author title body created id message-count last-author last-date first-author) in (select-topics* forum offset limit))
+    (iter (for (author title created id message-count last-author last-date first-author) in (select-topics* forum offset limit))
           (collect (list :author author
                          :title title
-                         :body body
                          :create-date created
                          :id id
                          :message-count message-count
-                         :last-author last-author
-                         :last-date last-author)))))
+                         :last-author (postmodern:coalesce last-author)
+                         :last-date (postmodern:coalesce last-date))))))
 
 (postmodern:defprepared forum-info* "SELECT description, all_topics FROM rlf_forums WHERE pretty_forum_id = $1" :row)
 
