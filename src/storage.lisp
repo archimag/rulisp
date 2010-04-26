@@ -113,13 +113,22 @@
 ;;; forum
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;; storage-admin-p
+
 (defmethod restas.forum:storage-admin-p ((storage rulisp-db-storage) user)
   (member user '("archimag" "lispnik" "turtle")
           :test #'string=))
 
+;;;; storage-list-forums
+
 (defmethod restas.forum:storage-list-forums ((storage rulisp-db-storage))
   (with-db-storage storage
-    (postmodern:query "SELECT pretty_forum_id, description FROM rlf_forums ORDER BY forum_id")))
+    (postmodern:query (:order-by 
+                       (:select 'pretty-forum-id 'description
+                                :from 'rlf-forums)
+                       'forum-id))))
+
+;;;; storage-list-topics
 
 (postmodern:defprepared select-topics*
     " SELECT fm.author as author, t.title, 
@@ -149,12 +158,9 @@
 
 ;;; storage-create-topic
 
-(postmodern:defprepared insert-new-topic
-    "select rlf_new_topic($1, $2, $3, $4)")
-
 (defmethod restas.forum:storage-create-topic ((storage rulisp-db-storage) forum-id title body user)
   (with-db-storage storage
-    (insert-new-topic forum-id title body user)))
+    (postmodern:query (:select (:rlf-new-topic forum-id title body user)))))
 
 ;;; storage-delete-topic
 
@@ -166,24 +172,32 @@
           nil
           forum-id))))
 
-(postmodern:defprepared forum-info* "SELECT description, all_topics FROM rlf_forums WHERE pretty_forum_id = $1" :row)
+;;;; storage-form-info
 
 (defmethod restas.forum:storage-forum-info ((storage rulisp-db-storage) forum)
   (with-db-storage storage
-    (forum-info* forum)))
+    (postmodern:query (:select 'description 'all-topics
+                               :from 'rlf-forums
+                               :where (:= 'pretty-forum-id forum))
+                      :row)))
 
-(postmodern:defprepared select-message*
-    "SELECT t.title, t.topic_id, t.all_message, m.author, m.message as body,
-            to_char(m.created, 'DD.MM.YYYY HH24:MI') as date
-       FROM rlf_topics AS t
-       LEFT JOIN rlf_messages AS m ON t.first_message = m.message_id
-       WHERE t.topic_id = $1"
-  :row)
-
+;;;; storage-topic-message
 
 (defmethod restas.forum:storage-topic-message ((storage rulisp-db-storage) topic-id)
   (with-db-storage storage
-    (bind:bind (((title id all-message author body created) (select-message* topic-id)))
+    (bind:bind (((title id all-message author body created) 
+                 (postmodern:query (:select (:dot :t 'title)
+                                            (:dot :t 'topic-id)
+                                            (:dot :t 'all-message)
+                                            (:dot :m 'author)
+                                            (:as (:dot :m 'message) 'body)
+                                            (:as (:to-char (:dot :m 'created) "DD.MM.YYYY HH24:MI") 'date)
+                                            :from (:as 'rlf-topics :t)
+                                            :left-join (:as 'rlf-messages :m) :on (:= (:dot :t 'first-message)
+                                                                                      (:dot :m 'message-id))
+                                            :where (:= (:dot :t 'topic-id)
+                                                       topic-id))
+                                   :row)))
       (list :title title
             :id id
             :count-replies all-message
@@ -198,31 +212,74 @@
                                                            :where (:= 'topic_id topic-id))))
                     :row)))))
 
-(postmodern:defprepared select-reply-list*
-    "SELECT message_id as id , message as body ,author ,to_char(created, 'DD.MM.YYYY HH24:MI') as date
-            FROM rlf_messages 
-            WHERE topic_id = $1
-            ORDER BY created ASC
-            LIMIT $3 OFFSET $2"
-  :alists)
+;;;; storage-topic-replies
 
 (defmethod restas.forum:storage-topic-replies ((storage rulisp-db-storage) topic limit offset)
-  (iter (for reply in (with-db-storage storage
-                        (select-reply-list* topic (1+ offset) limit)))
-        (collect (alexandria:alist-plist reply))))
+  (with-db-storage storage
+    (postmodern:query (:limit 
+                       (:order-by 
+                        (:select (:as 'message-id 'id)
+                                 (:as 'message 'body)
+                                 'author
+                                 (:as (:to-char 'created "DD.MM.YYYY HH24:MI") 'date)
+                              :from 'rlf-messages
+                              :where (:= 'topic-id topic))
+                        'created)
+                       limit
+                       (1+ offset))
+                      :plists)))
 
-(postmodern:defprepared insert-new-message
-    "INSERT INTO rlf_messages (topic_id, message, author) VALUES($1, $2, $3)")
+;;;; storage-create-reply
 
 (defmethod restas.forum:storage-create-reply ((storage rulisp-db-storage) topic body user)
-  (insert-new-message topic body user))
+  (with-db-storage storage
+    (postmodern:execute (:insert-into 'rlf_messages
+                                      :set
+                                      'topic-id topic
+                                      'message body
+                                      'author user))))
+
+;;;; storage-delete-reply
 
 (defmethod restas.forum:storage-delete-reply ((storage rulisp-db-storage) reply)
-  (let ((topic-id (postmodern:query (:select '* :from (:rlf_delete_message reply))
-                                    :single)))
+  (let ((topic-id (with-db-storage storage
+                    (postmodern:query (:select '* :from (:rlf_delete_message reply))
+                                      :single))))
     (if (eql topic-id :null)
         nil
         topic-id)))
+  
+;;;; storage-all-news
+
+(postmodern:query "SELECT pretty_forum_id, topic_id,  m.author, m.message,
+                                             created AT TIME ZONE 'GMT',
+                                             title
+                                       FROM rlf_messages AS m
+                                       JOIN rlf_topics AS t USING (topic_id)
+                                       JOIN rlf_forums AS f USING (forum_id)
+                                       ORDER BY created DESC
+                                       LIMIT 20")
+
+;;Mon, 26 Apr 2010 23:00:26 GMT
+
+(defmethod restas.forum:storage-all-news ((storage rulisp-db-storage) limit)
+  (with-db-storage storage
+    (postmodern:query (:limit
+                       (:order-by
+                        (:select 'pretty-forum-id
+                                 (:dot :m 'topic-id)
+                                 (:dot :m 'author)
+                                 (:dot :m 'message)
+                                 (:raw "created AT TIME ZONE 'GMT'")
+                                 'title
+                                 :from (:as 'rlf-messages :m)
+                                 :left-join (:as 'rlf-topics :t) :on (:= (:dot :m 'topic-id)
+                                                                         (:dot :t 'topic-id))
+                                 :left-join (:as 'rlf-forums :f) :on (:= (:dot :t 'forum-id)
+                                                                         (:dot :f 'forum-id)))
+                        (:desc 'created))
+                       20)
+                      :plists)))
   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

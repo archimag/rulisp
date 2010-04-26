@@ -10,7 +10,6 @@
   (:export #:substring
            #:username
 
-           #:with-rulisp-db
            #:*re-email-check*
 
            #:send-mail
