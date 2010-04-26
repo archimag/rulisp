@@ -113,6 +113,10 @@
 ;;; forum
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defmethod restas.forum:storage-admin-p ((storage rulisp-db-storage) user)
+  (member user '("archimag" "lispnik" "turtle")
+          :test #'string=))
+
 (defmethod restas.forum:storage-list-forums ((storage rulisp-db-storage))
   (with-db-storage storage
     (postmodern:query "SELECT pretty_forum_id, description FROM rlf_forums ORDER BY forum_id")))
@@ -142,6 +146,25 @@
                          :message-count message-count
                          :last-author (postmodern:coalesce last-author)
                          :last-date (postmodern:coalesce last-date))))))
+
+;;; storage-create-topic
+
+(postmodern:defprepared insert-new-topic
+    "select rlf_new_topic($1, $2, $3, $4)")
+
+(defmethod restas.forum:storage-create-topic ((storage rulisp-db-storage) forum-id title body user)
+  (with-db-storage storage
+    (insert-new-topic forum-id title body user)))
+
+;;; storage-delete-topic
+
+(defmethod restas.forum:storage-delete-topic ((storage rulisp-db-storage) topic)
+  (with-db-storage storage
+    (let ((forum-id (postmodern:query (:select '* :from (:rlf_delete_topic topic))
+                                      :single)))
+      (if (eql forum-id :null)
+          nil
+          forum-id))))
 
 (postmodern:defprepared forum-info* "SELECT description, all_topics FROM rlf_forums WHERE pretty_forum_id = $1" :row)
 
@@ -187,6 +210,20 @@
   (iter (for reply in (with-db-storage storage
                         (select-reply-list* topic (1+ offset) limit)))
         (collect (alexandria:alist-plist reply))))
+
+(postmodern:defprepared insert-new-message
+    "INSERT INTO rlf_messages (topic_id, message, author) VALUES($1, $2, $3)")
+
+(defmethod restas.forum:storage-create-reply ((storage rulisp-db-storage) topic body user)
+  (insert-new-message topic body user))
+
+(defmethod restas.forum:storage-delete-reply ((storage rulisp-db-storage) reply)
+  (let ((topic-id (postmodern:query (:select '* :from (:rlf_delete_message reply))
+                                    :single)))
+    (if (eql topic-id :null)
+        nil
+        topic-id)))
+  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; pastes 
