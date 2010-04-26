@@ -211,7 +211,7 @@
                                   :id (first item)
                                   :author (second item)
                                   :title (third item)
-                                  :date (local-time:universal-to-timestamp (fourth item)))))))
+                                  :date (local-time:universal-to-timestamp (simple-date:timestamp-to-universal-time (fourth item))))))))
 
 (postmodern:defprepared get-paste*
     "SELECT u.login, f.title, f.code, f.created AT TIME ZONE 'GMT', f.lang FROM formats AS f
@@ -227,7 +227,7 @@
                      :author (first raw)
                      :title (second raw)
                      :code (third raw)
-                     :date (local-time:universal-to-timestamp (fourth raw))
+                     :date (local-time:universal-to-timestamp (simple-date:timestamp-to-universal-time  (fourth raw)))
                      :lang (fifth raw)))))
 
 (defmethod restas.colorize:storage-add-paste ((storage rulisp-db-storage) paste)
