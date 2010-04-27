@@ -279,12 +279,12 @@
 
 (defmethod restas.forum:storage-forum-news ((storage rulisp-db-storage) forum limit)
   (new-messages (:= (:dot :f 'pretty-forum-id)
-                forum)
+                    forum)
             limit))
 
 (defmethod restas.forum:storage-topic-news ((storage rulisp-db-storage) topic limit)
   (new-messages (:= (:dot :m 'topic-id)
-                topic)
+                    topic)
             limit))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
