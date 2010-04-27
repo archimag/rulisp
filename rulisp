@@ -14,25 +14,25 @@ start () {
 
     export LC_ALL="ru_RU.UTF-8"
 
-    sbcl --dynamic-space-size 400 --noinform --no-userinit --no-sysinit --load /etc/restas-daemon.lisp /etc/rulisp.daemon start
+    sbcl --dynamic-space-size 400 --noinform --no-userinit --no-sysinit --load /etc/restas/restas-daemon.lisp /etc/restas/rulisp.daemon start
 		       
 	[ $? -eq 0 ] && echo "done." || echo "failed!"
 }
 
 nodaemon () {
-    sbcl --dynamic-space-size 400 --noinform --no-userinit --no-sysinit --load /etc/restas-daemon.lisp /etc/rulisp.daemon nodaemon
+    sbcl --dynamic-space-size 400 --noinform --no-userinit --no-sysinit --load /etc/restas/restas-daemon.lisp /etc/restas/rulisp.daemon nodaemon
 }
 
 stop () {
 	echo -n "Stopping rulisp server... "
-    sbcl --noinform --no-userinit --no-sysinit --load /etc/restas-daemon.lisp /etc/rulisp.daemon kill
+    sbcl --noinform --no-userinit --no-sysinit --load /etc/restas/restas-daemon.lisp /etc/restas/rulisp.daemon kill
     
 	[ $? -eq 0 ] && echo "done." || echo "failed!"
 }
 
 restart () {
 	echo -n "Restart rulisp server... "
-    sbcl --noinform --no-userinit --no-sysinit --load /etc/restas-daemon.lisp /etc/rulisp.daemon restart
+    sbcl --noinform --no-userinit --no-sysinit --load /etc/restas/restas-daemon.lisp /etc/restas/rulisp.daemon restart
     
 	[ $? -eq 0 ] && echo "done." || echo "failed!"
 }
