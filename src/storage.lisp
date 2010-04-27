@@ -249,38 +249,43 @@
         nil
         topic-id)))
   
-;;;; storage-all-news
+;;;; forum news (RSS)
 
-(postmodern:query "SELECT pretty_forum_id, topic_id,  m.author, m.message,
-                                             created AT TIME ZONE 'GMT',
-                                             title
-                                       FROM rlf_messages AS m
-                                       JOIN rlf_topics AS t USING (topic_id)
-                                       JOIN rlf_forums AS f USING (forum_id)
-                                       ORDER BY created DESC
-                                       LIMIT 20")
-
-;;Mon, 26 Apr 2010 23:00:26 GMT
+(defmacro new-messages (where limit)
+  `(with-db-storage storage
+     (postmodern:query (:limit
+                        (:order-by
+                         (:select 'pretty-forum-id
+                                  (:dot :m 'topic-id)
+                                  (:dot :m 'author)
+                                  (:dot :m 'message)
+                                  (:as (:to-char (:raw "created AT TIME ZONE 'GMT'")
+                                                 "DY, DD Mon YYYY HH24:MI:SS GMT")
+                                       'date)
+                                  'title
+                                  :from (:as 'rlf-messages :m)
+                                  :left-join (:as 'rlf-topics :t) :on (:= (:dot :m 'topic-id)
+                                                                          (:dot :t 'topic-id))
+                                  :left-join (:as 'rlf-forums :f) :on (:= (:dot :t 'forum-id)
+                                                                          (:dot :f 'forum-id))
+                                  ,@(if where
+                                        `(:where ,where)))
+                         (:desc 'created))
+                        ,limit)
+                       :plists)))
 
 (defmethod restas.forum:storage-all-news ((storage rulisp-db-storage) limit)
-  (with-db-storage storage
-    (postmodern:query (:limit
-                       (:order-by
-                        (:select 'pretty-forum-id
-                                 (:dot :m 'topic-id)
-                                 (:dot :m 'author)
-                                 (:dot :m 'message)
-                                 (:raw "created AT TIME ZONE 'GMT'")
-                                 'title
-                                 :from (:as 'rlf-messages :m)
-                                 :left-join (:as 'rlf-topics :t) :on (:= (:dot :m 'topic-id)
-                                                                         (:dot :t 'topic-id))
-                                 :left-join (:as 'rlf-forums :f) :on (:= (:dot :t 'forum-id)
-                                                                         (:dot :f 'forum-id)))
-                        (:desc 'created))
-                       20)
-                      :plists)))
-  
+  (new-messages nil limit))
+
+(defmethod restas.forum:storage-forum-news ((storage rulisp-db-storage) forum limit)
+  (new-messages (:= (:dot :f 'pretty-forum-id)
+                forum)
+            limit))
+
+(defmethod restas.forum:storage-topic-news ((storage rulisp-db-storage) topic limit)
+  (new-messages (:= (:dot :m 'topic-id)
+                topic)
+            limit))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; pastes 
