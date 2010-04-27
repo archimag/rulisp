@@ -8,7 +8,6 @@
 (defsystem rulisp
   :depends-on (#:restas 
                #:postmodern
-               #:cl-recaptcha
                #:zip
                #:restas-simple-auth #:restas-planet #:restas-wiki
                #:restas-colorize #:restas-directory-publisher #:restas-forum)
