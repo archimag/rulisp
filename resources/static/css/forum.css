@@ -148,6 +148,11 @@
     padding-bottom: 3px;
 }
 
+.topic-pages {
+    text-align: center;
+    color: gray;
+}
+
 
 .reply {
     margin: 10px;
@@ -156,8 +161,9 @@
     /*background-color: #ebe9d9;*/
     background-color: #DDDDDD;
     border: 1px solid #d0d0d0;
-
 }
+
+.reply:target { border: 1px solid red; }
 
 .replybody {
     font-size: 80%;

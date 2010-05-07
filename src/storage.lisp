@@ -212,6 +212,14 @@
                                                            :where (:= 'topic_id topic-id))))
                     :row)))))
 
+;;;; storage-topic-reply-count
+
+(defmethod restas.forum:storage-topic-reply-count ((storage rulisp-db-storage) topic)
+  (with-db-storage storage
+    (postmodern:query (:select (:count '*) :from 'rlf-messages
+                               :where (:= 'topic-id topic))
+                      :single)))
+
 ;;;; storage-topic-replies
 
 (defmethod restas.forum:storage-topic-replies ((storage rulisp-db-storage) topic limit offset)
@@ -248,6 +256,20 @@
     (if (eql topic-id :null)
         nil
         topic-id)))
+
+;;;; storage-reply-position
+
+(defmethod restas.forum:storage-reply-position ((storage rulisp-db-storage) reply)
+  (with-db-storage storage
+    (let ((topic-id (postmodern:query (:select 'topic-id :from 'rlf-messages
+                                               :where (:= 'message-id reply))
+                                      :single)))
+      (values (postmodern:query (:select (:count '*) 
+                                         :from 'rlf-messages
+                                         :where (:and (:= 'topic-id topic-id)
+                                                      (:< 'created (:select 'created :from 'rlf-messages :where (:= 'message-id reply)))))
+                                :single)
+              topic-id))))
   
 ;;;; forum news (RSS)
 
@@ -259,6 +281,7 @@
                                   (:dot :m 'topic-id)
                                   (:dot :m 'author)
                                   (:dot :m 'message)
+                                  (:as (:dot :m 'message-id) 'id)
                                   (:as (:to-char (:raw "created AT TIME ZONE 'GMT'")
                                                  "DY, DD Mon YYYY HH24:MI:SS GMT")
                                        'date)
