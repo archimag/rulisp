@@ -37,28 +37,32 @@
                            ("Wiki" rulisp-wiki restas.wiki:wiki-main-page)
                            ("Файлы" rulisp-files restas.directory-publisher:route :path "")))
 
-(defun main-menu-data ()
-  (iter (for item in *mainmenu*)
-        (collect (list :href (apply  #'restas:genurl-toplevel
-                                     (gethash (second item) *submodules*)
-                                     (if (cdddr item)
-                                         (cddr item)
-                                         (last item)))
-                       :name (first item)))))
-
-(defun css-urls (items)
-  (iter (for item in items)
-        (collect (format nil "/css/~A" item))))
-
 (defun rulisp-finalize-page (&key title css js content)
-  (rulisp.view:main-frame (list :title title
-                                :css (css-urls css)
-                                :js js
-                                :gecko-png  "/image/gecko.png"
-                                :user (compute-user-login-name)
-                                :main-menu (main-menu-data)
-                                :content content
-                                :callback (hunchentoot:request-uri*))))
+  (labels ((rulisp (&optional (submodule restas:*submodule*))
+             (if (eql (restas:submodule-module submodule)
+                      #.*package*)
+                 submodule
+                 (rulisp (restas:submodule-parent submodule))))
+           (main-menu-data ()
+             (iter (for item in *mainmenu*)
+                   (collect (list :href (apply #'restas:genurl-submodule
+                                               (second item)
+                                               (if (cdddr item)
+                                                   (cddr item)
+                                                   (last item)))
+                                  :name (first item)))))
+           (css-urls (items)
+             (iter (for item in items)
+                   (collect (format nil "/css/~A" item)))))
+    (let ((restas::*submodule* (rulisp)))
+      (rulisp.view:main-frame (list :title title
+                                    :css (css-urls css)
+                                    :js js
+                                    :gecko-png  "/image/gecko.png"
+                                    :user (compute-user-login-name)
+                                    :main-menu (main-menu-data)
+                                    :content content
+                                    :callback (hunchentoot:request-uri*))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; routes
@@ -105,6 +109,7 @@
 
 (restas:define-submodule rulisp-forum (#:restas.forum)
   (restas.forum:*baseurl* '("forum"))
+  (restas.forum:*site-name* "Lisper.ru")
   (restas.forum:*storage* *rulisp-db-storage*)
   (restas.forum:*user-name-function* #'compute-user-login-name)
   (restas.forum:*default-render-method*
