@@ -6,7 +6,7 @@ a:active { color: #c00 }
 
 #login, #caution, #mainmenu, #content, .bottom { margin: 0 }
 
-#caution { padding: 0.5em; background: #58e url('bgr.png'); color: #fff }
+#caution { padding: 0.5em; background: #58e ; color: #fff }
 
 #caution img { position: inline; vertical-align: bottom }
 

@@ -185,9 +185,10 @@
 
 (defmethod restas.forum:storage-topic-message ((storage rulisp-db-storage) topic-id)
   (with-db-storage storage
-    (bind:bind (((title id all-message author body created) 
+    (bind:bind (((title id message-id all-message author body created) 
                  (postmodern:query (:select (:dot :t 'title)
                                             (:dot :t 'topic-id)
+                                            (:dot :m 'message-id)
                                             (:dot :t 'all-message)
                                             (:dot :m 'author)
                                             (:as (:dot :m 'message) 'body)
@@ -200,6 +201,7 @@
                                    :row)))
       (list :title title
             :id id
+            :message-id message-id
             :count-replies all-message
             :author author
             :created created
@@ -226,26 +228,37 @@
   (with-db-storage storage
     (postmodern:query (:limit 
                        (:order-by 
-                        (:select (:as 'message-id 'id)
-                                 (:as 'message 'body)
-                                 'author
-                                 (:as (:to-char 'created "DD.MM.YYYY HH24:MI") 'date)
-                              :from 'rlf-messages
-                              :where (:= 'topic-id topic))
-                        'created)
+                        (:select (:as (:dot :t1 'message-id) 'id)
+                                 (:as (:dot :t1 'message) 'body)
+                                 (:dot :t1 'author)
+                                 (:as (:to-char (:dot :t1 'created) "DD.MM.YYYY HH24:MI") 'date)
+                                 (:dot :t1 'reply-on)
+                                 (:as (:dot :t2 'author) 'prev-author)
+                                 (:as (:dot :t2 'message-id) 'prev-id)
+                                 (:as (:to-char (:dot :t2 'created) "DD.MM.YYYY HH24:MI") 'prev-created)
+                              :from (:as 'rlf-messages :t1)
+                              :left-join (:as 'rlf-messages :t2) :on (:= (:dot :t1 'reply-on)
+                                                                         (:dot :t2 'message-id))
+                              :where (:= (:dot :t1 'topic-id) topic))
+                        (:dot :t1 'created))
                        limit
                        (1+ offset))
                       :plists)))
 
 ;;;; storage-create-reply
 
-(defmethod restas.forum:storage-create-reply ((storage rulisp-db-storage) topic body user)
+(defmethod restas.forum:storage-create-reply ((storage rulisp-db-storage) reply-on body user)
   (with-db-storage storage
-    (postmodern:execute (:insert-into 'rlf_messages
-                                      :set
-                                      'topic-id topic
-                                      'message body
-                                      'author user))))
+    (let ((message-id (postmodern:query (:select (:nextval "rlf_messages_message_id_seq"))
+                                        :single)))
+      (postmodern:execute (:insert-into 'rlf-messages
+                                        :set
+                                        'message-id message-id
+                                        'topic-id (:select 'topic-id :from 'rlf-messages :where (:= 'message-id reply-on))
+                                        'reply-on reply-on
+                                        'message body
+                                        'author user))
+      message-id)))
 
 ;;;; storage-delete-reply
 

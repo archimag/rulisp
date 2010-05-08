@@ -23,27 +23,35 @@
 /* .newmessage */
 /* ---------------------------------------------------------------------------------------------------- */
 
-.newmessage {
+/*
+.forum .newmessage {
     margin-top: 20px;
     padding-bottom: 10px;
     border: 1px solid #b9b2ca;
     font-size: 90%;
 }
 
+
 .newmessage textarea {
-    width: 95%;
+    margin: 1em;
 }
 
-.newmessage * {
+
+.forum .newmessage * {
     padding: 5px;
 
 }
 
-.newmessage > :first-child {
+.forum .newmessage > :first-child {
     margin-bottom: 5px;
     margin-left: 0;
     background-color: #f1efe9;
-    /*background-color: silver;*/
+}
+*/
+
+.newmessage * {
+    padding: 5px;
+
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -51,7 +59,6 @@
 /* ---------------------------------------------------------------------------------------------------- */
 
 #forum-nav-panel {
-    /*background-color: #e5e5e5;*/
     padding: 3px;
     border-bottom: 1px solid #b9b2ca;
     margin-bottom: 5px;
@@ -99,7 +106,7 @@
 
 .topic {
     margin-top: 10px;
-    padding-bottom: 5px;
+    /*padding-bottom: 5px;*/
     margin-bottom: 5px;
     border-bottom: 1px solid #b9b2ca;
 }
@@ -109,11 +116,6 @@
     color: #6A5EAB;
 }
 
-.topicbody {
-    font-size: 80%;
-    padding-top: 2px;
-    padding-bottom: 2px;
-}
 
 .topic-info {
     font-size: 80%;
@@ -123,7 +125,9 @@
 /**/
 .thread .topic {
     margin: 10px;
-    padding: 5px;
+    /*padding: 5px;*/
+    padding-left: 5px;
+    padding-right: 5px;
 
     /*background-color: #ebe9d9;*/
     background-color: #DDDDDD;
@@ -139,12 +143,13 @@
 
     margin-left: -5px;
     margin-right: -5px;
-    margin-bottom: -5px;
+    
 }
 
 .thread .topic-info {
     font-size: 80%;
     color: gray;
+    padding-top: 3px;
     padding-bottom: 3px;
 }
 
@@ -155,8 +160,9 @@
 
 
 .reply {
-    margin: 10px;
-    padding: 5px;
+    margin: 1.3em 10px;
+    padding: 0 5px 0 5px ;
+    /*padding-bottom: 0;*/
 
     /*background-color: #ebe9d9;*/
     background-color: #DDDDDD;
@@ -175,8 +181,7 @@
 
     margin-left: -5px;
     margin-right: -5px;
-    margin-bottom: -5px;
-
+    /*margin-bottom: -5px;*/
 }
 
 
