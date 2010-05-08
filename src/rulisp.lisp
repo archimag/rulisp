@@ -35,7 +35,8 @@
                            ("Сервисы" nil tools-list)
                            ("Practical Common Lisp" rulisp-pcl rulisp.pcl:pcl-main)
                            ("Wiki" rulisp-wiki restas.wiki:wiki-main-page)
-                           ("Файлы" rulisp-files restas.directory-publisher:route :path "")))
+                           ("Файлы" rulisp-files restas.directory-publisher:route :path "")
+                           ("Поиск" nil google-search)))
 
 (defun rulisp-finalize-page (&key title css js content)
   (labels ((rulisp (&optional (submodule restas:*submodule*))
@@ -78,6 +79,11 @@
   (rulisp-finalize-page :title "Инструменты"
                         :css '("style.css")
                         :content (rulisp.view:tools)))
+
+(define-route google-search ("search")
+  (rulisp-finalize-page :title "Поиск по сайту Lisper.ru"
+                        :css '("style.css")
+                        :content (rulisp.view:google-search)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; submodules
