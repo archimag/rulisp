@@ -1,5 +1,7 @@
 body { font-size: 90%; margin: 0; padding: 1em 5%; font-family: Arial, sans-serif; background: #fff }
 
+body.wysiwyg { padding: 0; }
+
 a:link { text-decoration: underline }
 a:hover { color: #666 }
 a:active { color: #c00 }
@@ -334,3 +336,4 @@ textarea {
 /* * * * * * * * * * * * *  * * ** * * */
 
 .pdf-link { background: transparent url(/image/pdf.png) no-repeat; padding-left: 17px; }
+

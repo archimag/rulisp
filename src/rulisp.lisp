@@ -123,7 +123,7 @@
      (rulisp-finalize-page :title (getf obj :title)
                            :content (restas:render-object (find-package '#:restas.forum.view) 
                                                           obj)
-                           :css '("style.css" "forum.css" "jquery.wysiwyg.css" )
+                           :css '("style.css" "jquery.wysiwyg.css" "forum.css" "colorize.css" )
                            :js (getf obj :js)))))
 
 ;;;; format
