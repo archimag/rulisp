@@ -30,6 +30,7 @@
 /* ---------------------------------------------------------------------------------------------------- */
 
 #forum-nav-panel {
+    font-size: 80%;
     padding: 3px;
     border-bottom: 1px solid #b9b2ca;
     margin-bottom: 5px;
@@ -108,7 +109,7 @@
 }
 
 .thread .topicbody {
-    /*font-size: 80%;*/
+    font-size: 90%;
     padding: 10px;
 
     border-top: 1px solid #b9b2ca;
@@ -143,6 +144,7 @@
 .reply:target { border: 1px solid red; }
 
 .replybody {
+    font-size: 90%;
     padding: 10px;
 
     border-top: 1px solid #b9b2ca;
