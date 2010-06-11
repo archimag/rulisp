@@ -1,4 +1,6 @@
-body { font-size: 90%; margin: 0; padding: 1em 5%; font-family: Arial, sans-serif; background: #fff }
+/*body { font-size: 90%; margin: 0; padding: 1em 5%; font-family: Arial, sans-serif; background: #fff }*/
+
+body {  margin: 0; padding: 1em 5%; background: #fff }
 
 body.wysiwyg { padding: 0; }
 
@@ -20,10 +22,11 @@ p { padding: 0; margin: 0 0 0.6em 0 }
 
 .underline { text-decoration: underline; }
 
-h1 { font-size: 200% }
+h1 { font-size: 200%,}
 h2 { font-size: 180% }
 h3 { font-size: 140% }
 h4 { font-size: 120% }
+h1, h2, h3, h4 { font-family: Arial; }
 
 pre { overflow: auto; }
 
@@ -50,6 +53,7 @@ pre { overflow: auto; }
 
 #mainmenu > ul {
     font-size: 80%;
+    font-family: Arial;
     margin: 0;
     padding: 0;
 }
@@ -123,7 +127,7 @@ pre { overflow: auto; }
     margin: 5px;
     padding: 10px;
 
-    font-family: "Courier New", monospace;
+    font-family: monospace;
 }
 
 .articles li {

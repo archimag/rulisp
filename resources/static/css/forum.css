@@ -9,8 +9,9 @@
 }
 
 .forum a {
-   font-size: 130%;    
-   color: #0066cc;
+    font-size: 130%;
+    font-family: Arial;
+    color: #0066cc;
 }
 
 
@@ -18,36 +19,6 @@
     font-size: 80%;
     color: gray;
 }
-
-/* ---------------------------------------------------------------------------------------------------- */
-/* .newmessage */
-/* ---------------------------------------------------------------------------------------------------- */
-
-/*
-.forum .newmessage {
-    margin-top: 20px;
-    padding-bottom: 10px;
-    border: 1px solid #b9b2ca;
-    font-size: 90%;
-}
-
-
-.newmessage textarea {
-    margin: 1em;
-}
-
-
-.forum .newmessage * {
-    padding: 5px;
-
-}
-
-.forum .newmessage > :first-child {
-    margin-bottom: 5px;
-    margin-left: 0;
-    background-color: #f1efe9;
-}
-*/
 
 .newmessage * {
     padding: 5px;
@@ -62,6 +33,7 @@
     padding: 3px;
     border-bottom: 1px solid #b9b2ca;
     margin-bottom: 5px;
+    font-family: Arial;
 }
 
 #forum-nav-panel ul {
@@ -113,6 +85,7 @@
 
 .topic > a {
     font-size: 110%;
+    font-family: Arial;
     color: #6A5EAB;
 }
 
@@ -135,7 +108,7 @@
 }
 
 .thread .topicbody {
-    font-size: 80%;
+    /*font-size: 80%;*/
     padding: 10px;
 
     border-top: 1px solid #b9b2ca;
@@ -162,9 +135,7 @@
 .reply {
     margin: 1.3em 10px;
     padding: 0 5px 0 5px ;
-    /*padding-bottom: 0;*/
 
-    /*background-color: #ebe9d9;*/
     background-color: #DDDDDD;
     border: 1px solid #d0d0d0;
 }
@@ -172,7 +143,6 @@
 .reply:target { border: 1px solid red; }
 
 .replybody {
-    font-size: 80%;
     padding: 10px;
 
     border-top: 1px solid #b9b2ca;
@@ -181,7 +151,6 @@
 
     margin-left: -5px;
     margin-right: -5px;
-    /*margin-bottom: -5px;*/
 }
 
 div.wysiwyg ul.panel li a.insertCode { background: transparent url(code.gif) no-repeat; }
