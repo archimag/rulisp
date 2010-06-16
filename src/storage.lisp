@@ -18,6 +18,19 @@
   `(postmodern:with-connection (slot-value ,storage 'dbspec)
      ,@body))
 
+(defun remove-obsolete-records ()
+  (with-db-storage *rulisp-db-storage*
+    (values 
+     (postmodern:execute "delete from users  using confirmations
+                                 where users.user_id = confirmations.user_id
+                                 and (now() - confirmations.created) > interval '3 days'")
+     (postmodern:execute "delete from forgot where (now() - created) > interval '3 day'"))))
+
+(clon:schedule-function 'remove-obsolete-records
+                        (clon:make-scheduler (clon:make-typed-cron-schedule :day-of-month '*)
+                                             :allow-now-p t)
+                        :thread t)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; auth
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
