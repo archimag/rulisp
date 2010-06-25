@@ -161,7 +161,7 @@
   (restas.wiki:*wiki-dir* #P"/var/rulisp/articles/")
   (restas.wiki:*wiki-user-function* #'(lambda ()
                                         (find (compute-user-login-name)
-                                              '("archimag")
+                                              '("archimag" "dmitry_vk")
                                               :test #'string=)))
   (restas.wiki:*finalize-page* #'(lambda (content)
                                    (rulisp-finalize-page :title (getf content :title)
