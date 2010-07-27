@@ -29,12 +29,12 @@
                                                       *resources-dir*)))
 
 (defparameter *mainmenu* `(("Главная" nil main)
-                           ("Статьи" rulisp-articles restas.wiki:wiki-main-page)
+                           ("Статьи" rulisp-articles restas.wiki:main-wiki-page)
                            ("Планета" rulisp-planet restas.planet:planet-main)
                            ("Форум" rulisp-forum restas.forum:list-forums)
                            ("Сервисы" nil tools-list)
                            ("Practical Common Lisp" rulisp-pcl rulisp.pcl:pcl-main)
-                           ("Wiki" rulisp-wiki restas.wiki:wiki-main-page)
+                           ("Wiki" rulisp-wiki restas.wiki:main-wiki-page)
                            ("Файлы" rulisp-files restas.directory-publisher:route :path "")
                            ("Поиск" nil google-search)))
 
@@ -145,28 +145,34 @@
 
 ;;;; wiki
 
+(defclass drawer (dokuwiki-drawer) ())
+
+(defmethod restas.wiki:finalize-page ((drawer drawer) content)
+  (rulisp-finalize-page :title (getf content :title)
+                        :css '("style.css" "wiki.css" "colorize.css")
+                        :content (concatenate 'string
+                                              (restas.wiki.view:show-page-menu (getf content :menu-links))
+                                              (getf content :content))))
+
+
 (restas:define-submodule rulisp-wiki (#:restas.wiki)
   (restas.wiki:*baseurl* '("wiki"))
-  (restas.wiki:*wiki-dir* *wiki-dir*)  
+  (restas.wiki:*storage* (make-instance 'restas.wiki:file-storage :dir *wiki-dir*))
   (restas.wiki:*wiki-user-function* #'compute-user-login-name)
-  (restas.wiki:*finalize-page* #'(lambda (content)
-                                   (rulisp-finalize-page :title (getf content :title)
-                                                         :css '("style.css" "wiki.css" "colorize.css")
-                                                         :content (getf content :content)))))
+  (restas.wiki:*default-render-method* (make-instance 'drawer)))
+
 ;;;; articles
 
 (restas:define-submodule rulisp-articles (#:restas.wiki)
   (restas.wiki:*baseurl* '("articles"))
   (restas.wiki:*index-page-title* "Статьи")
-  (restas.wiki:*wiki-dir* #P"/var/rulisp/articles/")
+  (restas.wiki:*storage* (make-instance 'restas.wiki:file-storage
+                                        :dir #P"/var/rulisp/articles/"))
   (restas.wiki:*wiki-user-function* #'(lambda ()
                                         (find (compute-user-login-name)
                                               '("archimag" "dmitry_vk")
                                               :test #'string=)))
-  (restas.wiki:*finalize-page* #'(lambda (content)
-                                   (rulisp-finalize-page :title (getf content :title)
-                                                         :css '("style.css" "wiki.css" "colorize.css")
-                                                         :content (getf content :content)))))
+  (restas.wiki:*default-render-method* (make-instance 'drawer)))
   
 
 

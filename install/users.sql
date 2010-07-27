@@ -7,6 +7,6 @@ CREATE TABLE users (
   password text NOT NULL,
   CONSTRAINT users_pkey PRIMARY KEY (user_id),
   CONSTRAINT users_login_key UNIQUE (login)
-)
+);
 
 ALTER TABLE users OWNER TO lisp;

@@ -168,7 +168,7 @@
         (finalize-page (rulisp.view:pcl-chapter-view (list :prev (chapter-url (1- number))
                                                                 :menu (genurl 'pcl-main)
                                                                 :next (chapter-url (1+ number))
-                                                                :content (xtree:with-object (el (restas.wiki::render-wiki-page
+                                                                :content (xtree:with-object (el (rulisp::render-wiki-page
                                                                                                  (wiki-parser:parse :dokuwiki path)))
                                                                            (xtree:serialize el :to-string))))
                        (second (aref *pcl-files-map* number)))
@@ -184,7 +184,7 @@
          (path (pcl-source-path (third (aref *pcl-files-map* number)))))
     (flexi-streams:with-output-to-sequence (out)
       (let ((out* (flexi-streams:make-flexi-stream out)))
-        (restas.wiki::pdf-render-wiki-page (wiki-parser:parse :dokuwiki
+        (rulisp::pdf-render-wiki-page (wiki-parser:parse :dokuwiki
                                                  path)
                               out*))
       out)))
@@ -215,7 +215,7 @@
                                 "Practical Common Lisp"
                                 (pdf:register-reference :name "Practical Common Lisp"
                                                         :page (pcl-first-page)))
-      (let ((restas.wiki::*current-chapter* "Practical Common Lisp"))
+      (let ((rulisp::*current-chapter* "Practical Common Lisp"))
         (iter (for chapter in-vector *pcl-files-map*)
               (for i from 1)
               (print i)
@@ -223,15 +223,15 @@
                                                 (pcl-source-path (third chapter)))))
                 (tt:draw-pages 
                  (tt:compile-text ()
-                   (tt:with-style (:font restas.wiki::*base-font* :font-size restas.wiki::*font-size*)
-                     (restas.wiki::pdf-render-wiki-item wikidoc)))
+                   (tt:with-style (:font rulisp::*base-font* :font-size rulisp::*font-size*)
+                     (rulisp::pdf-render-wiki-item wikidoc)))
                    :break :after
                    :margins '(30 50 30 40)
                    :finalize-fn #'(lambda (page)
                                     (pdf:draw-centered-text (/ (aref (pdf::bounds page) 2) 2)
                                                             10
                                                             (write-to-string (incf page-number))
-                                                            restas.wiki::*base-font*
+                                                            rulisp::*base-font*
                                                             10))))
                 (pdf:write-document out))))))
 
