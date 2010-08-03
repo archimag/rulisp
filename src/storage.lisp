@@ -337,39 +337,39 @@
             limit))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; pastes 
+;;; pastebin
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod restas.colorize:storage-count-pastes ((storage rulisp-db-storage))
+(defmethod restas.colorize:storage-count-notes ((storage rulisp-db-storage))
   (with-db-storage storage
     (postmodern:query (:select (:count '*) :from 'formats)
                       :single)))
 
 (postmodern:defprepared select-formats*
-  "SELECT f.format_id, u.login, f.title, f.created AT TIME ZONE 'GMT' FROM formats AS f
+    "SELECT f.format_id, u.login, f.title, f.created AT TIME ZONE 'GMT' FROM formats AS f
     LEFT JOIN users AS u USING (user_id)
     ORDER BY f.created DESC
     LIMIT $2 OFFSET $1")
 
-(defmethod restas.colorize:storage-list-pastes ((storage rulisp-db-storage) offset limit)
+(defmethod restas.colorize:storage-list-notes ((storage rulisp-db-storage) offset limit)
   (with-db-storage storage
     (iter (for item in (select-formats* offset limit))
-          (collect (make-instance 'restas.colorize:paste
+          (collect (make-instance 'restas.colorize:note
                                   :id (first item)
                                   :author (second item)
                                   :title (third item)
                                   :date (local-time:universal-to-timestamp (simple-date:timestamp-to-universal-time (fourth item))))))))
 
-(postmodern:defprepared get-paste*
+(postmodern:defprepared get-note*
     "SELECT u.login, f.title, f.code, f.created AT TIME ZONE 'GMT', f.lang FROM formats AS f
      LEFT JOIN users AS u USING (user_id)
      WHERE format_id = $1"
   :row)
 
-(defmethod restas.colorize:storage-get-paste ((storage rulisp-db-storage) id)
+(defmethod restas.colorize:storage-get-note ((storage rulisp-db-storage) id)
   (with-db-storage storage
-    (let ((raw (get-paste* id)))
-      (make-instance 'restas.colorize:paste
+    (let ((raw (get-note* id)))
+      (make-instance 'restas.colorize:note
                      :id id
                      :author (first raw)
                      :title (second raw)
@@ -377,19 +377,19 @@
                      :date (local-time:universal-to-timestamp (simple-date:timestamp-to-universal-time  (fourth raw)))
                      :lang (fifth raw)))))
 
-(defmethod restas.colorize:storage-add-paste ((storage rulisp-db-storage) paste)
+(defmethod restas.colorize:storage-add-note ((storage rulisp-db-storage) note)
   (with-db-storage storage
     (let ((id (postmodern:query (:select (:nextval "formats_format_id_seq"))
                                 :single))
           (user-id (postmodern:query (:select 'user-id :from 'users
-                                              :where (:= 'login (restas.colorize:paste-author paste)))
+                                              :where (:= 'login (restas.colorize:note-author note)))
                                      :single)))
       (postmodern:execute (:insert-into 'formats :set
                                         'format-id id
                                         'user-id user-id
-                                        'title (restas.colorize:paste-title paste)
-                                        'code (restas.colorize:paste-code paste)
-                                        'lang (restas.colorize:paste-lang paste)))
-      (setf (restas.colorize:paste-id paste)
+                                        'title (restas.colorize:note-title note)
+                                        'code (restas.colorize:note-code note)
+                                        'lang (restas.colorize:note-lang note)))
+      (setf (restas.colorize:note-id note)
             id))
-      paste))
+    note))

@@ -128,7 +128,7 @@
 
 ;;;; format
 
-(defclass pastebin-drawer (restas.colorize::base-drawer) ())
+(defclass pastebin-drawer (restas.colorize::drawer) ())
 
 (defmethod restas.colorize::finalize-page ((drawer pastebin-drawer) data)
   (rulisp-finalize-page  :title (getf data :title)
