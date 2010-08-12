@@ -347,7 +347,6 @@
 (defmethod aglorp:storage-count-objects ((storage rulisp-db-storage) (class (eql 'restas.colorize:note)))
   (postmodern:query (:select (:count '*) :from 'formats)
                     :single))
-  
 
 (defmethod aglorp:storage-read-objects ((storage rulisp-db-storage) (class (eql 'restas.colorize:note)) &key limit offset)
   (iter (for item in (postmodern:query (:limit (:order-by (:select (:dot :f 'format-id)
@@ -366,15 +365,18 @@
                                 :title (third item)
                                 :date (local-time:universal-to-timestamp (simple-date:timestamp-to-universal-time (fourth item)))))))
   
-
-(postmodern:defprepared get-note*
-    "SELECT u.login, f.title, f.code, f.created AT TIME ZONE 'GMT', f.lang FROM formats AS f
-     LEFT JOIN users AS u USING (user_id)
-     WHERE format_id = $1"
-  :row)
-
 (defmethod aglorp:storage-one-object ((storage rulisp-db-storage) (class (eql 'restas.colorize:note)) &key note-id)
-  (let ((raw (get-note* note-id)))
+  (let ((raw (postmodern:query (:select (:dot :u 'login)
+                                        (:dot :f 'title)
+                                        (:dot :f 'code)
+                                        (:raw "f.created AT TIME ZONE 'GMT'")
+                                        (:dot :f 'lang)
+                                        :from (:as 'formats :f)
+                                        :left-join (:as 'users :u) :on (:= (:dot :f 'user-id)
+                                                                           (:dot :u 'user-id))
+                                        :where (:= 'format-id
+                                                   note-id))
+                               :row)))
     (make-instance 'restas.colorize:note
                    :id note-id
                    :author (first raw)
