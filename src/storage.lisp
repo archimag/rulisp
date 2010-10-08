@@ -7,19 +7,15 @@
 
 (in-package #:rulisp)
 
-(defclass rulisp-db-storage ()
-  ((dbspec :initarg :spec :initform nil)))
+(defclass rulisp-db-storage (aglorp:pg-storage) ())
 
 (defparameter *rulisp-db-storage*
   (make-instance 'rulisp-db-storage
                  :spec *rulisp-db*))
 
-(defmacro with-db-storage (storage &body body)
-  `(postmodern:with-connection (slot-value ,storage 'dbspec)
-     ,@body))
 
 (defun remove-obsolete-records ()
-  (with-db-storage *rulisp-db-storage*
+  (aglorp:with-storage *rulisp-db-storage*
     (values 
      (postmodern:execute "delete from users  using confirmations
                                  where users.user_id = confirmations.user_id
@@ -40,8 +36,8 @@
   :single)
 
 
-(defmethod restas.simple-auth:storage-check-user-password ((storage rulisp-db-storage) login password)
-  (with-db-storage storage
+(defmethod restas.simple-auth:storage-check-user-password ((storage aglorp:pg-storage) login password)
+  (aglorp:with-storage storage
     (if (check-user-password* login password)
         login)))
 
@@ -49,34 +45,34 @@
     "select email from users where email = $1"
   :single)
     
-(defmethod restas.simple-auth:storage-email-exist-p ((storage rulisp-db-storage) email)
-    (with-db-storage storage
-      (check-email-exist* email)))
+(defmethod restas.simple-auth:storage-email-exist-p ((storage aglorp:pg-storage) email)
+  (aglorp:with-storage storage
+    (check-email-exist* email)))
 
 (postmodern:defprepared check-login-exist*
     "select login from users where login = $1"
   :single)
 
-(defmethod restas.simple-auth:storage-user-exist-p ((storage rulisp-db-storage) login)
-  (with-db-storage storage
+(defmethod restas.simple-auth:storage-user-exist-p ((storage aglorp:pg-storage) login)
+  (aglorp:with-storage storage
     (check-login-exist* login)))
 
 (postmodern:defprepared db-add-new-user "SELECT add_new_user($1, $2, $3, $4)" :single)
 
-(defmethod restas.simple-auth:storage-create-invite ((storage rulisp-db-storage) login email password)
+(defmethod restas.simple-auth:storage-create-invite ((storage aglorp:pg-storage) login email password)
   (let ((invite (calc-sha1-sum (format nil "~A~A~A" login email password))))
-    (with-db-storage storage
+    (aglorp:with-storage storage
       (db-add-new-user login email password invite))
     invite))
 
-(defmethod restas.simple-auth:storage-invite-exist-p ((storage rulisp-db-storage) invite)
-  (with-db-storage storage
+(defmethod restas.simple-auth:storage-invite-exist-p ((storage aglorp:pg-storage) invite)
+  (aglorp:with-storage storage
     (postmodern:query (:select 'mark :from 'confirmations :where (:= 'mark invite))
                       :single)))
 
 
-(defmethod restas.simple-auth:storage-create-account ((storage rulisp-db-storage) invite)
-  (with-db-storage storage
+(defmethod restas.simple-auth:storage-create-account ((storage aglorp:pg-storage) invite)
+  (aglorp:with-storage storage
     (let* ((account (postmodern:query (:select 'users.user_id 'login 'email 'password
                                                :from 'users
                                                :left-join 'confirmations :on (:= 'users.user_id 'confirmations.user_id)
@@ -90,8 +86,8 @@
                                           :where (:= 'mark invite))))
       (cdr account))))
 
-(defmethod restas.simple-auth:storage-create-forgot-mark ((storage rulisp-db-storage)  login-or-email)
-  (with-db-storage storage
+(defmethod restas.simple-auth:storage-create-forgot-mark ((storage aglorp:pg-storage)  login-or-email)
+  (aglorp:with-storage storage
     (let ((login-info (postmodern:query (:select 'user-id 'login 'email :from 'users
                                                  :where (:and (:or (:= 'email login-or-email)
                                                                    (:= 'login login-or-email))
@@ -105,15 +101,15 @@
                     (second login-info)
                     (third login-info)))))))
 
-(defmethod restas.simple-auth:storage-forgot-mark-exist-p ((storage rulisp-db-storage) mark)
-  (with-db-storage storage
+(defmethod restas.simple-auth:storage-forgot-mark-exist-p ((storage aglorp:pg-storage) mark)
+  (aglorp:with-storage storage
     (postmodern:query (:select 'mark
                                :from 'forgot
                                :where (:= 'mark  mark))
                       :single)))
 
-(defmethod restas.simple-auth:storage-change-password ((storage rulisp-db-storage) mark password)
-  (with-db-storage storage
+(defmethod restas.simple-auth:storage-change-password ((storage aglorp:pg-storage) mark password)
+  (aglorp:with-storage storage
     (postmodern:with-transaction ()
       (postmodern:execute (:update 'users
                                    :set 'password password
@@ -128,14 +124,14 @@
 
 ;;;; storage-admin-p
 
-(defmethod restas.forum:storage-admin-p ((storage rulisp-db-storage) user)
+(defmethod restas.forum:storage-admin-p ((storage aglorp:pg-storage) user)
   (member user '("archimag" "lispnik" "turtle")
           :test #'string=))
 
 ;;;; storage-list-forums
 
-(defmethod restas.forum:storage-list-forums ((storage rulisp-db-storage))
-  (with-db-storage storage
+(defmethod restas.forum:storage-list-forums ((storage aglorp:pg-storage))
+  (aglorp:with-storage storage
     (postmodern:query (:order-by 
                        (:select 'pretty-forum-id 'description
                                 :from 'rlf-forums)
@@ -158,8 +154,8 @@
         ORDER BY COALESCE(m.created, fm.created) DESC
         LIMIT $3 OFFSET $2")
 
-(defmethod restas.forum:storage-list-topics ((storage rulisp-db-storage) forum limit offset)
-  (with-db-storage storage
+(defmethod restas.forum:storage-list-topics ((storage aglorp:pg-storage) forum limit offset)
+  (aglorp:with-storage storage
     (iter (for (author title created id message-count last-author last-date first-author) in (select-topics* forum offset limit))
           (collect (list :author author
                          :title title
@@ -171,14 +167,14 @@
 
 ;;; storage-create-topic
 
-(defmethod restas.forum:storage-create-topic ((storage rulisp-db-storage) forum-id title body user)
-  (with-db-storage storage
+(defmethod restas.forum:storage-create-topic ((storage aglorp:pg-storage) forum-id title body user)
+  (aglorp:with-storage storage
     (postmodern:query (:select (:rlf-new-topic forum-id title body user)))))
 
 ;;; storage-delete-topic
 
-(defmethod restas.forum:storage-delete-topic ((storage rulisp-db-storage) topic)
-  (with-db-storage storage
+(defmethod restas.forum:storage-delete-topic ((storage aglorp:pg-storage) topic)
+  (aglorp:with-storage storage
     (let ((forum-id (postmodern:query (:select '* :from (:rlf_delete_topic topic))
                                       :single)))
       (if (eql forum-id :null)
@@ -187,8 +183,8 @@
 
 ;;;; storage-form-info
 
-(defmethod restas.forum:storage-forum-info ((storage rulisp-db-storage) forum)
-  (with-db-storage storage
+(defmethod restas.forum:storage-forum-info ((storage aglorp:pg-storage) forum)
+  (aglorp:with-storage storage
     (postmodern:query (:select 'description 'all-topics
                                :from 'rlf-forums
                                :where (:= 'pretty-forum-id forum))
@@ -196,8 +192,8 @@
 
 ;;;; storage-topic-message
 
-(defmethod restas.forum:storage-topic-message ((storage rulisp-db-storage) topic-id)
-  (with-db-storage storage
+(defmethod restas.forum:storage-topic-message ((storage aglorp:pg-storage) topic-id)
+  (aglorp:with-storage storage
     (bind:bind (((title id message-id all-message author body created) 
                  (postmodern:query (:select (:dot :t 'title)
                                             (:dot :t 'topic-id)
@@ -229,16 +225,16 @@
 
 ;;;; storage-topic-reply-count
 
-(defmethod restas.forum:storage-topic-reply-count ((storage rulisp-db-storage) topic)
-  (with-db-storage storage
+(defmethod restas.forum:storage-topic-reply-count ((storage aglorp:pg-storage) topic)
+  (aglorp:with-storage storage
     (postmodern:query (:select (:count '*) :from 'rlf-messages
                                :where (:= 'topic-id topic))
                       :single)))
 
 ;;;; storage-topic-replies
 
-(defmethod restas.forum:storage-topic-replies ((storage rulisp-db-storage) topic limit offset)
-  (with-db-storage storage
+(defmethod restas.forum:storage-topic-replies ((storage aglorp:pg-storage) topic limit offset)
+  (aglorp:with-storage storage
     (postmodern:query (:limit 
                        (:order-by 
                         (:select (:as (:dot :t1 'message-id) 'id)
@@ -260,8 +256,8 @@
 
 ;;;; storage-create-reply
 
-(defmethod restas.forum:storage-create-reply ((storage rulisp-db-storage) reply-on body user)
-  (with-db-storage storage
+(defmethod restas.forum:storage-create-reply ((storage aglorp:pg-storage) reply-on body user)
+  (aglorp:with-storage storage
     (let ((message-id (postmodern:query (:select (:nextval "rlf_messages_message_id_seq"))
                                         :single)))
       (postmodern:execute (:insert-into 'rlf-messages
@@ -275,8 +271,8 @@
 
 ;;;; storage-delete-reply
 
-(defmethod restas.forum:storage-delete-reply ((storage rulisp-db-storage) reply)
-  (let ((topic-id (with-db-storage storage
+(defmethod restas.forum:storage-delete-reply ((storage aglorp:pg-storage) reply)
+  (let ((topic-id (aglorp:with-storage storage
                     (postmodern:query (:select '* :from (:rlf_delete_message reply))
                                       :single))))
     (if (eql topic-id :null)
@@ -285,8 +281,8 @@
 
 ;;;; storage-reply-position
 
-(defmethod restas.forum:storage-reply-position ((storage rulisp-db-storage) reply)
-  (with-db-storage storage
+(defmethod restas.forum:storage-reply-position ((storage aglorp:pg-storage) reply)
+  (aglorp:with-storage storage
     (let ((topic-id (postmodern:query (:select 'topic-id :from 'rlf-messages
                                                :where (:= 'message-id reply))
                                       :single)))
@@ -300,7 +296,7 @@
 ;;;; forum news (RSS)
 
 (defmacro new-messages (where limit)
-  `(with-db-storage storage
+  `(aglorp:with-storage storage
      (postmodern:query (:limit
                         (:order-by
                          (:select 'pretty-forum-id
@@ -323,15 +319,15 @@
                         ,limit)
                        :plists)))
 
-(defmethod restas.forum:storage-all-news ((storage rulisp-db-storage) limit)
+(defmethod restas.forum:storage-all-news ((storage aglorp:pg-storage) limit)
   (new-messages nil limit))
 
-(defmethod restas.forum:storage-forum-news ((storage rulisp-db-storage) forum limit)
+(defmethod restas.forum:storage-forum-news ((storage aglorp:pg-storage) forum limit)
   (new-messages (:= (:dot :f 'pretty-forum-id)
                     forum)
             limit))
 
-(defmethod restas.forum:storage-topic-news ((storage rulisp-db-storage) topic limit)
+(defmethod restas.forum:storage-topic-news ((storage aglorp:pg-storage) topic limit)
   (new-messages (:= (:dot :m 'topic-id)
                     topic)
             limit))
@@ -340,22 +336,17 @@
 ;;; pastebin
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod aglorp:call-with-storage ((storage rulisp-db-storage) thunk)
-  (with-db-storage storage
-    (funcall thunk)))
+(defmethod aglorp:class-table-name ((storage aglorp:pg-storage) (class (eql 'restas.colorize:note)))
+  'formats)
 
-(defmethod aglorp:storage-count-objects ((storage rulisp-db-storage) (class (eql 'restas.colorize:note)))
-  (postmodern:query (:select (:count '*) :from 'formats)
-                    :single))
-
-(defmethod aglorp:storage-read-objects ((storage rulisp-db-storage) (class (eql 'restas.colorize:note)) &key limit offset)
-  (iter (for item in (postmodern:query (:limit (:order-by (:select (:dot :f 'format-id)
-                                                                   (:dot :u 'login)
-                                                                   (:dot :f 'title)
-                                                                   (:raw "f.created AT TIME ZONE 'GMT'")
-                                                                   :from (:as 'formats :f)
-                                                                   :left-join (:as 'users :u) :on (:= (:dot :f 'user-id)
-                                                                                                      (:dot :u 'user-id)))
+(defmethod aglorp:storage-read-objects ((storage aglorp:pg-storage) (class (eql 'restas.colorize:note)) &key limit offset)
+  (iter (for item in (postmodern:query (:limit (:order-by (:select (:dot 'formats 'format-id)
+                                                                   (:dot 'u 'login)
+                                                                   (:dot 'formats 'title)
+                                                                   (:raw "formats.created AT TIME ZONE 'GMT'")
+                                                                   :from (:as 'formats 'formats)
+                                                                   :left-join (:as 'users 'u) :on (:= (:dot 'formats 'user-id)
+                                                                                                      (:dot 'u 'user-id)))
                                                           (:desc 'created))
                                                limit
                                                offset)))
@@ -365,7 +356,7 @@
                                 :title (third item)
                                 :date (local-time:universal-to-timestamp (simple-date:timestamp-to-universal-time (fourth item)))))))
   
-(defmethod aglorp:storage-one-object ((storage rulisp-db-storage) (class (eql 'restas.colorize:note)) &key note-id)
+(defmethod aglorp:storage-one-object ((storage aglorp:pg-storage) (class (eql 'restas.colorize:note)) &key note-id)
   (let ((raw (postmodern:query (:select (:dot :u 'login)
                                         (:dot :f 'title)
                                         (:dot :f 'code)
@@ -385,7 +376,7 @@
                    :date (local-time:universal-to-timestamp (simple-date:timestamp-to-universal-time  (fourth raw)))
                    :lang (fifth raw))))
 
-(defmethod aglorp:storage-persist-object ((storage rulisp-db-storage) (object restas.colorize:note))
+(defmethod aglorp:storage-persist-object ((storage aglorp:pg-storage) (object restas.colorize:note))
   (let ((id (postmodern:query (:select (:nextval "formats_format_id_seq"))
                               :single))
         (user-id (postmodern:query (:select 'user-id :from 'users
