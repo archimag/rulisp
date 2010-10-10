@@ -12,8 +12,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun compute-user-login-name ()
-  (restas:with-submodule-context (gethash 'rulisp-auth *submodules*)
-    (restas.simple-auth::compute-user-login-name)))
+  (labels ((rulisp (submodule)
+             (if (eql (restas:submodule-module submodule)
+                      #.*package*)
+                 submodule
+                 (rulisp (restas:submodule-parent submodule)))))
+    (restas:with-submodule-context (restas:find-submodule 'rulisp-auth (rulisp restas:*submodule*))
+      (restas.simple-auth::compute-user-login-name))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; rulisp templates
@@ -91,18 +96,18 @@
 
 ;;;; static files
 
-(restas:define-submodule rulisp-static (#:restas.directory-publisher)
+(restas:mount-submodule rulisp-static (#:restas.directory-publisher)
   (restas.directory-publisher:*directory* (merge-pathnames "static/" *resources-dir*))
   (restas.directory-publisher:*autoindex* nil))
 
 ;;;; pcl
 
-(restas:define-submodule rulisp-pcl (#:rulisp.pcl)
+(restas:mount-submodule rulisp-pcl (#:rulisp.pcl)
   (rulisp.pcl:*baseurl* '("pcl")))
 
 ;; ;;;; auth
 
-(restas:define-submodule rulisp-auth (#:restas.simple-auth)
+(restas:mount-submodule rulisp-auth (#:restas.simple-auth)
   (restas.simple-auth:*storage* *rulisp-db-storage*)
   (restas.simple-auth:*noreply-email* *noreply-mail-account*)
   (restas.simple-auth:*cookie-cipher-key* *cookie-cipher-key*)
@@ -113,7 +118,7 @@
 
 ;;;; forum
 
-(restas:define-submodule rulisp-forum (#:restas.forum)
+(restas:mount-submodule rulisp-forum (#:restas.forum)
   (restas.forum:*baseurl* '("forum"))
   (restas.forum:*site-name* "Lisper.ru")
   (restas.forum:*storage* *rulisp-db-storage*)
@@ -138,7 +143,7 @@
                                                (getf data :content))))
 
 
-(restas:define-submodule rulisp-format (#:restas.colorize)
+(restas:mount-submodule rulisp-format (#:restas.colorize)
   (restas.colorize:*baseurl* '("apps" "format"))
   (restas.colorize:*max-on-page* 15)
   (restas.colorize:*storage* *rulisp-db-storage*)
@@ -157,7 +162,7 @@
                                               (getf content :content))))
 
 
-(restas:define-submodule rulisp-wiki (#:restas.wiki)
+(restas:mount-submodule rulisp-wiki (#:restas.wiki)
   (restas.wiki:*baseurl* '("wiki"))
   (restas.wiki:*storage* (make-instance 'restas.wiki:file-storage :dir *wiki-dir*))
   (restas.wiki:*wiki-user-function* #'compute-user-login-name)
@@ -165,7 +170,7 @@
 
 ;;;; articles
 
-(restas:define-submodule rulisp-articles (#:restas.wiki)
+(restas:mount-submodule rulisp-articles (#:restas.wiki)
   (restas.wiki:*baseurl* '("articles"))
   (restas.wiki:*index-page-title* "Статьи")
   (restas.wiki:*storage* (make-instance 'restas.wiki:file-storage
@@ -180,7 +185,7 @@
 
 ;;;; Russian Lisp Planet
 
-(restas:define-submodule rulisp-planet (#:restas.planet)
+(restas:mount-submodule rulisp-planet (#:restas.planet)
   (restas.planet:*baseurl* '("planet"))
   (restas.planet:*suggest-mail* "archimag@lisper.ru")
   (restas.planet:*feeds* (merge-pathnames "planet-feeds.lisp" *rulisp-path*))
@@ -192,7 +197,7 @@
                                                     :content (restas.planet.view:feed-html-body data)))))
 ;;;; Files
 
-(restas:define-submodule rulisp-files (#:restas.directory-publisher)
+(restas:mount-submodule rulisp-files (#:restas.directory-publisher)
   (restas.directory-publisher:*baseurl* '("files"))
   (restas.directory-publisher:*directory* (merge-pathnames "files/" *vardir*))
   (restas.directory-publisher:*autoindex-template*
