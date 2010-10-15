@@ -6,7 +6,7 @@
 ;;;; Author: Moskvitin Andrey <archimag@gmail.com>
 
 (restas:define-module #:rulisp
-  (:use #:cl #:iter #:restas.optional #:rulisp.preferences)
+  (:use #:cl #:iter #:rulisp.preferences)
   (:export #:substring
            #:username
 
@@ -32,6 +32,6 @@
            ))
 
 (restas:define-module #:rulisp.pcl
-  (:use #:cl #:iter #:restas.optional #:rulisp.preferences)
+  (:use #:cl #:iter #:rulisp.preferences)
   (:export #:pcl-main))
 
