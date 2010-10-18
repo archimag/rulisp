@@ -7,6 +7,78 @@
 
 (in-package #:rulisp)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; utils
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun apply-format-aux (format args)
+  (if (symbolp format)
+      (apply #'restas:genurl format args)
+      (if args
+          (apply #'format nil (cons format args))
+          format)))
+
+(defun eid (format &rest args)
+  "Make id attribute"
+  (xfactory:attributes :id
+                       (apply-format-aux format args)))
+
+(defun eclass (format &rest args)
+  "Make class attribute"
+  (xfactory:attributes :class
+                       (apply-format-aux format args)))
+
+(defun ehref (format &rest args)
+  "Make href attribute"
+  (xfactory:attributes :href
+                       (apply-format-aux format args)))
+
+(defun estyle (format &rest args)
+  "Make style attributes"
+  (xfactory:attributes :style
+                       (apply-format-aux format args)))
+
+(defun escript (src &optional (type "text/javascript"))
+  "Make script element"
+  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "script")))
+    (xfactory:attributes :src src
+                         :type type)))
+
+(defun ecss (format &rest args)
+  "Make link css element"
+  (let ((xfactory:*node* (xtree:make-child-element xfactory:*node* "link")))
+    (xfactory:attributes :href (apply-format-aux format args)
+                         :rel "stylesheet"
+                         :type "text/css")))
+
+(defun e-break-line ()
+  "Make br element"
+  (xtree:make-child-element xfactory:*node* "br"))
+
+(defun estrong (format &rest args)
+  "Make strong element"
+  (xtree:make-child-text (xtree:make-child-element xfactory:*node*
+                                          "strong")
+                         (apply-format-aux format args)))
+
+(defun e-text2html (text)
+  "parse text as html and append to current element"
+  (if text
+      (html:with-parse-html (html text)
+        (when html
+          (iter (for node in (iter (for node in-child-nodes (xpath:find-single-node html "/html/body"))
+                                   (collect node)))
+                (xtree:detach node)
+                (xtree:append-child xfactory:*node* node))))))
+
+(defun etext (format &rest args)
+  (apply #'xfactory:text
+         format
+         args))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defparameter *wiki-render-map* (make-hash-table))
 
 (defun todo-dokuwiki ()
