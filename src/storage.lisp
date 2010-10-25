@@ -35,6 +35,12 @@
 ;;; auth
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun calc-sha1-sum (val)
+  "Calc sha1 sum of the val (string)"
+  (ironclad:byte-array-to-hex-string
+   (ironclad:digest-sequence :sha1
+                             (babel:string-to-octets val :encoding :utf-8))))
+
 (postmodern:defprepared check-user-password*
     "SELECT (count(*) > 0) FROM users WHERE login = $1 AND password = $2 AND status IS NULL"
   :single)
