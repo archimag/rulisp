@@ -129,8 +129,9 @@
       (pdf-render-all-wiki-items items)))))
 
 (define-wiki-pdf-render dokuwiki:footnote (items)
-	(tt:with-style (:font *footnote-font* :font-size 10.0)
-	  (pdf-render-all-wiki-items items)))
+  )
+;;	(tt:with-style (:font *footnote-font* :font-size 10.0)
+;;;;;;(pdf-render-all-wiki-items items)))
 
 (define-wiki-pdf-render dokuwiki:linebreak (items)
   (declare (ignore items))

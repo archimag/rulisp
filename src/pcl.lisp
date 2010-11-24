@@ -213,8 +213,8 @@
     (tt:with-document (:mode :outlines)
       (pdf:append-child-outline (pdf:outline-root pdf:*document*) 
                                 "Practical Common Lisp"
-                                (pdf:register-reference :name "Practical Common Lisp"
-                                                        :page (pcl-first-page)))
+                                (let ((pdf:*page* (pcl-first-page)))
+                                  (pdf:register-page-reference "Practical Common Lisp")))
       (let ((rulisp::*current-chapter* "Practical Common Lisp"))
         (iter (for chapter in-vector *pcl-files-map*)
               (for i from 1)
