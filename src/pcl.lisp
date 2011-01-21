@@ -137,13 +137,13 @@
 ;; contents
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-route pcl-main ("")
+(restas:define-route pcl-main ("")
   (finalize-page (rulisp.view:pcl-main (list :pdf-href (restas:genurl 'pcl-pdf)
-                                                  :jpg-href "/image/pcl.jpg"
-                                                  :chapters (iter (for chapter in-vector *pcl-files-map*)
-                                                                  (collect (list :href (genurl 'pcl-chapter-view
-                                                                                               :chapter (first chapter))
-                                                                                 :title (second chapter))))))
+                                             :jpg-href "/image/pcl.jpg"
+                                             :chapters (iter (for chapter in-vector *pcl-files-map*)
+                                                             (collect (list :href (restas:genurl 'pcl-chapter-view
+                                                                                                 :chapter (first chapter))
+                                                                            :title (second chapter))))))
                  "Перевод Practical Common Lisp"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -154,11 +154,11 @@
 (defun chapter-url (number)
   (if (and (> number -1)
            (< number (1- (length *pcl-files-map*))))
-      (genurl 'pcl-chapter-view
-              :chapter (first (aref *pcl-files-map*
-                                    number)))))
+      (restas:genurl 'pcl-chapter-view
+                     :chapter (first (aref *pcl-files-map*
+                                           number)))))
 
-(define-route pcl-chapter-view (":(chapter)")
+(restas:define-route pcl-chapter-view (":(chapter)")
   (let* ((number (position chapter
                            *pcl-files-map*
                            :key #'first
@@ -166,17 +166,17 @@
          (path (pcl-source-path (third (aref *pcl-files-map* number)))))
     (if (fad:file-exists-p path)
         (finalize-page (rulisp.view:pcl-chapter-view (list :prev (chapter-url (1- number))
-                                                                :menu (genurl 'pcl-main)
-                                                                :next (chapter-url (1+ number))
-                                                                :content (xtree:with-object (el (rulisp::render-wiki-page
-                                                                                                 (wiki-parser:parse :dokuwiki path)))
-                                                                           (xtree:serialize el :to-string))))
+                                                           :menu (restas:genurl 'pcl-main)
+                                                           :next (chapter-url (1+ number))
+                                                           :content (xtree:with-object (el (rulisp::render-wiki-page
+                                                                                            (wiki-parser:parse :dokuwiki path)))
+                                                                      (xtree:serialize el :to-string))))
                        (second (aref *pcl-files-map* number)))
         hunchentoot:+HTTP-NOT-FOUND+)))
 
 
-(define-route pcl-chapter-pdf ("pdf/:(chapter)"
-                               :content-type "application/pdf")
+(restas:define-route pcl-chapter-pdf ("pdf/:(chapter)"
+                                      :content-type "application/pdf")
   (let* ((number (position chapter
                            *pcl-files-map*
                            :key #'first
@@ -185,8 +185,8 @@
     (flexi-streams:with-output-to-sequence (out)
       (let ((out* (flexi-streams:make-flexi-stream out)))
         (rulisp::pdf-render-wiki-page (wiki-parser:parse :dokuwiki
-                                                 path)
-                              out*))
+                                                         path)
+                                      out*))
       out)))
 
 
@@ -235,7 +235,7 @@
                                                             10))))
                 (pdf:write-document out))))))
 
-(define-route pcl-pdf ("pcl.pdf")
+(restas:define-route pcl-pdf ("pcl.pdf")
   (merge-pathnames "pcl.pdf"
                    *pcl-snapshot-dir*))
 

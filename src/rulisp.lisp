@@ -12,13 +12,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun compute-user-login-name ()
-  (labels ((rulisp (submodule)
-             (if (eql (restas:submodule-module submodule)
-                      #.*package*)
-                 submodule
-                 (rulisp (restas:submodule-parent submodule)))))
-    (restas:with-submodule-context (restas:find-submodule 'rulisp-auth (rulisp restas:*submodule*))
-      (restas.simple-auth::compute-user-login-name))))
+  (restas:with-submodule (restas:find-submodule 'rulisp-auth
+                                                (restas:find-upper-submodule #.*package*))
+    (restas.simple-auth::compute-user-login-name)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; rulisp templates
@@ -44,48 +40,40 @@
                            ("Поиск" nil google-search)))
 
 (defun rulisp-finalize-page (&key title css js content)
-  (labels ((rulisp (&optional (submodule restas:*submodule*))
-             (if (eql (restas:submodule-module submodule)
-                      #.*package*)
-                 submodule
-                 (rulisp (restas:submodule-parent submodule))))
-           (main-menu-data ()
-             (iter (for item in *mainmenu*)
-                   (collect (list :href (apply #'restas:genurl-submodule
-                                               (second item)
-                                               (if (cdddr item)
-                                                   (cddr item)
-                                                   (last item)))
-                                  :name (first item)))))
-           (css-urls (items)
-             (iter (for item in items)
-                   (collect (format nil "/css/~A" item)))))
-    (let ((restas::*submodule* (rulisp)))
-      (rulisp.view:main-frame (list :title title
-                                    :css (css-urls css)
-                                    :js js
-                                    :gecko-png  "/image/gecko.png"
-                                    :user (compute-user-login-name)
-                                    :main-menu (main-menu-data)
-                                    :content content
-                                    :callback (hunchentoot:request-uri*))))))
+  (rulisp.view:main-frame 
+   (list :title title
+         :css (iter (for item in css)
+                    (collect (format nil "/css/~A" item)))
+         :js js
+         :gecko-png  "/image/gecko.png"
+         :user (compute-user-login-name)
+         :main-menu (restas:with-submodule (restas:find-upper-submodule #.*package*)
+                      (iter (for item in *mainmenu*)
+                            (collect (list :href (apply #'restas:genurl-submodule
+                                                        (second item)
+                                                        (if (cdddr item)
+                                                            (cddr item)
+                                                            (last item)))
+                                           :name (first item)))))
+         :content content
+         :callback (hunchentoot:request-uri*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; routes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-route main ("")
+(restas:define-route main ("")
   (rulisp-finalize-page :title "Русскоязычное сообщество Common Lisp разработчиков"
                         :css '("style.css")
                         :content (alexandria:read-file-into-string (merge-pathnames "index.html"
                                                                                     *resources-dir*))))
 
-(define-route tools-list ("apps/")
+(restas:define-route tools-list ("apps/")
   (rulisp-finalize-page :title "Инструменты"
                         :css '("style.css")
                         :content (rulisp.view:tools)))
 
-(define-route google-search ("search")
+(restas:define-route google-search ("search")
   (rulisp-finalize-page :title "Поиск по сайту Lisper.ru"
                         :css '("style.css")
                         :content (rulisp.view:google-search)))
@@ -94,11 +82,19 @@
 ;; submodules
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defclass rulisp-drawer () ())
+
+(defmethod restas:render-object ((designer rulisp-drawer) (code (eql hunchentoot:+http-not-found+)))
+  (rulisp-finalize-page :title "Not Found"
+                        :css '("style.css")
+                        :content (rulisp.view:not-found-content (list :href (hunchentoot:request-uri*)))))
+
 ;;;; static files
 
 (restas:mount-submodule rulisp-static (#:restas.directory-publisher)
   (restas.directory-publisher:*directory* (merge-pathnames "static/" *resources-dir*))
-  (restas.directory-publisher:*autoindex* nil))
+  (restas.directory-publisher:*autoindex* nil)
+  (restas.directory-publisher:*default-render-method* (make-instance 'rulisp-drawer)))
 
 ;;;; pcl
 
