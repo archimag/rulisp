@@ -352,7 +352,7 @@
                                                     (if delimiter
                                                         (subseq (car items) 0 delimiter)
                                                         (car items)))
-                                       (hunchentoot:request-uri*)))
+                                       (wsal:request-uri*)))
                     (string-trim '#(#\Space #\Tab)
                                  (if delimiter
                                      (subseq (car items) 0 delimiter)

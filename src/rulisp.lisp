@@ -56,7 +56,7 @@
                                                             (last item)))
                                            :name (first item)))))
          :content content
-         :callback (hunchentoot:request-uri*))))
+         :callback (wsal:request-uri*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; routes
@@ -84,10 +84,10 @@
 
 (defclass rulisp-drawer () ())
 
-(defmethod restas:render-object ((designer rulisp-drawer) (code (eql hunchentoot:+http-not-found+)))
+(defmethod restas:render-object ((designer rulisp-drawer) (code (eql wsal:+http-not-found+)))
   (rulisp-finalize-page :title "Not Found"
                         :css '("style.css")
-                        :content (rulisp.view:not-found-content (list :href (hunchentoot:request-uri*)))))
+                        :content (rulisp.view:not-found-content (list :href (wsal:request-uri*)))))
 
 ;;;; static files
 

@@ -172,7 +172,7 @@
                                                                                             (wiki-parser:parse :dokuwiki path)))
                                                                       (xtree:serialize el :to-string))))
                        (second (aref *pcl-files-map* number)))
-        hunchentoot:+HTTP-NOT-FOUND+)))
+        wsal:+http-not-found+)))
 
 
 (restas:define-route pcl-chapter-pdf ("pdf/:(chapter)"
