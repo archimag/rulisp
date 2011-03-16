@@ -11,7 +11,8 @@
                #:zip
                #:restas-simple-auth #:restas-planet #:restas-wiki
                #:restas-colorize #:restas-directory-publisher #:restas-forum
-               #:xfactory #:cl-typesetting)
+               #:xfactory #:cl-typesetting
+               #:wiki-parser)
   :components ((:file "pref")
                (:module :src
                         :components ((:file "packages")
