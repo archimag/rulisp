@@ -88,14 +88,6 @@
   (rulisp-finalize-page :title "Not Found"
                         :css '("style.css")
                         :content (rulisp.view:not-found-content (list :href (hunchentoot:request-uri*)))))
-
-;;;; static files
-
-(restas:mount-submodule rulisp-static (#:restas.directory-publisher)
-  (restas.directory-publisher:*directory* (merge-pathnames "static/" *resources-dir*))
-  (restas.directory-publisher:*autoindex* nil)
-  (restas.directory-publisher:*default-render-method* (make-instance 'rulisp-drawer)))
-
 ;;;; pcl
 
 (restas:mount-submodule rulisp-pcl (#:rulisp.pcl)
@@ -191,15 +183,35 @@
                               (rulisp-finalize-page :title "Russian Lisp Planet"
                                                     :css '("style.css" "planet.css")
                                                     :content (restas.planet.view:feed-html-body data)))))
-;;;; Files
+
+;;;; static files
+
+(closure-template:ensure-ttable-package
+ '#:rulisp.directory-publisher.view
+ :prototype (closure-template:package-ttable '#:restas.directory-publisher.view))
+
+(let ((ttable (closure-template:package-ttable '#:restas.directory-publisher.view)))
+  (flet ((rulisp-autoindex (data out)
+           (write-string (rulisp-finalize-page :title (getf data :title)
+                                               :css '("style.css" "autoindex.css")
+                                               :content (restas.directory-publisher.view:autoindex-content data))
+                         out)))
+    (closure-template:ttable-register-template ttable "AUTOINDEX" #'rulisp-autoindex :supersede t)))
+
+(defclass static-autoindex-view (rulisp-drawer restas.directory-publisher:view) ()
+  (:default-initargs
+   :template-package '#:rulisp.directory-publisher.view))
+
+(defclass rulisp-static-view (rulisp-drawer restas.directory-publisher:view) ()
+  
+
+(restas:mount-submodule rulisp-static (#:restas.directory-publisher)
+  (restas.directory-publisher:*directory* (merge-pathnames "static/" *resources-dir*))
+  (restas.directory-publisher:*default-render-method* (make-instance 'static-autoindex-view)))
 
 (restas:mount-submodule rulisp-files (#:restas.directory-publisher)
   (restas.directory-publisher:*baseurl* '("files"))
   (restas.directory-publisher:*directory* (merge-pathnames "files/" *vardir*))
-  (restas.directory-publisher:*autoindex-template*
-   (lambda (data)
-     (rulisp-finalize-page :title (getf data :title)
-                           :css '("style.css" "autoindex.css")
-                           :content (restas.directory-publisher.view:autoindex-content data)))))
+  (restas.directory-publisher:*default-render-method* (make-instance 'static-autoindex-view)))
                                                                                         
 
