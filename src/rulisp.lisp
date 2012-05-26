@@ -202,8 +202,7 @@
   (:default-initargs
    :template-package '#:rulisp.directory-publisher.view))
 
-(defclass rulisp-static-view (rulisp-drawer restas.directory-publisher:view) ()
-  
+(defclass rulisp-static-view (rulisp-drawer restas.directory-publisher:view) ())
 
 (restas:mount-submodule rulisp-static (#:restas.directory-publisher)
   (restas.directory-publisher:*directory* (merge-pathnames "static/" *resources-dir*))
