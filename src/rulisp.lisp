@@ -179,7 +179,7 @@
   (restas.planet:*cache-dir* (merge-pathnames "planet/" *cachedir*))
   (restas.planet:*template* (lambda (data)
                               (rulisp-finalize-page :title "Russian Lisp Planet"
-                                                    :css '("style.css" "planet.css")
+                                                    :css '("style.css" "planet.css" "colorize.css")
                                                     :content (restas.planet.view:feed-html-body data)))))
 
 ;;;; static files
