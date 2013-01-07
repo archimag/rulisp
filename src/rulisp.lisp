@@ -12,9 +12,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun compute-user-login-name ()
-  (restas:with-submodule (restas:find-submodule 'rulisp-auth
-                                                (restas:find-upper-submodule #.*package*))
-    (restas.simple-auth::compute-user-login-name)))
+  (labels ((find-upper-module (module)
+             (let ((parent (restas::module-parent module)))
+               (if parent
+                   (find-upper-module parent)
+                   module))))
+    (let ((rulisp-module (find-upper-module restas:*module*)))
+      (restas::with-module (gethash '-auth- (slot-value rulisp-module 'restas::children))
+        (restas.simple-auth::compute-user-login-name)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; rulisp templates
@@ -29,15 +34,15 @@
                                      (merge-pathnames "rulisp.tmpl"
                                                       *resources-dir*)))
 
-(defparameter *mainmenu* `(("Главная" nil main)
-                           ("Статьи" rulisp-articles restas.wiki:main-wiki-page)
-                           ("Планета" rulisp-planet restas.planet:planet-main)
-                           ("Форум" rulisp-forum restas.forum:list-forums)
-                           ("Сервисы" nil tools-list)
-                           ("Practical Common Lisp" rulisp-pcl rulisp.pcl:pcl-main)
-                           ("Wiki" rulisp-wiki restas.wiki:main-wiki-page)
-                           ("Файлы" rulisp-files restas.directory-publisher:route :path "")
-                           ("Поиск" nil google-search)))
+(defparameter *mainmenu* `(("Главная" main)
+                           ("Статьи" -articles-.main-wiki-page)
+                           ("Планета" -planet-.planet-main)
+                           ("Форум" -forum-.list-forums)
+                           ("Сервисы" tools-list)
+                           ("Practical Common Lisp" -pcl-.pcl-main)
+                           ("Wiki" -wiki-.main-wiki-page)
+                           ("Файлы" -files-.route :path "")
+                           ("Поиск" google-search)))
 
 (defun rulisp-finalize-page (&key title css js content)
   (rulisp.view:main-frame 
@@ -47,14 +52,9 @@
          :js js
          :gecko-png  "/image/gecko.png"
          :user (compute-user-login-name)
-         :main-menu (restas:with-submodule (restas:find-upper-submodule #.*package*)
-                      (iter (for item in *mainmenu*)
-                            (collect (list :href (apply #'restas:genurl-submodule
-                                                        (second item)
-                                                        (if (cdddr item)
-                                                            (cddr item)
-                                                            (last item)))
-                                           :name (first item)))))
+         :main-menu (iter (for item in *mainmenu*)
+                          (collect (list :href (apply #'restas:genurl (second item) (cddr item))
+                                         :name (first item))))
          :content content
          :callback (hunchentoot:request-uri*))))
 
@@ -79,7 +79,7 @@
                         :content (rulisp.view:google-search)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; submodules
+;; modules
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass rulisp-drawer () ())
@@ -90,13 +90,13 @@
                         :content (rulisp.view:not-found-content (list :href (hunchentoot:request-uri*)))))
 ;;;; pcl
 
-(restas:mount-submodule rulisp-pcl (#:rulisp.pcl)
-  (rulisp.pcl:*baseurl* '("pcl")))
+(restas:mount-module -pcl- (#:rulisp.pcl)
+  (:url "pcl"))
 
 ;; ;;;; auth
 
-(restas:mount-submodule rulisp-auth (#:restas.simple-auth)
-  (restas.simple-auth:*storage* *rulisp-db-storage*)
+(restas:mount-module -auth- (#:restas.simple-auth)
+  (restas.simple-auth:*datastore* *rulisp-db-storage*)
   (restas.simple-auth:*noreply-email* *noreply-mail-account*)
   (restas.simple-auth:*cookie-cipher-key* *cookie-cipher-key*)
   (restas.simple-auth:*finalize-page* (lambda (content)
@@ -106,18 +106,18 @@
 
 ;;;; forum
 
-(restas:mount-submodule rulisp-forum (#:restas.forum)
-  (restas.forum:*baseurl* '("forum"))
-  (restas.forum:*site-name* "Lisper.ru")
-  (restas.forum:*storage* *rulisp-db-storage*)
-  (restas.forum:*user-name-function* #'compute-user-login-name)
-  (restas.forum:*default-render-method*
+(restas:mount-module -forum- (#:restas.forum)
+  (:url "forum")
+  (:render-method
    (lambda (obj)
      (rulisp-finalize-page :title (getf obj :title)
                            :content (restas:render-object (find-package '#:restas.forum.view) 
                                                           obj)
                            :css '("style.css" "jquery.wysiwyg.css" "forum.css" "colorize.css" )
-                           :js (getf obj :js)))))
+                           :js (getf obj :js))))
+  (restas.forum:*site-name* "Lisper.ru")
+  (restas.forum:*storage* *rulisp-db-storage*)
+  (restas.forum:*user-name-function* #'compute-user-login-name))
 
 ;;;; format
 
@@ -131,12 +131,12 @@
                                                (getf data :content))))
 
 
-(restas:mount-submodule rulisp-format (#:restas.colorize)
-  (restas.colorize:*baseurl* '("apps" "format"))
+(restas:mount-module -format- (#:restas.colorize)
+  (:url "apps/format/")
+  (:render-method (make-instance 'pastebin-drawer))
   (restas.colorize:*max-on-page* 15)
   (restas.colorize:*storage* *rulisp-db-storage*)
-  (restas.colorize:*colorize-user-function* #'compute-user-login-name)
-  (restas.colorize:*default-render-method* (make-instance 'pastebin-drawer)))
+  (restas.colorize:*colorize-user-function* #'compute-user-login-name))
 
 ;;;; wiki
 
@@ -150,31 +150,29 @@
                                               (getf content :content))))
 
 
-(restas:mount-submodule rulisp-wiki (#:restas.wiki)
-  (restas.wiki:*baseurl* '("wiki"))
+(restas:mount-module -wiki- (#:restas.wiki)
+  (:url "wiki")
+  (:render-method (make-instance 'drawer))
   (restas.wiki:*storage* (make-instance 'restas.wiki:file-storage :dir *wiki-dir*))
-  (restas.wiki:*wiki-user-function* #'compute-user-login-name)
-  (restas.wiki:*default-render-method* (make-instance 'drawer)))
+  (restas.wiki:*wiki-user-function* #'compute-user-login-name))
 
 ;;;; articles
 
-(restas:mount-submodule rulisp-articles (#:restas.wiki)
-  (restas.wiki:*baseurl* '("articles"))
+(restas:mount-module -articles- (#:restas.wiki)
+  (:url "articles")
+  (:render-method (make-instance 'drawer))
   (restas.wiki:*index-page-title* "Статьи")
   (restas.wiki:*storage* (make-instance 'restas.wiki:file-storage
                                         :dir #P"/var/rulisp/articles/"))
   (restas.wiki:*wiki-user-function* #'(lambda ()
                                         (find (compute-user-login-name)
                                               '("archimag" "dmitry_vk")
-                                              :test #'string=)))
-  (restas.wiki:*default-render-method* (make-instance 'drawer)))
-  
-
+                                              :test #'string=))))
 
 ;;;; Russian Lisp Planet
 
-(restas:mount-submodule rulisp-planet (#:restas.planet)
-  (restas.planet:*baseurl* '("planet"))
+(restas:mount-module -planet- (#:restas.planet)
+  (:url "planet")
   (restas.planet:*suggest-mail* "archimag@lisper.ru")
   (restas.planet:*feeds* (merge-pathnames "planet-feeds.lisp" *rulisp-path*))
   (restas.planet:*name* "Russian Lisp Planet")  
@@ -186,31 +184,28 @@
 
 ;;;; static files
 
-(closure-template:ensure-ttable-package
- '#:rulisp.directory-publisher.view
- :prototype (closure-template:package-ttable '#:restas.directory-publisher.view))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (closure-template:ensure-ttable-package
+   '#:rulisp.directory-publisher.view
+   :prototype (closure-template:package-ttable '#:restas.directory-publisher.view))
 
-(let ((ttable (closure-template:package-ttable '#:restas.directory-publisher.view)))
-  (flet ((rulisp-autoindex (data out)
-           (write-string (rulisp-finalize-page :title (getf data :title)
-                                               :css '("style.css" "autoindex.css")
-                                               :content (restas.directory-publisher.view:autoindex-content data))
-                         out)))
-    (closure-template:ttable-register-template ttable "AUTOINDEX" #'rulisp-autoindex :supersede t)))
+  (let ((ttable (closure-template:package-ttable '#:rulisp.directory-publisher.view)))
+    (flet ((rulisp-autoindex (data out)
+             (write-string (rulisp-finalize-page :title (getf data :title)
+                                                 :css '("style.css" "autoindex.css")
+                                                 :content (restas.directory-publisher.view:autoindex-content data))
+                           out)))
+      (closure-template:ttable-register-template ttable "AUTOINDEX" #'rulisp-autoindex :supersede t)
+      (closure-template:ttable-sync-package ttable '#:rulisp.directory-publisher.view))))
 
-(defclass static-autoindex-view (rulisp-drawer restas.directory-publisher:view) ()
-  (:default-initargs
-   :template-package '#:rulisp.directory-publisher.view))
+(restas:mount-module -static- (#:restas.directory-publisher)
+  (restas.directory-publisher:*directory* (merge-pathnames "static/" *resources-dir*)))
 
-(defclass rulisp-static-view (rulisp-drawer restas.directory-publisher:view) ())
-
-(restas:mount-submodule rulisp-static (#:restas.directory-publisher)
-  (restas.directory-publisher:*directory* (merge-pathnames "static/" *resources-dir*))
-  (restas.directory-publisher:*default-render-method* (make-instance 'static-autoindex-view)))
-
-(restas:mount-submodule rulisp-files (#:restas.directory-publisher)
-  (restas.directory-publisher:*baseurl* '("files"))
+(restas:mount-module -files- (#:restas.directory-publisher)
+  (:url "files")
+  (:render-method #'rulisp.directory-publisher.view:autoindex)
   (restas.directory-publisher:*directory* (merge-pathnames "files/" *vardir*))
-  (restas.directory-publisher:*default-render-method* (make-instance 'static-autoindex-view)))
+  (restas.directory-publisher:*autoindex* t))
+
                                                                                         
 

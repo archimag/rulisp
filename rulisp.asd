@@ -12,6 +12,7 @@
                #:restas-simple-auth #:restas-planet #:restas-wiki
                #:restas-colorize #:restas-directory-publisher #:restas-forum
                #:xfactory #:cl-typesetting
+               #:simple-date
                #:wiki-parser)
   :components ((:file "pref")
                (:module :src

@@ -46,7 +46,7 @@
   :single)
 
 
-(defmethod restas.simple-auth:storage-check-user-password ((storage rulisp-db-storage) login password)
+(defmethod restas.simple-auth.policy.datastore:check-user-password ((storage rulisp-db-storage) login password)
   (with-db-storage storage
     (if (check-user-password* login password)
         login)))
@@ -55,7 +55,7 @@
     "select email from users where email = $1"
   :single)
     
-(defmethod restas.simple-auth:storage-email-exist-p ((storage rulisp-db-storage) email)
+(defmethod restas.simple-auth.policy.datastore:email-exist-p ((storage rulisp-db-storage) email)
     (with-db-storage storage
       (check-email-exist* email)))
 
@@ -63,25 +63,25 @@
     "select login from users where login = $1"
   :single)
 
-(defmethod restas.simple-auth:storage-user-exist-p ((storage rulisp-db-storage) login)
+(defmethod restas.simple-auth.policy.datastore:user-exist-p ((storage rulisp-db-storage) login)
   (with-db-storage storage
     (check-login-exist* login)))
 
 (postmodern:defprepared db-add-new-user "SELECT add_new_user($1, $2, $3, $4)" :single)
 
-(defmethod restas.simple-auth:storage-create-invite ((storage rulisp-db-storage) login email password)
+(defmethod restas.simple-auth.policy.datastore:create-invite ((storage rulisp-db-storage) login email password)
   (let ((invite (calc-sha1-sum (format nil "~A~A~A" login email password))))
     (with-db-storage storage
       (db-add-new-user login email password invite))
     invite))
 
-(defmethod restas.simple-auth:storage-invite-exist-p ((storage rulisp-db-storage) invite)
+(defmethod restas.simple-auth.policy.datastore:invite-exist-p ((storage rulisp-db-storage) invite)
   (with-db-storage storage
     (postmodern:query (:select 'mark :from 'confirmations :where (:= 'mark invite))
                       :single)))
 
 
-(defmethod restas.simple-auth:storage-create-account ((storage rulisp-db-storage) invite)
+(defmethod restas.simple-auth.policy.datastore:create-account ((storage rulisp-db-storage) invite)
   (with-db-storage storage
     (let* ((account (postmodern:query (:select 'users.user_id 'login 'email 'password
                                                :from 'users
@@ -96,7 +96,7 @@
                                           :where (:= 'mark invite))))
       (cdr account))))
 
-(defmethod restas.simple-auth:storage-create-forgot-mark ((storage rulisp-db-storage)  login-or-email)
+(defmethod restas.simple-auth.policy.datastore:create-forgot-mark ((storage rulisp-db-storage)  login-or-email)
   (with-db-storage storage
     (let ((login-info (postmodern:query (:select 'user-id 'login 'email :from 'users
                                                  :where (:and (:or (:= 'email login-or-email)
@@ -111,14 +111,14 @@
                     (second login-info)
                     (third login-info)))))))
 
-(defmethod restas.simple-auth:storage-forgot-mark-exist-p ((storage rulisp-db-storage) mark)
+(defmethod restas.simple-auth.policy.datastore:forgot-mark-exist-p ((storage rulisp-db-storage) mark)
   (with-db-storage storage
     (postmodern:query (:select 'mark
                                :from 'forgot
                                :where (:= 'mark  mark))
                       :single)))
 
-(defmethod restas.simple-auth:storage-change-password ((storage rulisp-db-storage) mark password)
+(defmethod restas.simple-auth.policy.datastore:change-password ((storage rulisp-db-storage) mark password)
   (with-db-storage storage
     (postmodern:with-transaction ()
       (postmodern:execute (:update 'users
