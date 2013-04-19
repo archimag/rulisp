@@ -1,6 +1,3 @@
-
-(feed "http://lisplearn.blogspot.com/feeds/posts/default")
-
 (feed "http://lisp-univ-etc.blogspot.com/feeds/posts/default/-/lisp/ru")
 
 (feed "http://catap.ru/feeds/atom/tag/lisp/")
