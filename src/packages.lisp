@@ -35,3 +35,6 @@
   (:use #:cl #:iter #:rulisp.preferences)
   (:export #:pcl-main))
 
+(restas:define-module #:rulisp.jscl
+  (:use #:cl #:rulisp.preferences)
+  (:export #:jscl-main))
