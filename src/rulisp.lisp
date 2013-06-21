@@ -138,6 +138,11 @@
   (restas.colorize:*storage* *rulisp-db-storage*)
   (restas.colorize:*colorize-user-function* #'compute-user-login-name))
 
+;;;; jscl
+
+(restas:mount-module -jscl- (#:rulisp.jscl)
+  (:url "apps/jscl/"))
+
 ;;;; wiki
 
 (defclass drawer (dokuwiki-drawer) ())

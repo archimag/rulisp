@@ -1,0 +1,56 @@
+
+#console {
+    font-size: 14px;
+    font-family: Courier;
+    height: 500px;
+}
+
+.parents {
+    font-weight: bold;
+}
+
+.jqconsole {
+    padding: 10px
+}
+
+.jqconsole-cursor {
+    background-color: Gray;
+}
+
+.jqconsole-blurred .jqconsole-cursor {
+    background-color: Gray;
+}
+
+.jqconsole-prompt {
+    color: Black;
+}
+
+.jqconsole-old-prompt {
+    color: Gray;
+}
+
+.jqconsole-input {
+    color: Black;
+}
+
+.jqconsole-old-input {
+    color: Gray;
+    font-weight: normal;
+}
+
+.jqconsole-output {
+    color: green;
+}
+
+ .jqconsole-header {
+     color: gray;
+}
+
+.jqconsole-return {
+    color: gray;
+    font-style: italic;
+}
+
+.jqconsole-error {
+    color: red;
+}

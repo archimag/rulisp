@@ -24,6 +24,9 @@
            #:*pcl-snapshot-url*
            #:*pcl-snapshot-dir*
            #:*pcl-load-snapshot-p*
+           #:*jscl-snapshot-url*
+           #:*jscl-snapshot-dir*
+           #:*jscl-load-snapshot-p*
            #:*corefonts-dir*
            #:*cm-fonts-dir*))
 
@@ -60,6 +63,11 @@
 
 (defparameter *pcl-load-snapshot-p* nil)
 
+(defparameter *jscl-snapshot-url* "https://github.com/davazp/jscl.git")
+
+(defparameter *jscl-snapshot-dir* #P"/var/rulisp/")
+
+(defparameter *jscl-load-snapshot-p* t)
 
 (defparameter *wiki-dir* #P"/var/rulisp/wiki/")
 

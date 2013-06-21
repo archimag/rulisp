@@ -226,16 +226,23 @@ textarea {
 .tools {
     padding-bottom: 10px;
     border-bottom:  1px solid #777777;
-    height: 70px;
+    height: 160px;
 }
 
 .tools-img {
     width: 64px;
     height: 64px;
-    background: transparent url(/image/formatter.png) no-repeat;
     float: left;
     border: 1px solid gray;
     margin-right: 10px;
+}
+
+.tools-img#formatter {
+    background: transparent url(/image/formatter.png) no-repeat;
+}
+
+.tools-img#jscl {
+    background: transparent url(/image/jscl.png) no-repeat;
 }
 
 .tools .description {

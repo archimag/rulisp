@@ -22,6 +22,7 @@
                                               :depends-on ("packages"))
                                      (:file "storage" :depends-on ("packages"))
                                      (:file "pcl"  :depends-on ("rulisp"))
+                                     (:file "jscl"  :depends-on ("rulisp"))
                                      (:file "rulisp" :depends-on ("storage" "dokuwiki")))
                         :depends-on ("pref"))))
 
