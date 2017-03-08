@@ -55,7 +55,7 @@
 
 (defparameter *default-skin* "fine")
 
-(defparameter *pcl-dir* #P"/var/www/localhost/htdocs/dokuwiki/data/pages/pcl/")
+(defparameter *pcl-dir* #P"/var/rulisp/pcl/dwiki/")
 
 (defparameter *pcl-snapshot-url* #u"http://pcl.catap.ru/snapshot.zip")
 

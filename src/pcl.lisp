@@ -124,6 +124,10 @@
   (merge-pathnames (concatenate 'string chapter ".txt")
                    *pcl-dir*))
 
+(defun pcl-source-path (chapter)
+  (merge-pathnames (format nil "chapter-~2,'0d.txt" chapter)
+                   *pcl-dir*))
+
 (defun finalize-page (content title)
   (rulisp::rulisp-finalize-page :title title
                                 :css '("style.css" "colorize.css")
@@ -163,7 +167,7 @@
                            *pcl-files-map*
                            :key #'first
                            :test #'string=))
-         (path (pcl-source-path (third (aref *pcl-files-map* number)))))
+         (path (pcl-source-path (1+ number))))
     (if (fad:file-exists-p path)
         (finalize-page (rulisp.view:pcl-chapter-view (list :prev (chapter-url (1- number))
                                                            :menu (restas:genurl 'pcl-main)
@@ -243,35 +247,35 @@
 ;; load snapshot from http://pcl.catap.ru/
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun load-pcl-snapshot ()
-  (let ((snapshot-path (ensure-directories-exist (merge-pathnames (car (last (puri:uri-parsed-path *pcl-snapshot-url*)))
-                                                                  *pcl-snapshot-dir*)))
-        (snapshot (drakma:http-request *pcl-snapshot-url*
-                                       :force-binary t)))
-    (when snapshot
-      (with-open-file (out
-                       snapshot-path
-                       :direction :output
-                       :element-type '(unsigned-byte 8)
-                       :if-exists :supersede)
-        (write-sequence snapshot out))
-      (zip:unzip snapshot-path
-                 *pcl-snapshot-dir*
-                 :if-exists :supersede)
-      (setf *pcl-dir*
-            (merge-pathnames "var/www/pcl.catap.ru/htdocs/data/pages/pcl/"
-                             *pcl-snapshot-dir*))
+;; (defun load-pcl-snapshot ()
+;;   (let ((snapshot-path (ensure-directories-exist (merge-pathnames (car (last (puri:uri-parsed-path *pcl-snapshot-url*)))
+;;                                                                   *pcl-snapshot-dir*)))
+;;         (snapshot (drakma:http-request *pcl-snapshot-url*
+;;                                        :force-binary t)))
+;;     (when snapshot
+;;       (with-open-file (out
+;;                        snapshot-path
+;;                        :direction :output
+;;                        :element-type '(unsigned-byte 8)
+;;                        :if-exists :supersede)
+;;         (write-sequence snapshot out))
+;;       (zip:unzip snapshot-path
+;;                  *pcl-snapshot-dir*
+;;                  :if-exists :supersede)
+;;       (setf *pcl-dir*
+;;             (merge-pathnames "var/www/pcl.catap.ru/htdocs/data/pages/pcl/"
+;;                              *pcl-snapshot-dir*))
         
-      (make-pcl-pdf (merge-pathnames "pcl.pdf.tmp"
-                                     *pcl-snapshot-dir*))
-      (sb-posix:rename (merge-pathnames "pcl.pdf.tmp"
-                                        *pcl-snapshot-dir*)
-                       (merge-pathnames "pcl.pdf"
-                                        *pcl-snapshot-dir*))
-      t)))
+;;       (make-pcl-pdf (merge-pathnames "pcl.pdf.tmp"
+;;                                      *pcl-snapshot-dir*))
+;;       (sb-posix:rename (merge-pathnames "pcl.pdf.tmp"
+;;                                         *pcl-snapshot-dir*)
+;;                        (merge-pathnames "pcl.pdf"
+;;                                         *pcl-snapshot-dir*))
+;;       t)))
 
-(if *pcl-load-snapshot-p*
-    (clon:schedule-function 'load-pcl-snapshot
-                            (clon:make-scheduler (clon:make-typed-cron-schedule :hour '*)
-                                                 :allow-now-p t)
-                            :thread t))
+;; (if *pcl-load-snapshot-p*
+;;     (clon:schedule-function 'load-pcl-snapshot
+;;                             (clon:make-scheduler (clon:make-typed-cron-schedule :hour '*)
+;;                                                  :allow-now-p t)
+;;                             :thread t))
