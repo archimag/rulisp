@@ -120,9 +120,9 @@
      ("conclusion-whats-next" "Заключение: Что дальше ?" "conclusion")))
 
                                
-(defun pcl-source-path (chapter)
-  (merge-pathnames (concatenate 'string chapter ".txt")
-                   *pcl-dir*))
+;; (defun pcl-source-path (chapter)
+;;   (merge-pathnames (concatenate 'string chapter ".txt")
+;;                    *pcl-dir*))
 
 (defun pcl-source-path (chapter)
   (merge-pathnames (format nil "chapter-~2,'0d.txt" chapter)
