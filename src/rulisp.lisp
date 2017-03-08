@@ -201,16 +201,18 @@
                                                  :content (restas.directory-publisher.view:autoindex-content data))
                            out)))
       (closure-template:ttable-register-template ttable "AUTOINDEX" #'rulisp-autoindex :supersede t)
-      (closure-template:ttable-sync-package ttable '#:rulisp.directory-publisher.view))))
+      ;;(closure-template:ttable-sync-package ttable '#:rulisp.directory-publisher.view)
+      )))
 
 (restas:mount-module -static- (#:restas.directory-publisher)
   (restas.directory-publisher:*directory* (merge-pathnames "static/" *resources-dir*)))
 
 (restas:mount-module -files- (#:restas.directory-publisher)
   (:url "files")
-  (:render-method #'rulisp.directory-publisher.view:autoindex)
+  ;;(:render-method #'rulisp.directory-publisher.view:autoindex)
   (restas.directory-publisher:*directory* (merge-pathnames "files/" *vardir*))
-  (restas.directory-publisher:*autoindex* t))
+  ;;(restas.directory-publisher:*autoindex* t)
+  )
 
                                                                                         
 
