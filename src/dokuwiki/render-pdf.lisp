@@ -18,14 +18,14 @@
 
 (defmacro deffont (name string-name)  
   `(defparameter ,name
-     (pdf:get-font (pdf:font-name (pdf:load-ttf-file (merge-pathnames (format nil
+     (pdf:get-font (pdf:font-name (pdf:load-ttf-font (merge-pathnames (format nil
                                                                               "~A.ttf"
                                                                               ,string-name)
                                                                       *cm-fonts-dir*))))))
 
 (defmacro defcorefont (name string-name)
   `(defparameter ,name
-     (pdf:get-font (pdf:font-name (pdf:load-ttf-file (merge-pathnames (format nil
+     (pdf:get-font (pdf:font-name (pdf:load-ttf-font (merge-pathnames (format nil
                                                                               "~A.ttf"
                                                                               ,string-name)
                                                                       *corefonts-dir*))))))
@@ -93,15 +93,24 @@
             (let ((res (find-outline-by-ref ref item)))
               (finding res such-that res)))))
 
+(defun append-child-outline (parent title ref-name)
+  (let ((child (make-instance 'outline
+                              :title title
+                              :reference (pdf:get-named-reference ref-name))))
+    (setf (pdf::sub-levels parent)
+          (nconc (pdf::sub-levels parent)
+                 (list child)))
+    child))
+
 (defmethod tt::stroke ((header chapter-header) x y)
   (let ((parent-ref (slot-value header 'parent)))
-    (pdf:append-child-outline (or (and parent-ref
-                                       (find-outline-by-ref (pdf::get-named-reference parent-ref)
-                                                            (pdf:outline-root pdf:*document*)))
-                                  (pdf:outline-root pdf:*document*))
-                              (slot-value header 'title)
-                              (pdf::register-named-reference (vector pdf:*page* "/FitH" y)
-                                                             (slot-value header 'title)))))
+    (append-child-outline (or (and parent-ref
+				   (find-outline-by-ref (pdf::get-named-reference parent-ref)
+							(pdf::outline-root pdf:*document*)))
+			      (pdf::outline-root pdf:*document*))
+			  (slot-value header 'title)
+			  (pdf::register-named-reference (vector pdf:*page* "/FitH" y)
+							 (slot-value header 'title)))))
 
 (define-wiki-pdf-render dokuwiki:chapter (items)
   (let ((name (second (first items))))

@@ -215,7 +215,7 @@
 (defun make-pcl-pdf (&optional (out #P"/tmp/pcl.pdf"))
   (let ((page-number 1))
     (tt:with-document (:mode :outlines)
-      (pdf:append-child-outline (pdf:outline-root pdf:*document*) 
+      (rulisp::append-child-outline (pdf::outline-root pdf:*document*) 
                                 "Practical Common Lisp"
                                 (let ((pdf:*page* (pcl-first-page)))
                                   (pdf:register-page-reference "Practical Common Lisp")))
