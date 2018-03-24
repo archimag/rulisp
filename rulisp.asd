@@ -17,8 +17,7 @@
                (:module :src
                         :components ((:file "packages")
                                      (:module "dokuwiki"
-                                              :components ((:file "render-pdf")
-                                                           (:file "render-html"))
+                                              :components ((:file "render-html"))
                                               :depends-on ("packages"))
                                      (:file "storage" :depends-on ("packages"))
                                      (:file "pcl"  :depends-on ("rulisp"))

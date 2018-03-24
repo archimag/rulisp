@@ -16,8 +16,6 @@
            #:*noreply-mail-account*
            #:*vardir*
            #:*cachedir*
-           #:*reCAPTCHA.publick-key*
-           #:*reCAPTCHA.privake-key*
            #:*default-skin*
            #:*pcl-dir*
            #:*wiki-dir*
@@ -49,9 +47,6 @@
 (defparameter *cookie-cipher-key* (ironclad:ascii-string-to-byte-array "Specify the secure key"))
 
 (defparameter *noreply-mail-account* "noreply@lisper.ru")
-
-(defvar *reCAPTCHA.publick-key* "6LdZjAcAAAAAAGh_MzHcHfJWp6rpI0XUNghGQB1f")
-(defvar *reCAPTCHA.privake-key* "6LdZjAcAAAAAAKJ2GPWTHPh1H1Foc0kyfbwgrFgO")
 
 (defparameter *default-skin* "fine")
 
