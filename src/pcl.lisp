@@ -120,10 +120,6 @@
      ("conclusion-whats-next" "Заключение: Что дальше ?" "conclusion")))
 
                                
-;; (defun pcl-source-path (chapter)
-;;   (merge-pathnames (concatenate 'string chapter ".txt")
-;;                    *pcl-dir*))
-
 (defun pcl-source-path (chapter)
   (merge-pathnames (format nil "chapter-~2,'0d.txt" chapter)
                    *pcl-dir*))
@@ -179,26 +175,10 @@
         hunchentoot:+HTTP-NOT-FOUND+)))
 
 
-(restas:define-route pcl-chapter-pdf ("pdf/:(chapter)"
-                                      :content-type "application/pdf")
-  (let* ((number (position chapter
-                           *pcl-files-map*
-                           :key #'first
-                           :test #'string=))
-         (path (pcl-source-path (third (aref *pcl-files-map* number)))))
-    (flexi-streams:with-output-to-sequence (out)
-      (let ((out* (flexi-streams:make-flexi-stream out)))
-        (rulisp::pdf-render-wiki-page (wiki-parser:parse :dokuwiki
-                                                         path)
-                                      out*))
-      out)))
-
-
 (defun pcl-first-page ()
   (let ((result))
     (pdf:with-page ()
       (setf result pdf:*page*)
-      ;;(pdf:draw-centered-text 300 500 "Practical Common Lisp" *header-font* 30)
       (let ((bounds (pdf::bounds pdf:*page*))
             (image (pdf:make-image (merge-pathnames "static/image/pcl.jpg"
                                                     rulisp::*resources-dir*))))
@@ -212,70 +192,6 @@
 ;; pdf
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun make-pcl-pdf (&optional (out #P"/tmp/pcl.pdf"))
-  (let ((page-number 1))
-    (tt:with-document (:mode :outlines)
-      (rulisp::append-child-outline (pdf::outline-root pdf:*document*) 
-                                "Practical Common Lisp"
-                                (let ((pdf:*page* (pcl-first-page)))
-                                  (pdf:register-page-reference "Practical Common Lisp")))
-      (let ((rulisp::*current-chapter* "Practical Common Lisp"))
-        (iter (for chapter in-vector *pcl-files-map*)
-              (for i from 1)
-              (print i)
-              (let ((wikidoc (wiki-parser:parse :dokuwiki
-                                                (pcl-source-path (third chapter)))))
-                (tt:draw-pages 
-                 (tt:compile-text ()
-                   (tt:with-style (:font rulisp::*base-font* :font-size rulisp::*font-size*)
-                     (rulisp::pdf-render-wiki-item wikidoc)))
-                   :break :after
-                   :margins '(30 50 30 40)
-                   :finalize-fn #'(lambda (page)
-                                    (pdf:draw-centered-text (/ (aref (pdf::bounds page) 2) 2)
-                                                            10
-                                                            (write-to-string (incf page-number))
-                                                            rulisp::*base-font*
-                                                            10))))
-                (pdf:write-document out))))))
-
 (restas:define-route pcl-pdf ("pcl.pdf")
   (merge-pathnames "pcl.pdf"
                    *pcl-snapshot-dir*))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; load snapshot from http://pcl.catap.ru/
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (defun load-pcl-snapshot ()
-;;   (let ((snapshot-path (ensure-directories-exist (merge-pathnames (car (last (puri:uri-parsed-path *pcl-snapshot-url*)))
-;;                                                                   *pcl-snapshot-dir*)))
-;;         (snapshot (drakma:http-request *pcl-snapshot-url*
-;;                                        :force-binary t)))
-;;     (when snapshot
-;;       (with-open-file (out
-;;                        snapshot-path
-;;                        :direction :output
-;;                        :element-type '(unsigned-byte 8)
-;;                        :if-exists :supersede)
-;;         (write-sequence snapshot out))
-;;       (zip:unzip snapshot-path
-;;                  *pcl-snapshot-dir*
-;;                  :if-exists :supersede)
-;;       (setf *pcl-dir*
-;;             (merge-pathnames "var/www/pcl.catap.ru/htdocs/data/pages/pcl/"
-;;                              *pcl-snapshot-dir*))
-        
-;;       (make-pcl-pdf (merge-pathnames "pcl.pdf.tmp"
-;;                                      *pcl-snapshot-dir*))
-;;       (sb-posix:rename (merge-pathnames "pcl.pdf.tmp"
-;;                                         *pcl-snapshot-dir*)
-;;                        (merge-pathnames "pcl.pdf"
-;;                                         *pcl-snapshot-dir*))
-;;       t)))
-
-;; (if *pcl-load-snapshot-p*
-;;     (clon:schedule-function 'load-pcl-snapshot
-;;                             (clon:make-scheduler (clon:make-typed-cron-schedule :hour '*)
-;;                                                  :allow-now-p t)
-;;                             :thread t))
