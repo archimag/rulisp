@@ -170,7 +170,7 @@
                                         :dir #P"/var/rulisp/articles/"))
   (restas.wiki:*wiki-user-function* #'(lambda ()
                                         (find (compute-user-login-name)
-                                              '("archimag" "dmitry_vk" "Hedin")
+                                              '("archimag" "dmitry_vk")
                                               :test #'string=))))
 
 ;;;; Russian Lisp Planet
