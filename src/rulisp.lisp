@@ -41,7 +41,6 @@
                            ("Сервисы" tools-list)
                            ("Practical Common Lisp" -pcl-.pcl-main)
                            ("Wiki" -wiki-.main-wiki-page)
-                           ("Файлы" -files-.route :path "")
                            ("Поиск" google-search)))
 
 (defun rulisp-finalize-page (&key title css js content)
@@ -204,15 +203,21 @@
       ;;(closure-template:ttable-sync-package ttable '#:rulisp.directory-publisher.view)
       )))
 
-(restas:mount-module -static- (#:restas.directory-publisher)
-  (restas.directory-publisher:*directory* (merge-pathnames "static/" *resources-dir*)))
+(defmacro defstatic (resource)
+  (let* ((module-name (make-symbol (format nil "-STATIC-~a" resource)))
+	(resource-string (string-downcase (symbol-name resource)))
+	(path (format nil "static/~(~s~)/" resource)))
+    `(restas:mount-module ,module-name (#:restas.directory-publisher)
+       (:url ,resource-string)
+       (restas.directory-publisher:*directory* (merge-pathnames ,path *resources-dir*)))))
 
-(restas:mount-module -files- (#:restas.directory-publisher)
-  (:url "files")
-  ;;(:render-method #'rulisp.directory-publisher.view:autoindex)
-  (restas.directory-publisher:*directory* (merge-pathnames "files/" *vardir*))
-  ;;(restas.directory-publisher:*autoindex* t)
-  )
+(defstatic css)
+(defstatic image)
+(defstatic js)
+(defstatic fonts)
 
-                                                                                        
-
+;;;; not found page
+(restas:define-route not-found ("*any")
+  (:render-method (make-instance 'rulisp-drawer))
+  (declare (ignore any))
+  hunchentoot:+http-not-found+)
