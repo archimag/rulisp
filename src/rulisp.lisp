@@ -218,9 +218,6 @@
 
 ;;;; not found page
 (restas:define-route not-found ("*any")
+  (:render-method (make-instance 'rulisp-drawer))
   (declare (ignore any))
-  (print "!!!")
-  hunchentoot:+http-not-found+
-  (rulisp-finalize-page :title "Not Found"
-			:css '("style.css")
-			:content (rulisp.view:not-found-content (list :href (hunchentoot:request-uri*)))))
+  hunchentoot:+http-not-found+)
